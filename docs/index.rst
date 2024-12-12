@@ -1,1 +1,0 @@
-# LCO Microlensing Photometry Pipeline Documentation
