@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "microlensing_photometry"
+version = "0.1.0"
+description = ""
+authors = ["Rachel Street <rstreet@lco.global>", "Etienne Bachelet <etibachelet@gmail.com>"]
+readme = "README.md"
+packages = []
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
