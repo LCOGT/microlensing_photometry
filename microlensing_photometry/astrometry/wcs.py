@@ -6,25 +6,25 @@ from skimage.measure import ransac
 from skimage import transform as tf
 from astropy.wcs import WCS,utils
 
-import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
+import microlensing_photometry.logistics.GaiaTools.GaiaImage as GI
 
 def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     """
-    Estimate the shifts between two images. Generally a good idea to do a fraction in the middle,
-    where the effect of rotation is minimal.
+    Estimate the shifts (X,Y) between two images. Generally a good idea to do only a fraction of the field of view
+    centred in the middle, where the effect of rotation is minimal.
 
     Parameters
     ----------
-    reference : an image acting as the reference
-    image :  the image we want to align
-    image_fraction : the fraction of image around the center we want to analyze
-    upsample_factor : the degree of upsampling, if one wants subpixel accuracy
+    reference : array,  an image acting as the reference
+    image : array,  the image we want to align
+    image_fraction : float, the fraction of image around the center we want to analyze
+    upsample_factor : float, the degree of upsampling, if one wants subpixel accuracy
 
 
     Returns
     -------
-    shiftx : the shift in pixels in the x direction
-    shifty : the shift in pixels in the y direction
+    shiftx : float, the shift in pixels in the x direction
+    shifty : float, the shift in pixels in the y direction
     """
 
     leny, lenx = (np.array(image.shape) * image_fraction).astype(int)
@@ -43,23 +43,24 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
 
 def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1000):
     """
-    Refine the WCS of an image with Gaia catalog
+    Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
+    a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.
 
     Parameters
     ----------
-    image : an array with the image
-    stars_image :  the x,y positions of stars in the image
-    image_wcs : the original astropy WCS solution
-    gaia_catalog : the entire gaia catalog
+    image : array, the image to refine the WCS solution
+    stars_image : array, the x,y positions of stars in the image
+    image_wcs : astropy.wcs, the original astropy WCS solution
+    gaia_catalog : astropy.Table, the entire gaia catalog
 
 
     Returns
     -------
-    new_wcs : an updated astropy WCS object
+    new_wcs : astropy.wcs, an updated astropy WCS object
     """
-    mo_image,skycoords,star_pix = GC.build_Gaia_image(gaia_catalog, image_wcs, image_shape=image.shape)
+    mo_image, skycoords, star_pix = GI.build_Gaia_image(gaia_catalog, image_wcs, image_shape=image.shape)
 
-    shiftx, shifty = find_images_shifts(mo_image, image, image_fraction=0.25, upsample_factor=1)
+    shiftx, shifty = find_images_shifts(mo_image, image, image_fraction=0.5, upsample_factor=1)
 
     dists = sspa.distance.cdist(stars_image[:star_limit],
                                 np.c_[star_pix[0][:star_limit] - shiftx, star_pix[1][:star_limit] - shifty])
