@@ -73,9 +73,9 @@ class AperturePhotometryAnalyst(object):
         if self.image_layers[1].header['EXTNAME']=='CAT':
             #BANZAI image
             self.log.info('Find and use the BANZAI catalog for the entire process')
-
             self.star_catalog = np.c_[self.image_layers[1].data['x'],
-                                      self.image_layers[1].data['y']]
+                                      self.image_layers[1].data['y'],
+                                      self.image_layers[1].data['flux']]
         else:
             ### run starfinder
             pass
@@ -88,7 +88,7 @@ class AperturePhotometryAnalyst(object):
         try:
             wcs2 = lcowcs.refine_image_wcs(self.image_data , self.star_catalog,
                                        self.image_original_wcs, self.gaia_catalog,
-                                       star_limit = 1000)
+                                       star_limit = 5000)
 
             self.log.info('WCS successfully updated')
 

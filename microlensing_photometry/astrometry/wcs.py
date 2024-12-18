@@ -5,8 +5,10 @@ import scipy.spatial as sspa
 from skimage.measure import ransac
 from skimage import transform as tf
 from astropy.wcs import WCS,utils
+import astropy.units as u
+from astropy.coordinates import SkyCoord
 
-import microlensing_photometry.logistics.GaiaTools.GaiaImage as GI
+from microlensing_photometry.logistics import image_tools
 
 def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     """
@@ -35,7 +37,6 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     shifts, errors, phasediff = phase_cross_correlation(subref,subimage,
                                                         normalization=None,
                                                         upsample_factor=upsample_factor)
-
     shifty,shiftx = shifts
 
     return shiftx,shifty
@@ -52,30 +53,42 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
     stars_image : array, the x,y positions of stars in the image
     image_wcs : astropy.wcs, the original astropy WCS solution
     gaia_catalog : astropy.Table, the entire gaia catalog
-
+    star_limit : int, the limit number of stars to use
 
     Returns
     -------
     new_wcs : astropy.wcs, an updated astropy WCS object
     """
-    mo_image, skycoords, star_pix = GI.build_Gaia_image(gaia_catalog, image_wcs, image_shape=image.shape)
 
-    shiftx, shifty = find_images_shifts(mo_image, image, image_fraction=0.5, upsample_factor=1)
+    skycoords = SkyCoord(ra=gaia_catalog['ra'].data[:star_limit],
+                      dec=gaia_catalog['dec'].data[:star_limit],
+                      unit=(u.degree, u.degree), frame='icrs')
 
-    dists = sspa.distance.cdist(stars_image[:star_limit],
+    fluxes = [1]*len(gaia_catalog['phot_g_mean_flux'].data)
+    star_pix = image_wcs.world_to_pixel(skycoords)
+
+    stars_positions = np.array(star_pix).T
+
+    model_gaia_image = image_tools.build_image(stars_positions, fluxes, image.shape,
+                                          image_fraction=1)
+
+    model_image = image_tools.build_image(stars_image[:,:2], [1]*len(stars_image), image.shape, image_fraction=1)
+
+    shiftx, shifty = find_images_shifts(model_gaia_image, model_image, image_fraction=0.25, upsample_factor=1)
+
+    dists = sspa.distance.cdist(stars_image[:star_limit,:2],
                                 np.c_[star_pix[0][:star_limit] - shiftx, star_pix[1][:star_limit] - shifty])
-
-    mask = dists < 20
+    mask = dists < 10
     lines, cols = np.where(mask)
 
     pts1 = np.c_[star_pix[0], star_pix[1]][:star_limit][cols]
     pts2 = np.c_[stars_image[:,0], stars_image[:,1]][:star_limit][lines]
-    model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=3,
+    model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=5,
                                    max_trials=300)
 
     new_wcs = utils.fit_wcs_from_points(pts2[:star_limit][inliers].T, skycoords[cols][inliers])
 
-
+    #breakpoint()
     ### might be valuable some looping here
 
     # Refining???

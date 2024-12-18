@@ -1,1 +1,1 @@
-from . import GaiaCatalog, GaiaImage
+from . import GaiaCatalog
