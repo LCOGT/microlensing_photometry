@@ -70,12 +70,14 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
     stars_positions = np.array(star_pix).T
 
     model_gaia_image = image_tools.build_image(stars_positions, fluxes, image.shape,
-                                          image_fraction=1)
+                                                image_fraction=1,star_limit =  star_limit)
 
-    model_image = image_tools.build_image(stars_image[:,:2], [1]*len(stars_image), image.shape, image_fraction=1)
+    model_image = image_tools.build_image(stars_image[:,:2], [1]*len(stars_image), image.shape, image_fraction=1,
+                                          star_limit = star_limit)
+
 
     shiftx, shifty = find_images_shifts(model_gaia_image, model_image, image_fraction=0.25, upsample_factor=1)
-
+    print(shiftx,shifty)
     dists = sspa.distance.cdist(stars_image[:star_limit,:2],
                                 np.c_[star_pix[0][:star_limit] - shiftx, star_pix[1][:star_limit] - shifty])
     mask = dists < 10

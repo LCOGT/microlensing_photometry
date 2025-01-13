@@ -28,7 +28,6 @@ def build_image(star_positions, fluxes, image_shape, image_fraction = 0.25, star
     XX, YY = np.indices((21, 21))
 
     model_gaussian = psf.Gaussian2d(1, XX.max()/2, XX.max()/2, 3, 3, XX, YY)
-
     model_image = np.zeros(image_shape)
 
     for ind in range(len(sub_star_positions)):

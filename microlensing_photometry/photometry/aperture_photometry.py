@@ -58,12 +58,17 @@ class AperturePhotometryAnalyst(object):
         """
         Process the image following the various steps
         """
-
+        import time
+        start = time.time()
         self.log.info('Start Image Processing')
 
         self.find_star_catalog()
+        print(time.time()-start)
         self.refine_wcs()
+        print(time.time()-start)
+
         self.run_aperture_photometry()
+        print(time.time()-start)
 
     def find_star_catalog(self):
         """
