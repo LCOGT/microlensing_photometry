@@ -10,6 +10,8 @@ packages = []
 python = "^3.9"
 astropy = "7.0.0"
 fsspec = "2024.10.0"
+astroquery = "0.4.7"
+scikit-image = "0.24.0"
 
 [build-system]
 requires = ["poetry-core"]
