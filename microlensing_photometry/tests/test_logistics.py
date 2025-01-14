@@ -6,22 +6,26 @@ import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.logistics import image_tools
 
+CWD = getcwd()
+TEST_DATA_DIR = path.join(CWD, 'tests/test_output')
 def test_collect_Gaia_catalog():
 
     ra,dec,radius = 270,-30, 0.1
 
     gaia_catalog = GC.collect_Gaia_catalog(ra,dec,radius=radius,row_limit = 10000,catalog_name='Gaia_catalog.dat',
-                         catalog_path='../')
+                         catalog_path=TEST_DATA_DIR)
 
     assert len(gaia_catalog) == 5
-    assert np.allclose(gaia_catalog['phot_g_mean_flux'].value,np.array([3687.1 ,  822.27,  742.57,  251.3 ,  201.87]),
-                                                                     atol = 0.01)
+    assert np.allclose(
+        gaia_catalog['phot_g_mean_flux'].value,
+        np.array([3687.07248 ,  830.04544,  747.28028,  252.18597 ,  201.87001]),
+        atol = 0.01
+    )
 
-    filename = './Gaia_catalog.dat'
-    checkfile =  path.isfile(filename)
-    assert checkfile
+    filepath = path.join(TEST_DATA_DIR, 'Gaia_catalog.dat')
+    assert(path.isfile(filepath))
 
-    remove(filename)
+    remove(filepath)
 
 
 
