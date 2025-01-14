@@ -6,6 +6,7 @@ import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.logistics import image_tools
 from astropy.table import Table
+import numpy as np
 
 CWD = getcwd()
 TEST_DATA_DIR = path.join(CWD, 'tests/test_output')
@@ -28,9 +29,6 @@ def test_collect_Gaia_catalog():
 
     remove(filepath)
 
-
-
-import numpy as np
 
 def test_build_image():
 
