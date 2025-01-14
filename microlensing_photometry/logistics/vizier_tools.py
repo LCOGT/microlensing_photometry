@@ -50,11 +50,20 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
                                     'pmDE':'pm_dec', 'e_pmDE':'pm_dec_error',
                                     'Plx':'parallax', 'e_Plx': 'parallax_error'},
                                     #'parallax':'parallax', 'parallax_error': 'parallax_error'},
-                                    {}]
+                                    {}],
+                           'Gaia-DR3': ['I/355/gaiadr3',
+                                         {'RA_ICRS': 'ra', 'DE_ICRS': 'dec', 'Source': 'source_id',
+                                          'e_RA_ICRS': 'ra_error', 'e_DE_ICRS': 'dec_error',
+                                          'FG': 'phot_g_mean_flux', 'e_FG': 'phot_g_mean_flux_error',
+                                          'FBP': 'phot_bp_mean_flux', 'e_FBP': 'phot_bp_mean_flux_error',
+                                          'FRP': 'phot_rp_mean_flux', 'e_FRP': 'phot_rp_mean_flux_error',
+                                          'PM': 'pm', 'pmRA': 'pm_ra', 'e_pmRA': 'pm_ra_error',
+                                          'pmDE': 'pm_dec', 'e_pmDE': 'pm_dec_error',
+                                          'Plx': 'parallax', 'e_Plx': 'parallax_error'},
+                                         {}],
                            }
 
     (cat_id,cat_col_dict,cat_filters) = supported_catalogs[catalog]
-
     if catalog=='Gaia-EDR3':
         v = Vizier(column_filters=cat_filters)
     else:
@@ -62,7 +71,6 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
                 column_filters=cat_filters)
 
     v = Vizier(column_filters=cat_filters)
-
     v.ROW_LIMIT = row_limit
 
     if 'sexigesimal' in coords:
@@ -75,12 +83,11 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
     catalog_list = Vizier.find_catalogs(cat_id)
 
     (status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug)
-
-    if result != None and len(result) == 1:
+    if result != None and len(result) > 0:
 
         col_list = []
         for col_id, col_name in cat_col_dict.items():
-            col = table.Column(name=col_name, data=result[0][col_id].data)
+            col = table.Column(name=col_name, data=result[col_id].data)
             col_list.append(col)
 
         result = table.Table( col_list )
@@ -111,7 +118,7 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
     result : astropy.Table, an astropy.Table containing the catalog
     """
 
-    vizier_servers_list = ['vizier.cfa.harvard.edu', 'vizier.hia.nrc.ca', 'vizier.u-strasbg.fr']
+    vizier_servers_list = ['vizier.cds.unistra.fr', 'vizier.cfa.harvard.edu']
 
     query_service.VIZIER_SERVER = vizier_servers_list[0]
 
@@ -132,6 +139,7 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
             log.warning('Searching catalog server '+repr(query_service.VIZIER_SERVER))
 
         try:
+            # Query_region now returns a TableList object, so we need to extract the result
             result = query_service.query_region(coord, radius=search_radius, catalog=catalog_id)
 
         # Handle long timeout requests:
@@ -159,14 +167,15 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
 
                 return status, result
 
-        if result == None or len(result) > 0:
-            continue_query = False
-        elif len(result) == 0:
+        if result == None or len(result) == 0:
             iserver += 1
             if iserver >= len(vizier_servers_list):
                 continue_query = False
                 result = []
                 status = False
+        elif len(result) > 0:
+            continue_query = False
+            result = result[0]
 
     return status, result
 
