@@ -10,7 +10,6 @@ def find_star_catalog(image):
                                             sigma=3.0, maxiters=5)
 
     daofind = DAOStarFinder(fwhm=3.0, threshold=3.*std,min_separation=5.0)
-    lcostarfinder.find_star_catalog(z)
 
     sources = daofind(image - median)
     order = np.array(sources['flux']).argsort()[::-1]
