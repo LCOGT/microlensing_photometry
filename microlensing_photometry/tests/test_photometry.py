@@ -9,13 +9,6 @@ def test_aperture_photometry():
 
     #This needs some discussion on how to test that
 
-def test_dia_photometry():
-
-    pass
-
-    #This needs some discussion on how to test that
-
-
 def test_photometric_scale_factor_from_lightcurves():
 
     lcs = np.array(([[3,2,1],[0.5,2.5,9]]))

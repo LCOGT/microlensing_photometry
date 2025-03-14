@@ -19,7 +19,7 @@ class AperturePhotometryAnalyst(object):
     ----------
 
     image_name : str, a name to the data
-    image_path : str, a path to the data
+    image_path : str, a path+name to the data
     gaia_catalog : astropy.Table, the Gaia catalog of the field
 
     """
@@ -47,21 +47,11 @@ class AperturePhotometryAnalyst(object):
 
         ### To fix with config files
         self.image_data = self.image_layers[0].data
-        self.image_header = self.image_layers[0].header
-
-        try:
-
-            self.image_errors = self.image_layers[3].data
-
-        except:
-
-            self.image_errors = np.abs(self.image_data**0.5)
-
-        self.image_original_wcs = WCS(self.image_header)
+        self.image_errors = self.image_layers[3].data
+        self.image_original_wcs = WCS(self.image_layers[0].header)
 
         self.process_image()
 
-        self.update_image_with_new_layers()
         lcologs.close_log(self.log)
 
     def process_image(self):
@@ -85,23 +75,15 @@ class AperturePhotometryAnalyst(object):
         Find the star catalog for an image. It uses BANZAI outputs if available, otherwise compute it.
         """
 
-        try:
+        if self.image_layers[1].header['EXTNAME']=='CAT':
             #BANZAI image
-            sources_catalog = np.c_[self.image_layers[1].data['x'],
+            self.log.info('Find and use the BANZAI catalog for the entire process')
+            self.star_catalog = np.c_[self.image_layers[1].data['x'],
                                       self.image_layers[1].data['y'],
                                       self.image_layers[1].data['flux']]
-            self.log.info('Find and use the BANZAI catalog for the entire process')
-
-        except:
-
+        else:
             ### run starfinder
-            from microlensing_photometry.starfinder import starfinder
-
-            catalog = starfinder.find_star_catalog(self.image_data)
-            sources_catalog = np.c_[catalog['x'],catalog['y'],catalog['flux']]
-            self.log.info('Compute DAOstarfinder catalog for the entire process')
-
-        self.star_catalog = sources_catalog
+            pass
 
     def refine_wcs(self):
         """
@@ -121,15 +103,13 @@ class AperturePhotometryAnalyst(object):
             self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
 
             sys.exit()
-
         self.image_new_wcs = wcs2
-
-
 
     def run_aperture_photometry(self):
         """
         Run aperture photometry on the image using the star catalog of Gaia for time been.
         """
+
         try:
 
             skycoord = SkyCoord(ra=self.gaia_catalog['ra'], dec=self.gaia_catalog['dec'], unit=(u.degree, u.degree))
@@ -137,16 +117,10 @@ class AperturePhotometryAnalyst(object):
             positions = np.c_[xx,yy]
 
             phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions, 5)
+            exptime = self.image_layers[0].header['EXPTIME']
 
-            try:
-
-                exptime = self.image_layers[0].header['EXPTIME']
-                phot_table['aperture_sum'] /= exptime
-                phot_table['aperture_sum_err'] /= exptime
-
-            except:
-
-                pass
+            phot_table['aperture_sum'] /= exptime
+            phot_table['aperture_sum_err'] /= exptime
 
             self.aperture_photometry_table = phot_table
 
@@ -156,33 +130,6 @@ class AperturePhotometryAnalyst(object):
 
             self.log.info('Problems with the aperture photometry: aboard Aperture Photometry! Details below')
             self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
-
-    def update_image_with_new_layers(self):
-
-            update_wcs_layer = fits.PrimaryHDU(header=self.image_header)
-            update_wcs_layer.header['EXTNAME'] = 'LCO MICROLENSING UPDATED WCS'
-            update_wcs_layer.header.update(self.image_new_wcs.to_header())
-
-            try:
-
-                self.image_layers[4] = update_wcs_layer
-
-            except:
-
-                self.image_layers.append(update_wcs_layer)
-
-            aperture_photometry_table = fits.BinTableHDU(data=self.aperture_photometry_table)
-            aperture_photometry_table.header['EXTNAME'] = 'LCO MICROLENSING APERTURE PHOTOMETRY'
-
-            try:
-
-                self.image_layers[5] = aperture_photometry_table
-
-            except:
-
-                self.image_layers.append(aperture_photometry_table)
-
-            self.image_layers.writeto(self.image_path,overwrite=True)
 
 def run_aperture_photometry(image, error, positions,radius):
     """
@@ -213,4 +160,3 @@ def run_aperture_photometry(image, error, positions,radius):
     phot_table['aperture_sum'] -= total_bkg
 
     return phot_table
-
