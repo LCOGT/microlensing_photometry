@@ -1,6 +1,7 @@
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
+from photutils.aperture import aperture_photometry
 from photutils.aperture import CircularAnnulus, CircularAperture
 from photutils.aperture import ApertureStats
 import numpy as np
@@ -165,9 +166,14 @@ class DIAPhotometryAnalyst(object):
         model_robust, inliers = ransac((pts2[:1000], pts1[:1000]), tf.AffineTransform,
                                        min_samples=int(0.5 * len(pts1[:1000])), residual_threshold=0.01, max_trials=300)
 
-        aligned_image = tf.warp(self.cutout_image.astype(float), model_robust.inverse, output_shape=self.cutout_image.shape, order=3)
-        aligned_mask = tf.warp(self.cutout_mask.astype(float), model_robust.inverse, output_shape=self.cutout_image.shape, order=3)
-        aligned_errors = tf.warp(self.cutout_errors.astype(float)**2, model_robust.inverse, output_shape=self.cutout_image.shape, order=3)
+        aligned_image = tf.warp(self.cutout_image.astype(float),
+                                model_robust.inverse,
+                                output_shape=self.cutout_image.shape, order=3)
+        aligned_mask = tf.warp(self.cutout_mask.astype(float), model_robust.inverse,
+                               output_shape=self.cutout_image.shape, order=1)
+        aligned_errors = tf.warp(self.cutout_errors.astype(float)**2,
+                                 model_robust.inverse,
+                                 output_shape=self.cutout_image.shape, order=3)
 
         self.cutout_aligned_image = aligned_image
         self.cutout_aligned_mask = aligned_mask
@@ -185,14 +191,20 @@ class DIAPhotometryAnalyst(object):
             mask = self.cutout_aligned_mask.astype(bool) | self.cutout_reference_mask.astype(bool)
 
             dia_image,image_model,dia_mask, kernel,bkg_coeffs,kernel_errors = (
-                run_difference_image(self.cutout_reference, self.cutout_aligned_image, self.kernel_size,mask = mask,
+                run_difference_image(self.cutout_reference, self.cutout_aligned_image,
+                                     self.kernel_size,mask = mask,
                                      indi=self.indi, indj=self.indj))
+
             positions = np.c_[[self.ref_catalog['xcenter'][self.ref_catalog_mask] - self.origin_ref_x,
               self.ref_catalog['ycenter'][self.ref_catalog_mask] - self.origin_ref_y]].T
 
-            phot_table = lcoaphot.run_aperture_photometry(dia_image,
-                                                          np.abs(self.cutout_aligned_errors[kernel_size:-kernel_size, kernel_size:-kernel_size] ),
-                                                          positions, self.fwhm)
+            #phot_table = lcoaphot.run_aperture_photometry(dia_image,
+            #                                              np.abs(
+            #                                              self.cutout_aligned_errors[kernel_size:-kernel_size, kernel_size:-kernel_size] ),
+            #                                              positions, self.fwhm)
+
+            phot_table = run_dia_photometry(dia_image,np.abs(self.cutout_aligned_errors[kernel_size:-kernel_size, kernel_size:-kernel_size] ),
+                                            positions, self.fwhm)
             phot_table['id'] = self.ref_catalog['id'][self.ref_catalog_mask]
 
             self.dia_photometry = phot_table
@@ -274,7 +286,8 @@ def run_difference_image(reference_image, aligned_image, kernel_size, mask=None,
         noise = np.ones(reference_image.shape)
 
     #Extend the mask a bit
-    mask = ndimage.binary_dilation(mask, structure=np.ones((3, 3)).astype(bool), iterations=5).astype(bool)
+    mask = ndimage.binary_dilation(mask, structure=np.ones((3, 3)).astype(bool),
+                                   iterations=15).astype(bool)
 
     if (indi is not None) & (indj is not None):
 
@@ -287,7 +300,8 @@ def run_difference_image(reference_image, aligned_image, kernel_size, mask=None,
     kernel_size = int(kernel_size / 2)
 
     Umatrix = ((reference_image-reference_image.mean()) / noise)[indi, indj]
-    Umatrix[mask[indi, indj]] = 0
+    Umatrix2 = Umatrix.copy()
+    Umatrix2[mask[indi, indj]] = 0
 
     tofit = ((aligned_image - aligned_image.mean()) / noise)
     tofit[mask] = 0
@@ -302,20 +316,30 @@ def run_difference_image(reference_image, aligned_image, kernel_size, mask=None,
     yyy = (Y / noise)
     yyy[mask] = 0
 
-    bkg_coeffs = np.c_[ones[kernel_size:-kernel_size, kernel_size:-kernel_size].ravel(),
+    bkg_coeffs = np.c_[ones[kernel_size:-kernel_size,
+                       kernel_size:-kernel_size].ravel(),
     xxx[kernel_size:-kernel_size, kernel_size:-kernel_size].ravel(),
     yyy[kernel_size:-kernel_size, kernel_size:-kernel_size].ravel()]
-
-    solution = np.linalg.lstsq(np.c_[Umatrix, bkg_coeffs],
+    #bkg_coeffs = ones[kernel_size:-kernel_size,kernel_size:-kernel_size].ravel()
+    bigU = np.c_[Umatrix2, bkg_coeffs]
+    solution = np.linalg.lstsq(bigU,
                                tofit[kernel_size:-kernel_size, kernel_size:-kernel_size].ravel())
-
+    #breakpoint()
     if np.any(np.isnan(solution[0])):
         breakpoint()
-    model = ((((Umatrix @ solution[0][:-3]).reshape(
-        reference_image[kernel_size:-kernel_size, kernel_size:-kernel_size].shape) +
-               solution[0][-3] + X[kernel_size:-kernel_size, kernel_size:-kernel_size] * solution[0][-2]) +
-              Y[kernel_size:-kernel_size, kernel_size:-kernel_size] * solution[0][-1]) +
-             aligned_image.mean())
+
+    #model = ((((Umatrix @ solution[0][:-3]).reshape(
+    #    reference_image[kernel_size:-kernel_size, kernel_size:-kernel_size].shape) +
+    #           solution[0][-3] + X[kernel_size:-kernel_size,
+    #    #           kernel_size:-kernel_size] * solution[0][-2]) +
+    #          Y[kernel_size:-kernel_size, kernel_size:-kernel_size] * solution[0][
+    #    #          -1]) +
+    #         aligned_image.mean())
+
+    model = (np.c_[Umatrix, bkg_coeffs] @ solution[0]).reshape(
+        reference_image[kernel_size:-kernel_size,
+        kernel_size:-kernel_size].shape) + aligned_image.mean()
+
 
     residus = aligned_image[kernel_size:-kernel_size, kernel_size:-kernel_size] - model
     #residus[mask[kernel_size:-kernel_size, kernel_size:-kernel_size]] = 0
@@ -332,6 +356,12 @@ def run_difference_image(reference_image, aligned_image, kernel_size, mask=None,
     image_model = model
     dia_image = residus
     dia_mask = mask
+
+    #import scipy.signal as ss
+
+    #model2 = ss.fftconvolve(reference_image - reference_image.mean(),kernel,
+    #                         mode='same' )
+    #breakpoint()
 
     return dia_image,image_model,dia_mask,kernel,bkg_coeffs,kernel_errors
 
@@ -352,17 +382,17 @@ def run_dia_photometry(image, error, positions,radius):
     """
 
     aperture = CircularAperture(positions, r=radius)
-    annulus_aperture = CircularAnnulus(positions, r_in=radius+3, r_out=radius+5)
+    #annulus_aperture = CircularAnnulus(positions, r_in=radius+3, r_out=radius+5)
 
-    aperstats = ApertureStats(image, annulus_aperture)
+    #aperstats = ApertureStats(image, annulus_aperture)
 
-    bkg_mean = aperstats.mean
+    #bkg_mean = aperstats.mean
 
     phot_table = aperture_photometry(image, aperture, error=error)
-    total_bkg = aperture.area * bkg_mean
+    #total_bkg = aperture.area * bkg_mean
 
-    phot_table['aperture_sum'] -= total_bkg
-
+    #phot_table['aperture_sum'] -= total_bkg
+    #breakpoint()
     return phot_table
 
 

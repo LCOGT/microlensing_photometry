@@ -70,6 +70,8 @@ class AperturePhotometryAnalyst(object):
         self.run_aperture_photometry()
         print(time.time()-start)
 
+        self.save_new_products_in_image()
+
     def find_star_catalog(self):
         """
         Find the star catalog for an image. It uses BANZAI outputs if available, otherwise compute it.
@@ -103,6 +105,7 @@ class AperturePhotometryAnalyst(object):
             self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
 
             sys.exit()
+
         self.image_new_wcs = wcs2
 
     def run_aperture_photometry(self):
@@ -130,6 +133,26 @@ class AperturePhotometryAnalyst(object):
 
             self.log.info('Problems with the aperture photometry: aboard Aperture Photometry! Details below')
             self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
+
+    def save_new_products_in_image(self):
+        """
+        Save the new product, corrected WCS and aperture phot table, on the image
+        directly
+        """
+
+        #Save updated wcs in a new layer
+        new_header = self.image_new_wcs.to_header()
+        new_header['EXTNAME'] = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
+        new_wcs_hdu = fits.PrimaryHDU(header=new_header)
+        self.image_layers.append(new_wcs_hdu)
+
+        #Save Aperture Photometry  in a new layer
+        aperture_hdu =  fits.BinTableHDU(data= self.aperture_photometry_table)
+        aperture_hdu.header['EXTNAME'] = 'LCO MICROLENSING APERTURE PHOTOMETRY'
+        self.image_layers.append(aperture_hdu)
+
+        #Save updates
+        self.image_layers.writeto(self.image_path, overwrite=True)
 
 def run_aperture_photometry(image, error, positions,radius):
     """
