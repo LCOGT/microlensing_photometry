@@ -14,6 +14,8 @@ fsspec = "2024.10.0"
 photutils = "2.0.2"
 scikit-image = "0.24.0"
 pytest = "8.3.4"
+matplotlib = "v3.10.1"
+tqdm = "4.67.1"
 
 [build-system]
 requires = ["poetry-core"]
