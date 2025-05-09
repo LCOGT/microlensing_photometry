@@ -1,3 +1,5 @@
+import copy
+
 import astropy.units as u
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,8 +8,10 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-
+import argparse
 from tqdm import tqdm
+import gc
+import copy
 
 import microlensing_photometry.photometry.aperture_photometry as lcoapphot
 import microlensing_photometry.photometry.dia_photometry as lcodiaphot
@@ -17,8 +21,11 @@ import microlensing_photometry.astrometry.wcs as lcowcs
 import microlensing_photometry.photometry as lcophot
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('directory', help='Path to data directory of FITS images')
+args = parser.parse_args()
 
-directory = '/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/'
+#directory = '/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/'
 
 ra= 266.04333333
 dec=-39.11322222
@@ -33,59 +40,62 @@ gaia_catalog = GC.collect_Gaia_catalog(ra,dec,20,row_limit = 10000,catalog_name=
                          catalog_path='./')
 coords = SkyCoord(ra=gaia_catalog['ra'].data, dec=gaia_catalog['dec'].data, unit=(u.degree, u.degree), frame='icrs')
  
-images = [i for i in os.listdir(directory) if ('.fits' in i) & ('.fz' not in i)]
+images = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not in i)]
 
 cutout_region = [ra-0/60.,dec-0/60.,250]
 
 
 ### First run wcs+aperture
 new_wcs = []
-cats = []
+cats = []   # List of star catalogs for all images
 Time = []
 exptime = []
 bad_agent = []
-ims = []
-errors = []
-counts = []
+#ims = []
+#errors = []
+nstars = []
 l1fwhm = []
 
-for im in tqdm(images[:]):#[::1]:
+for im in tqdm(images[::10]):#[::1]:
+    image_path = os.path.join(args.directory,im)
 
-    image = fits.open(directory+im)
+    with fits.open(image_path) as hdul:
 
-    if image[0].header['FILTER'] == 'ip':
-        #image = fits.open(directory+im)
-        ims.append(image[0].data)
-        errors.append(image[3].data)    
-        counts.append(len(image[1].data))
-        l1fwhm.append(image[0].header['L1FWHM'])
-        try:
-            if 'LCO' not in image[-2].header['EXTNAME']:
-                bb = tgsb
-            new_wcs.append(WCS(image[-2].header))
-            Time.append(image[0].header['MJD-OBS'])
-            exptime.append(image[0].header['EXPTIME'])
-            cats.append(image[-1].data)
-            
-        except:
-            
-            agent = lcoapphot.AperturePhotometryAnalyst(im,directory,gaia_catalog)
+        # Q: Not sure why this is limited to one filter, likely for testing
 
-            new_wcs.append(agent.image_new_wcs)
-            Time.append(agent.image_layers[0].header['MJD-OBS'])
-            exptime.append(agent.image_layers[0].header['EXPTIME'])
-            image = fits.open(directory+im)
-            cats.append(image[-1].data)
-           
-        
-    else:
-        pass
-        
-    del image[0].data
+        if hdul[0].header['FILTER'] == 'ip':
+            #image = fits.open(directory+im)
+            #ims.append(hdul[0].data)
+            #errors.append(hdul[3].data)
+            nstars.append(len(hdul[1].data))
+            l1fwhm.append(copy.deepcopy(hdul[0].header['L1FWHM']))
 
-    image.close()  
-   
-   
+            # Attempt to retrieve header information and the aperture photometry
+            # catalog from a previous run.  If this is not present, perform
+            # aperture photometry on the image
+            try:
+                new_wcs.append(copy.deepcopy(WCS(hdul[-2].header)))
+                Time.append(copy.deepcopy(hdul[0].header['MJD-OBS']))
+                exptime.append(copy.deepcopy(hdul[0].header['EXPTIME']))
+                cats.append(copy.deepcopy(np.array(hdul[-1].data.tolist())))
+                print(cats[-1])
+            except:
+
+                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog)
+
+                new_wcs.append(copy.deepcopy(agent.image_new_wcs))
+                Time.append(copy.deepcopy(agent.image_layers[0].header['MJD-OBS']))
+                exptime.append(copy.deepcopy(agent.image_layers[0].header['EXPTIME']))
+                cats.append(copy.deepcopy(np.array(agent.image_layers[-1].data.tolist())))
+                print(cats[-1])
+        else:
+            pass
+
+        del hdul[0].data
+        hdul.close()
+        del hdul
+        gc.collect()
+
 #Create the aperture lightcurves
 apsum = np.array([cats[i]['aperture_sum'] for i in range(len(Time))])
 eapsum = np.array([cats[i]['aperture_sum_err'] for i in range(len(Time))])
@@ -107,7 +117,7 @@ breakpoint()
 cutout_region = [ra,dec,250]
 kernel_size = 17 
 #Choose the ref as the max number of stars detected by BANZAI, could be updated of course
-ref = np.argmax(counts)
+ref = np.argmax(nstars)
 
 dia_phots = []
 dia_kers = []
@@ -115,7 +125,7 @@ dia_ekers = []
 #breakpoint()
 for ind,im in enumerate(tqdm(images[:])):#[::1]:
 
-        agent = lcodiaphot.DIAPhotometryAnalyst( images[ref],directory,images[ind], directory,cats[ref], cats[ind],
+        agent = lcodiaphot.DIAPhotometryAnalyst( images[ref],args.directory,images[ind], args.directory,cats[ref], cats[ind],
                  cutout_region,kernel_size)
         dia_phots.append(agent.dia_photometry)
         dia_kers.append(agent.kernel)

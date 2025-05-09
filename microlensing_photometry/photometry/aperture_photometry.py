@@ -7,6 +7,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 import numpy as np
 import sys
+import os
 
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.infrastructure import logs as lcologs
@@ -24,12 +25,12 @@ class AperturePhotometryAnalyst(object):
 
     """
 
-    def __init__(self,image_name, image_path,gaia_catalog,log_path='./logs'):
+    def __init__(self, image_name, image_path, gaia_catalog, log_path='./logs'):
 
         self.log = lcologs.start_log(log_path, image_name)
-        self.log.info('Initialize Aperture Photometry Analyst on '+image_name+' at this location'+image_path)
+        self.log.info('Initialize Aperture Photometry Analyst on '+image_name+' at this location '+image_path)
 
-        self.image_path = image_path+image_name
+        self.image_path = os.path.join(image_path, image_name)
 
         try:
 

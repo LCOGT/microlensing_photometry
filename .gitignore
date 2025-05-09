@@ -164,3 +164,4 @@ cython_debug/
 
 # Test datasets
 data/
+trials/Gaia_catalog.dat
