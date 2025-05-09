@@ -34,7 +34,7 @@ def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000,catalog_name='Gaia_c
 
     except:
 
-        gaia_catalog = vizier_tools.search_vizier_for_sources(ra, dec, radius, 'Gaia-DR3', row_limit=-1,
+        gaia_catalog = vizier_tools.search_vizier_for_sources(ra, dec, radius, 'Gaia-EDR3', row_limit=-1,
                                   coords='degree', log=None, debug=True)
 
         mask = np.isfinite(gaia_catalog['phot_g_mean_flux'])

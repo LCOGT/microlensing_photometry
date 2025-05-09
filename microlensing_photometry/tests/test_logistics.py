@@ -1,4 +1,5 @@
-from os import getcwd, path, remove
+from os import getcwd, path, remove, rmdir, makedirs
+import shutil
 import numpy as np
 
 from microlensing_photometry.logistics import vizier_tools
@@ -8,9 +9,13 @@ from microlensing_photometry.logistics import image_tools
 from astropy.table import Table
 import numpy as np
 
+
 CWD = getcwd()
-TEST_DATA_DIR = path.join(CWD, 'tests/test_output')
+TEST_DATA_DIR = path.join(CWD, 'tests/test_output/')
+makedirs(TEST_DATA_DIR, exist_ok=True)
+
 def test_collect_Gaia_catalog():
+
 
     ra,dec,radius = 270,-30, 0.1
 
@@ -19,16 +24,17 @@ def test_collect_Gaia_catalog():
 
     assert len(gaia_catalog) == 5
     assert np.allclose(
-        gaia_catalog['phot_g_mean_flux'].value,
-        np.array([3687.07248 ,  830.04544,  747.28028,  252.18597 ,  201.87001]),
-        atol = 0.01
-    )
+            gaia_catalog['phot_g_mean_flux'].value,
+            np.array([3687.10009766,  822.27001953,  742.57000732,  251.30000305,
+            201.86999512]),
+            atol = 0.01)
 
     filepath = path.join(TEST_DATA_DIR, 'Gaia_catalog.dat')
     assert(path.isfile(filepath))
 
+    #cleaning after tests
     remove(filepath)
-
+    shutil.rmtree(path.join(CWD, 'tests'))
 
 def test_build_image():
 
