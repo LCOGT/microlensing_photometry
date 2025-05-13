@@ -19,13 +19,15 @@ import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
 import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
 import microlensing_photometry.astrometry.wcs as lcowcs
 import microlensing_photometry.photometry as lcophot
-
+from microlensing_photometry.IO import fits_table_parser
 
 parser = argparse.ArgumentParser()
 parser.add_argument('directory', help='Path to data directory of FITS images')
 args = parser.parse_args()
 
 #directory = '/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/'
+
+do_dia_phot = False
 
 ra= 266.04333333
 dec=-39.11322222
@@ -56,11 +58,13 @@ bad_agent = []
 nstars = []
 l1fwhm = []
 
-for im in tqdm(images[::10]):#[::1]:
+for im in tqdm(images):#[::1]:
     image_path = os.path.join(args.directory,im)
+    print('Aperture photometry for ' + im)
 
     with fits.open(image_path) as hdul:
 
+        hdr0 = copy.deepcopy(hdul[0].header)
         # Q: Not sure why this is limited to one filter, likely for testing
 
         if hdul[0].header['FILTER'] == 'ip':
@@ -68,33 +72,32 @@ for im in tqdm(images[::10]):#[::1]:
             #ims.append(hdul[0].data)
             #errors.append(hdul[3].data)
             nstars.append(len(hdul[1].data))
-            l1fwhm.append(copy.deepcopy(hdul[0].header['L1FWHM']))
+            l1fwhm.append(hdr0['L1FWHM'])
 
-            # Attempt to retrieve header information and the aperture photometry
-            # catalog from a previous run.  If this is not present, perform
-            # aperture photometry on the image
-            try:
-                new_wcs.append(copy.deepcopy(WCS(hdul[-2].header)))
-                Time.append(copy.deepcopy(hdul[0].header['MJD-OBS']))
-                exptime.append(copy.deepcopy(hdul[0].header['EXPTIME']))
-                cats.append(copy.deepcopy(np.array(hdul[-1].data.tolist())))
-                print(cats[-1])
-            except:
+            # Check whether there is an existing photometry table available.
+            phot_table_index = fits_table_parser.find_phot_table(hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
+            print('Table index: ', phot_table_index)
+            # If photometry has already been done, read the table
+            if phot_table_index >= 0:
+                cats.append(copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index])))
+                print(' -> Loaded existing photometry catalog')
 
+            # If no photometry table is available, perform photometry:
+            else:
                 agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog)
+                cats.append(agent.aperture_photometry_table)
+                print(' -> Performed aperture photometry')
 
-                new_wcs.append(copy.deepcopy(agent.image_new_wcs))
-                Time.append(copy.deepcopy(agent.image_layers[0].header['MJD-OBS']))
-                exptime.append(copy.deepcopy(agent.image_layers[0].header['EXPTIME']))
-                cats.append(copy.deepcopy(np.array(agent.image_layers[-1].data.tolist())))
-                print(cats[-1])
+            # Store FITS header information
+            new_wcs.append(copy.deepcopy(WCS(hdul[-2].header)))
+            Time.append(hdr0['MJD-OBS'])
+            exptime.append(hdr0['EXPTIME'])
+
         else:
             pass
 
-        del hdul[0].data
         hdul.close()
         del hdul
-        gc.collect()
 
 #Create the aperture lightcurves
 apsum = np.array([cats[i]['aperture_sum'] for i in range(len(Time))])
@@ -112,44 +115,45 @@ err_flux = (elcs**2/pscales[1]**2+lcs**2*epscales**2/pscales[1]**4)**0.5
 np.save('ap_phot.npy',np.c_[flux,err_flux])
 
 breakpoint()
+if do_dia_phot:
 
-#Location of the DIA cutout
-cutout_region = [ra,dec,250]
-kernel_size = 17 
-#Choose the ref as the max number of stars detected by BANZAI, could be updated of course
-ref = np.argmax(nstars)
+    #Location of the DIA cutout
+    cutout_region = [ra,dec,250]
+    kernel_size = 17
+    #Choose the ref as the max number of stars detected by BANZAI, could be updated of course
+    ref = np.argmax(nstars)
 
-dia_phots = []
-dia_kers = []
-dia_ekers = []
-#breakpoint()
-for ind,im in enumerate(tqdm(images[:])):#[::1]:
+    dia_phots = []
+    dia_kers = []
+    dia_ekers = []
+    #breakpoint()
+    for ind,im in enumerate(tqdm(images[:])):#[::1]:
 
-        agent = lcodiaphot.DIAPhotometryAnalyst( images[ref],args.directory,images[ind], args.directory,cats[ref], cats[ind],
-                 cutout_region,kernel_size)
-        dia_phots.append(agent.dia_photometry)
-        dia_kers.append(agent.kernel)
-        dia_ekers.append(agent.kernel_errors)
+            agent = lcodiaphot.DIAPhotometryAnalyst( images[ref],args.directory,images[ind], args.directory,cats[ref], cats[ind],
+                     cutout_region,kernel_size)
+            dia_phots.append(agent.dia_photometry)
+            dia_kers.append(agent.kernel)
+            dia_ekers.append(agent.kernel_errors)
 
-breakpoint()
-#Create de DIA lightcurves
-ppp = [np.sum(i) for i in dia_kers]
+    breakpoint()
+    #Create de DIA lightcurves
+    ppp = [np.sum(i) for i in dia_kers]
 
-lcs = []
-elcs = []
+    lcs = []
+    elcs = []
 
-for ind,star in enumerate(tqdm(dia_phots[0]['id'])):
-    #if star==17505:
-    #    breakpoint()
-    cible = np.where(cats[ref]['id'] == star)[0][0]
-    phph = [cats[ref]['aperture_sum'][cible]+dia_phots[i][ind]['aperture_sum']/ppp[i]/exptime[ref] for i in range(len(dia_phots))]
-    ephph = [np.sqrt(cats[ref]['aperture_sum_err'][cible]**2
-        +dia_phots[i][ind]['aperture_sum_err']**2/ppp[i]**2/exptime[ref]**2
-        +dia_phots[i][ind]['aperture_sum']**2/ppp[i]**4*np.sum(dia_ekers[i]**2)/exptime[ref]**2) for i in range(len(dia_phots))]
+    for ind,star in enumerate(tqdm(dia_phots[0]['id'])):
+        #if star==17505:
+        #    breakpoint()
+        cible = np.where(cats[ref]['id'] == star)[0][0]
+        phph = [cats[ref]['aperture_sum'][cible]+dia_phots[i][ind]['aperture_sum']/ppp[i]/exptime[ref] for i in range(len(dia_phots))]
+        ephph = [np.sqrt(cats[ref]['aperture_sum_err'][cible]**2
+            +dia_phots[i][ind]['aperture_sum_err']**2/ppp[i]**2/exptime[ref]**2
+            +dia_phots[i][ind]['aperture_sum']**2/ppp[i]**4*np.sum(dia_ekers[i]**2)/exptime[ref]**2) for i in range(len(dia_phots))]
 
-    lcs.append(phph)
-    elcs.append(ephph)
-    
+        lcs.append(phph)
+        elcs.append(ephph)
 
 
-breakpoint()
+
+    breakpoint()

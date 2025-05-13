@@ -10,7 +10,7 @@ class FITSParser(unittest.TestCase):
 
         # Create an Astropy table and convert it into a FITS
         # table for use as a test
-        ndata = 10
+        ndata = 100000
         column_list = [
                 Column(name='id', data=np.arange(0,ndata,1)),
                 Column(name='xcenter', data=np.random.rand(ndata)*100.0),
