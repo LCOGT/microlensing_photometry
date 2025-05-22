@@ -17,6 +17,7 @@ pytest = "8.3.4"
 matplotlib = "v3.10.1"
 tqdm = "4.67.1"
 ipython = "9.2.0"
+h5py = "3.13.0"
 
 [build-system]
 requires = ["poetry-core"]

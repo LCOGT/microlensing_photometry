@@ -5,9 +5,11 @@ from astropy.io import fits
 from astropy.wcs import WCS
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import Table, Column
 import numpy as np
 import sys
 import os
+import h5py
 
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.infrastructure import logs as lcologs
@@ -184,3 +186,76 @@ def run_aperture_photometry(image, error, positions,radius):
     phot_table['aperture_sum'] -= total_bkg
 
     return phot_table
+
+class AperturePhotometryDataset(object):
+    """
+    Class to store and manipulate the results of the AperturePhotometryAnalyst for a set of multiple images
+    """
+
+    def __init__(self, file_path=None):
+        """
+        Method to instantiate an AperturePhotometryDataset object and optionally load photometry data from
+        an HSF5 file.
+
+        Parameters
+        ----------
+        file_path   str     [optiona] Path to input HDF5 file
+
+        Returns
+        -------
+        self
+        """
+        self.source_id = Table([Column(name='ID', data=np.array([]))])
+        self.wcs_positions = Table(
+            [
+                Column(name='RA', data=np.array([]), unit=u.deg),
+                Column(name='Dec', data=np.array([]), unit=u.deg)
+            ]
+        )
+        self.positions  = Table(
+            [
+                Column(name='x', data=np.array([]), unit='pixel'),
+                Column(name='y', data=np.array([]), unit='pixel')
+            ]
+        )
+        self.timestamps = Table([Column(name='MJD', data=np.array([]))])
+        self.exptimes = Table([Column(name='exptime', unit=u.second, data=np.array([]))])
+        self.flux = np.array([])
+        self.err_flux = np.array([])
+        self.pscale = np.array([])
+        self.epscale = np.array([])
+
+        if file_path:
+            self.load_hdf5(file_path)
+
+    def load_hdf5(self, file_path):
+        """
+        Method to load
+        Parameters
+        ----------
+        file_path  str     Path to input HDF5 file
+
+        Returns
+        -------
+        object with attributes populated with photometry from the file
+        """
+
+        if not os.path.isfile(file_path):
+            raise IOError('Cannot find aperture photometry dataset file at ' + file_path)
+
+        with h5py.File(file_path, 'r') as f:
+            self.source_id = Table([Column(name='ID', data=np.array(f['source_id'][:]))])
+            self.source_wcs = Table(
+                [
+                    Column(name='RA', data=np.array(f['source_wcs'][:])[:,0], unit=u.deg),
+                    Column(name='Dec', data=np.array(f['source_wcs'][:])[:,1], unit=u.deg),
+                ]
+            )
+            self.positions = np.array(f['positions'][:])
+            self.timestamps = Table([Column(name='MJD', data=np.array(f['timestamps'][:]), unit=u.day)])
+            self.exptimes = Table([Column(name='exptime', data=np.array(f['exptime']), unit=u.second)])
+            self.flux = np.array(f['flux'])
+            self.err_flux = np.array(f['err_flux'])
+            self.pscale = np.array(f['pscale'])
+            self.epscale = np.array(f['epscale'])
+

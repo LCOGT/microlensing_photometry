@@ -1,4 +1,5 @@
 from astropy.table import Table, Column
+from astropy.io import fits
 import numpy as np
 
 def fits_rec_to_table(fits_rec_array):
