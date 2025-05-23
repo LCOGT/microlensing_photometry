@@ -13,6 +13,7 @@ import h5py
 
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.photometry import conversions
 
 class AperturePhotometryAnalyst(object):
     """
@@ -208,8 +209,8 @@ class AperturePhotometryDataset(object):
         self.source_id = Table([Column(name='ID', data=np.array([]))])
         self.wcs_positions = Table(
             [
-                Column(name='RA', data=np.array([]), unit=u.deg),
-                Column(name='Dec', data=np.array([]), unit=u.deg)
+                Column(name='ra', data=np.array([]), unit=u.deg),
+                Column(name='dec', data=np.array([]), unit=u.deg)
             ]
         )
         self.positions  = Table(
@@ -247,8 +248,8 @@ class AperturePhotometryDataset(object):
             self.source_id = Table([Column(name='ID', data=np.array(f['source_id'][:]))])
             self.source_wcs = Table(
                 [
-                    Column(name='RA', data=np.array(f['source_wcs'][:])[:,0], unit=u.deg),
-                    Column(name='Dec', data=np.array(f['source_wcs'][:])[:,1], unit=u.deg),
+                    Column(name='ra', data=np.array(f['source_wcs'][:])[:,0], unit=u.deg),
+                    Column(name='dec', data=np.array(f['source_wcs'][:])[:,1], unit=u.deg),
                 ]
             )
             self.positions = np.array(f['positions'][:])
@@ -259,3 +260,36 @@ class AperturePhotometryDataset(object):
             self.pscale = np.array(f['pscale'])
             self.epscale = np.array(f['epscale'])
 
+    def get_lightcurve(self, star_idx):
+        """
+
+        Parameters
+        ----------
+        star_idx int    Index (not ID) of star in source catalog
+
+        Returns
+        -------
+        lc  Table  Lightcurve data for the star with columns MJD, flux, err_flux, mag, err_mag
+        """
+
+        # Check for valid flux and err_flux measurements for this star's lightcurve
+        flux = self.flux[star_idx, :]
+        valid_flux = ~np.isnan(self.flux[star_idx, :])
+        valid_err_flux = ~np.isnan(self.err_flux[star_idx, :])
+        valid = np.logical_and(valid_flux, valid_err_flux)
+
+        # Convert to magnitudes for convenience
+        mag, err_mag, _, _ = conversions.flux_to_mag(
+            self.flux[star_idx, valid],
+            self.err_flux[star_idx, valid]
+        )
+
+        lc = Table([
+            Column(name='MJD', data=self.timestamps['MJD'][valid]),
+            Column(name='flux', data=self.flux[star_idx, valid]),
+            Column(name='err_flux', data=self.err_flux[star_idx, valid]),
+            Column(name='mag', data=mag),
+            Column(name='err_mag', data=err_mag),
+        ])
+
+        return lc

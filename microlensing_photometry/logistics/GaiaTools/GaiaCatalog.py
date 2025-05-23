@@ -45,3 +45,34 @@ def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000,catalog_name='Gaia_c
         gaia_catalog = sub_gaia_catalog
 
     return  gaia_catalog
+
+def find_nearest(catalog, ra, dec, radius=(2.0/3600.0)*u.deg):
+    """
+    Function to identify the nearest catalog entry to the given coordinates, within a cut-off radius
+
+    Parameters
+    ----------
+    catalog catalog Table of objects within the image
+    ra float    RA of location to search at [decimal deg]
+    dec float   Dec of location to search at [decimal deg]
+    radius float Search cut-off radius [decimal deg, default = 2 arcsec]
+
+    Returns
+    -------
+    star_idx int    Index of star within the catalog
+    closest match   catalog Table row for the closest match or None if no object is
+                    within the search radius
+    """
+
+    sources = SkyCoord(catalog['ra'], catalog['dec'], frame='icrs', unit=(u.deg, u.deg))
+    target = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+
+    separations = target.separation(sources)
+
+    idx = np.where(separations <= radius)[0]
+
+    if len(idx) > 0:
+        return idx[0], catalog[idx[0]]
+
+    else:
+        return None, None
