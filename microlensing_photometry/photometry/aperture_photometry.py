@@ -123,7 +123,9 @@ class AperturePhotometryAnalyst(object):
             xx, yy = self.image_new_wcs.world_to_pixel(skycoord)
             positions = np.c_[xx,yy]
 
-            phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions, 5)
+            #fwhm = self.image_layers[0].header['L1FWHM']
+
+            phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions,5)
             exptime = self.image_layers[0].header['EXPTIME']
 
             phot_table['aperture_sum'] /= exptime

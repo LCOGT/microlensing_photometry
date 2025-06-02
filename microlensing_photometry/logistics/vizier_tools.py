@@ -5,7 +5,7 @@ from astropy import wcs, coordinates, units, visualization, table
 import requests
 
 def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
-                              coords='sexigesimal', log=None, debug=False):
+                              coords='sexigesimal', timeout=60, log=None, debug=False):
     """Function to perform online query of the catalog and return
     a catalogue of known objects within the field of view
 
@@ -64,13 +64,15 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
                            }
 
     (cat_id,cat_col_dict,cat_filters) = supported_catalogs[catalog]
-    if catalog=='Gaia-EDR3':
-        v = Vizier(column_filters=cat_filters)
-    else:
-        v = Vizier(columns=list(cat_col_dict.keys()),\
-                column_filters=cat_filters)
-
-    v = Vizier(column_filters=cat_filters)
+    #breakpoint()
+    #if catalog=='Gaia-EDR3':
+    #    v = Vizier(columns=["*","+_r"],column_filters=cat_filters)
+    #else:
+    #    v = Vizier(columns=list(cat_col_dict.keys()),\
+    #            column_filters=cat_filters)
+    v = Vizier(columns=list(cat_col_dict.keys())+["+_r"], \
+               column_filters=cat_filters)
+    #v = Vizier(column_filters=cat_filters)
     v.ROW_LIMIT = row_limit
 
     if 'sexigesimal' in coords:
@@ -82,7 +84,7 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
 
     catalog_list = Vizier.find_catalogs(cat_id)
 
-    (status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug)
+    (status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug,timeout=timeout)
     if result != None and len(result) > 0:
 
         col_list = []
@@ -97,7 +99,7 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
     return result
 
 def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=None,
-                        debug=False):
+                        debug=False,timeout=60):
     """Function to query different ViZier servers in order of preference, as
     a fail-safe against server outages.  Based on code from NEOExchange by
     T. Lister
@@ -122,7 +124,7 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
 
     query_service.VIZIER_SERVER = vizier_servers_list[0]
 
-    query_service.TIMEOUT = 60
+    query_service.TIMEOUT = timeout
 
     continue_query = True
     iserver = 0
@@ -130,7 +132,7 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
 
     while continue_query:
         query_service.VIZIER_SERVER = vizier_servers_list[iserver]
-        query_service.TIMEOUT = 60
+        query_service.TIMEOUT = timeout
 
         if debug:
             print('Searching catalog server '+repr(query_service.VIZIER_SERVER))
@@ -149,7 +151,7 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
             if log!= None:
                 log.warning('Catalog server '+repr(query_service.VIZIER_SERVER)+' timed out, trying longer timeout')
 
-            query_service.TIMEOUT = 120
+            query_service.TIMEOUT = timeout
             result = query_service.query_region(coord, radius=search_radius, catalog=catalog_id)
 
         # Handle preferred-server timeout by trying the alternative server:
