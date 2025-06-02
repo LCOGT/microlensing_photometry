@@ -65,35 +65,30 @@ for im in tqdm(images):#[::1]:
     with fits.open(image_path) as hdul:
 
         hdr0 = copy.deepcopy(hdul[0].header)
-        # Q: Not sure why this is limited to one filter, likely for testing
 
-        if hdul[0].header['FILTER'] == 'ip':
-            #image = fits.open(directory+im)
-            #ims.append(hdul[0].data)
-            #errors.append(hdul[3].data)
-            nstars.append(len(hdul[1].data))
-            l1fwhm.append(hdr0['L1FWHM'])
+        #image = fits.open(directory+im)
+        #ims.append(hdul[0].data)
+        #errors.append(hdul[3].data)
+        nstars.append(len(hdul[1].data))
+        l1fwhm.append(hdr0['L1FWHM'])
 
-            # Check whether there is an existing photometry table available.
-            phot_table_index = fits_table_parser.find_phot_table(hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
-            # If photometry has already been done, read the table
-            if phot_table_index >= 0:
-                cats.append(copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index])))
-                print(' -> Loaded existing photometry catalog')
+        # Check whether there is an existing photometry table available.
+        phot_table_index = fits_table_parser.find_phot_table(hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
+        # If photometry has already been done, read the table
+        if phot_table_index >= 0:
+            cats.append(copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index])))
+            print(' -> Loaded existing photometry catalog')
 
-            # If no photometry table is available, perform photometry:
-            else:
-                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog)
-                cats.append(agent.aperture_photometry_table)
-                print(' -> Performed aperture photometry')
-
-            # Store FITS header information
-            new_wcs.append(copy.deepcopy(WCS(hdul[-2].header)))
-            Time.append(hdr0['MJD-OBS'])
-            exptime.append(hdr0['EXPTIME'])
-
+        # If no photometry table is available, perform photometry:
         else:
-            pass
+            agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog)
+            cats.append(agent.aperture_photometry_table)
+            print(' -> Performed aperture photometry')
+
+        # Store FITS header information
+        new_wcs.append(copy.deepcopy(WCS(hdul[-2].header)))
+        Time.append(hdr0['MJD-OBS'])
+        exptime.append(hdr0['EXPTIME'])
 
         hdul.close()
         del hdul
