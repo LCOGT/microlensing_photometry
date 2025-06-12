@@ -164,4 +164,4 @@ cython_debug/
 
 # Test datasets
 data/
-trials/Gaia_catalog.dat
+microlensing_photometry/trials/Gaia_catalog.dat
