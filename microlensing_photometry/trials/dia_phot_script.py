@@ -35,7 +35,7 @@ images = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not i
 # Use the header of the first image in the directory to
 # identify the expected target coordinates, assuming
 # that the frame is centered on the target
-hdr = fits.getheader(image[0])
+hdr = fits.getheader(images[0])
 ra = hdr['RA']
 dec = hdr['DEC']
 print('Extract Gaia targets for field centered on ' + repr(ra) + ', ' + repr(dec))
