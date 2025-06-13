@@ -41,11 +41,12 @@ dec = hdr['DEC']
 print('Extract Gaia targets for field centered on ' + repr(ra) + ', ' + repr(dec))
 
 coo = SkyCoord(ra=ra,dec=dec,unit='deg')
+if ':' in str(ra):
+    target = SkyCoord(ra=ra, dec=dec, unit=(u.hourangle, u.degree), frame='icrs')
+else:
+    target =  SkyCoord(ra=ra, dec=dec, unit=(u.degree, u.degree), frame='icrs')
 
-target =  SkyCoord(ra=ra, dec=dec, unit=(u.degree, u.degree), frame='icrs')
-
-
-gaia_catalog = GC.collect_Gaia_catalog(ra,dec,20,row_limit = 10000,catalog_name='Gaia_catalog.dat',
+gaia_catalog = GC.collect_Gaia_catalog(target.ra.deg, target.dec.deg,20,row_limit = 10000,catalog_name='Gaia_catalog.dat',
                          catalog_path=args.directory)
 
 if not gaia_catalog:
@@ -53,7 +54,7 @@ if not gaia_catalog:
 
 coords = SkyCoord(ra=gaia_catalog['ra'].data, dec=gaia_catalog['dec'].data, unit=(u.degree, u.degree), frame='icrs')
 
-cutout_region = [ra-0/60.,dec-0/60.,250]
+cutout_region = [target.ra.deg-0/60.,target.dec.deg-0/60.,250]
 
 
 ### First run wcs+aperture
