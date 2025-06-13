@@ -40,6 +40,10 @@ target =  SkyCoord(ra=ra, dec=dec, unit=(u.degree, u.degree), frame='icrs')
 
 gaia_catalog = GC.collect_Gaia_catalog(ra,dec,20,row_limit = 10000,catalog_name='Gaia_catalog.dat',
                          catalog_path=args.directory)
+
+if not gaia_catalog:
+    raise IOError('No Gaia catalog could be retrieved for this field, either locally or online')
+
 coords = SkyCoord(ra=gaia_catalog['ra'].data, dec=gaia_catalog['dec'].data, unit=(u.degree, u.degree), frame='icrs')
  
 images = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not in i)]
@@ -75,6 +79,7 @@ for im in tqdm(images):#[::1]:
         # Check whether there is an existing photometry table available.
         phot_table_index = fits_table_parser.find_phot_table(hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
         # If photometry has already been done, read the table
+        success = True
         if phot_table_index >= 0:
             cats.append(copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index])))
             print(' -> Loaded existing photometry catalog')
@@ -82,44 +87,49 @@ for im in tqdm(images):#[::1]:
         # If no photometry table is available, perform photometry:
         else:
             agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog)
-            cats.append(agent.aperture_photometry_table)
-            print(' -> Performed aperture photometry')
+            if agent.status == 'OK':
+                cats.append(agent.aperture_photometry_table)
+                print(' -> Performed aperture photometry')
+            else:
+                success = False
 
-        # Store FITS header information
-        new_wcs.append(copy.deepcopy(WCS(hdul[-2].header)))
-        Time.append(hdr0['MJD-OBS'])
-        exptime.append(hdr0['EXPTIME'])
+        # Store FITS header information only if photometry is successful
+        if success:
+            new_wcs.append(copy.deepcopy(WCS(hdul[-2].header)))
+            Time.append(hdr0['MJD-OBS'])
+            exptime.append(hdr0['EXPTIME'])
 
         hdul.close()
         del hdul
 
-#Create the aperture lightcurves
-apsum = np.array([cats[i]['aperture_sum'] for i in range(len(Time))])
-eapsum = np.array([cats[i]['aperture_sum_err'] for i in range(len(Time))])
+if len(cats) > 0:
+    #Create the aperture lightcurves
+    apsum = np.array([cats[i]['aperture_sum'] for i in range(len(Time))])
+    eapsum = np.array([cats[i]['aperture_sum_err'] for i in range(len(Time))])
 
-lcs = apsum.T
-elcs = eapsum.T
+    lcs = apsum.T
+    elcs = eapsum.T
 
-#Compute the phot scale based on <950 stars
-pscales = lcopscale.photometric_scale_factor_from_lightcurves(lcs[50:1000])
-epscales = (pscales[2]-pscales[0])/2
-flux = lcs/pscales[1]
-err_flux = (elcs**2/pscales[1]**2+lcs**2*epscales**2/pscales[1]**4)**0.5
+    #Compute the phot scale based on <950 stars
+    pscales = lcopscale.photometric_scale_factor_from_lightcurves(lcs[50:1000])
+    epscales = (pscales[2]-pscales[0])/2
+    flux = lcs/pscales[1]
+    err_flux = (elcs**2/pscales[1]**2+lcs**2*epscales**2/pscales[1]**4)**0.5
 
-#np.save('ap_phot.npy',np.c_[flux,err_flux])
+    #np.save('ap_phot.npy',np.c_[flux,err_flux])
 
-file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
-hdf5.output_photometry(
-    gaia_catalog,
-    np.array(Time),
-    new_wcs,
-    flux,
-    err_flux,
-    np.array(exptime),
-    pscales,
-    epscales,
-    file_path
-)
+    file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
+    hdf5.output_photometry(
+        gaia_catalog,
+        np.array(Time),
+        new_wcs,
+        flux,
+        err_flux,
+        np.array(exptime),
+        pscales,
+        epscales,
+        file_path
+    )
 
 breakpoint()
 if do_dia_phot:

@@ -35,6 +35,8 @@ class AperturePhotometryAnalyst(object):
 
         self.image_path = os.path.join(image_path, image_name)
 
+        self.status = 'OK'
+
         try:
 
             self.image_layers = fits.open(self.image_path)
@@ -71,10 +73,11 @@ class AperturePhotometryAnalyst(object):
         self.refine_wcs()
         print(time.time()-start)
 
-        self.run_aperture_photometry()
-        print(time.time()-start)
+        if self.status == 'OK':
+            self.run_aperture_photometry()
+            print(time.time()-start)
 
-        self.save_new_products_in_image()
+            self.save_new_products_in_image()
 
     def find_star_catalog(self):
         """
@@ -101,16 +104,19 @@ class AperturePhotometryAnalyst(object):
                                        self.image_original_wcs, self.gaia_catalog,
                                        star_limit = 5000)
 
-            self.log.info('WCS successfully updated')
+            self.image_new_wcs = wcs2
 
+            if wcs2:
+                self.log.info('WCS successfully updated')
+            else:
+                self.status = 'ERROR'
+                self.log.error('Problems with WCS update: image skipped')
         except Exception as error:
-
+            self.status = 'ERROR'
             self.log.info('Problems with WCS update: aboard Aperture Photometry! Details below')
             self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
 
-            sys.exit()
-
-        self.image_new_wcs = wcs2
+            #sys.exit()
 
     def run_aperture_photometry(self):
         """

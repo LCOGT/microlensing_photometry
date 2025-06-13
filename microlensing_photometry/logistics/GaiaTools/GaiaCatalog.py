@@ -6,7 +6,7 @@ from os import path
 
 from microlensing_photometry.logistics import vizier_tools
 
-def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000,catalog_name='Gaia_catalog.dat',
+def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000, catalog_name='Gaia_catalog.dat',
                          catalog_path='./',timeout=60):
     """
     Collect the Gaia catalog for the field centered at ra,dec and radius.
@@ -37,12 +37,15 @@ def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000,catalog_name='Gaia_c
         gaia_catalog = vizier_tools.search_vizier_for_sources(ra, dec, radius, 'Gaia-EDR3', row_limit=row_limit,
                                   coords='degree', timeout=timeout,log=None, debug=True)
 
-        mask = np.isfinite(gaia_catalog['phot_g_mean_flux'])
-        sub_gaia_catalog = gaia_catalog[mask]
-        sub_gaia_catalog =  sub_gaia_catalog[sub_gaia_catalog['phot_g_mean_flux'].argsort()[::-1],]
-        sub_gaia_catalog.write(catalog_path, format='ascii')
+        if len(gaia_catalog):
+            mask = np.isfinite(gaia_catalog['phot_g_mean_flux'])
+            sub_gaia_catalog = gaia_catalog[mask]
+            sub_gaia_catalog =  sub_gaia_catalog[sub_gaia_catalog['phot_g_mean_flux'].argsort()[::-1],]
+            sub_gaia_catalog.write(catalog_path, format='ascii')
 
-        gaia_catalog = sub_gaia_catalog
+            gaia_catalog = sub_gaia_catalog
+        else:
+            gaia_catalog = None
 
     return  gaia_catalog
 

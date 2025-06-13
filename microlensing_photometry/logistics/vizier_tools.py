@@ -84,7 +84,10 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
 
     catalog_list = Vizier.find_catalogs(cat_id)
 
-    (status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug,timeout=timeout)
+    # query_vizier_service function depreciated by latest astroquery changes
+    #(status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug,timeout=timeout)
+    result = v.query_region(c, radius=r, catalog=cat_id)
+
     if result != None and len(result) > 0:
 
         col_list = []
