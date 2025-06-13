@@ -108,6 +108,8 @@ for im in tqdm(images):#[::1]:
         hdul.close()
         del hdul
 
+print(len(new_wcs), len(Time), len(exptime), len(cats))
+
 if len(cats) > 0:
     #Create the aperture lightcurves
     apsum = np.array([cats[i]['aperture_sum'] for i in range(len(Time))])
