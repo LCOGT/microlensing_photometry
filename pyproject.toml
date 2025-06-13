@@ -18,6 +18,7 @@ matplotlib = "v3.10.1"
 tqdm = "4.67.1"
 ipython = "9.2.0"
 h5py = "3.13.0"
+jplephem = "2.22"
 
 [tool.poetry.scripts]
 dia_phot_script = "trials.dia_phot_script:main"

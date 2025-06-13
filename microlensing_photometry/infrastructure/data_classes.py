@@ -3,7 +3,9 @@ from astropy.table import Table, Column
 from astropy import units as u
 from astropy.io import ascii
 from astropy.coordinates import SkyCoord
+from astropy.coordinates import UnknownSiteException
 import numpy as np
+from microlensing_photometry.infrastructure import time_utils as lcotime
 
 class ObservationSet(object):
     """
@@ -13,6 +15,7 @@ class ObservationSet(object):
     def __init__(self, file_path=None):
         self.table = Table([
             Column(name='file', data=np.array([]), dtype='str'),
+            Column(name='facility_code', data=np.array([]), dtype='str'),
             Column(name='filter', data=np.array([]), dtype='str'),
             Column(name='dateobs', data=np.array([]), dtype='str'),
             Column(name='exptime', data=np.array([]), dtype='float64', unit=u.second),
@@ -53,6 +56,22 @@ class ObservationSet(object):
             if log:
                 log.info('No data summary found at ' + file_path + '; empty table returned')
 
+    def get_facility_code(self, header):
+        """Function to return the reference code used within the phot_db to
+        refer to a specific facility as site-enclosure-tel-instrument"""
+
+        try:
+            if 'fl' in header['INSTRUME']:
+                header['INSTRUME'] = header['INSTRUME'].replace('fl', 'fa')
+            facility_code = header['SITEID'] + '-' + \
+                            header['ENCID'] + '-' + \
+                            header['TELID'] + '-' + \
+                            header['INSTRUME']
+        except:
+            facility_code = 'None'
+
+        return facility_code
+
     def add_observation(self, file_path, header):
         """
         Method to extract observation from the FITS header of a single file
@@ -67,8 +86,21 @@ class ObservationSet(object):
         else:
             s = SkyCoord(header['RA'], header['DEC'], frame='icrs', unit=(u.degree, u.degree))
 
+        # Identify the facility from its header information
+        facility_code = self.get_facility_code(header)
+
+        # Calculate HJD
+        hjd, ltt_helio = lcotime.calc_hjd(
+            header['DATE-OBS'],
+            s.ra.deg,
+            s.dec.deg,
+            '-'.join(facility_code.split('-')[0:3]),
+            header['EXPTIME']
+        )
+
         row = [
             os.path.basename(file_path),
+            facility_code,
             header['FILTER'],
             header['DATE-OBS'],
             header['EXPTIME'],
@@ -79,7 +111,7 @@ class ObservationSet(object):
             header['MOONFRAC'],
             header['MOONDIST'],
             header['L1MEAN'],
-            0.0,
+            hjd,
             header['CTYPE1'],
             header['CTYPE2'],
             header['CRPIX1'],
@@ -97,3 +129,4 @@ class ObservationSet(object):
         ]
 
         self.table.add_row(row)
+

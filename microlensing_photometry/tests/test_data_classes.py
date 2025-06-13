@@ -9,6 +9,10 @@ class TestObservationSet(unittest.TestCase):
 
         file_path = './test_data/lsc1m009-fa04-20250610-0414-e91.fits'
         header = {
+            'SITEID': 'lsc',
+            'ENCID': 'domb',
+            'TELID': '1m0a',
+            'INSTRUME': 'fa04',
             'FILTER': 'ip',
             'DATE-OBS': '2025-06-11T09:21:20.374',
             'EXPTIME': 20.0,
@@ -39,12 +43,12 @@ class TestObservationSet(unittest.TestCase):
 
         assert(len(obs_set.table) == 1)
 
-        test_output_path = 'test_output/data_summary.txt'
+        test_output_path = 'test_input/data_summary.txt'
         obs_set.save(test_output_path)
 
         assert(os.path.isfile(test_output_path))
 
-        os.remove(test_output_path)
+        #os.remove(test_output_path)
 
     def test_load(self):
         from microlensing_photometry.infrastructure import data_classes
@@ -54,4 +58,4 @@ class TestObservationSet(unittest.TestCase):
         obs_set = data_classes.ObservationSet(file_path=test_path)
 
         assert(len(obs_set.table) == 1)
-        assert(len(obs_set.table.colnames) == 26)
+        assert(len(obs_set.table.colnames) == 27)
