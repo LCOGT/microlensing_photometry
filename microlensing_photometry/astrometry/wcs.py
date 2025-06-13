@@ -71,9 +71,11 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
     star_pix = image_wcs.world_to_pixel(skycoords)
 
     stars_positions = np.array(star_pix).T
+    print(stars_positions)
 
     wcs_check = astrometry_qc.check_stars_within_frame(image.shape, stars_positions)
-
+    print(wcs_check)
+    
     if wcs_check:
         model_gaia_image = image_tools.build_image(stars_positions, fluxes, image.shape,
                                                     image_fraction=1,star_limit =  star_limit)
