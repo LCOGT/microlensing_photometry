@@ -10,15 +10,11 @@ def check_stars_within_frame(image_shape, star_positions):
     :param star_positions: Numpy array of star pixel x,y positions
     :return: Boolean
     """
-    print(image_shape)
+
     idx1 = np.where(star_positions[:,0] > 0)[0]
-    print(idx1)
     idx2 = np.where(star_positions[:,0] < image_shape[1])[0]
-    print(idx2)
     idx3 = np.where(star_positions[:,1] > 0)[0]
-    print(idx3)
     idx4 = np.where(star_positions[:,1] < image_shape[0])[0]
-    print(idx4)
     idx = set(idx1).intersection(set(idx2)).intersection(set(idx3)).intersection(set(idx4))
 
     if len(idx) > 0:

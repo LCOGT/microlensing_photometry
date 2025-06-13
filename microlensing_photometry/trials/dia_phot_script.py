@@ -25,14 +25,21 @@ parser = argparse.ArgumentParser()
 parser.add_argument('directory', help='Path to data directory of FITS images')
 args = parser.parse_args()
 
-#directory = '/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/'
-
 do_dia_phot = False
 
-ra= 266.04333333
-dec=-39.11322222
+#directory = '/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/'
 
-from astropy.coordinates import SkyCoord
+# Build list of images in the reduction directory
+images = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not in i)]
+
+# Use the header of the first image in the directory to
+# identify the expected target coordinates, assuming
+# that the frame is centered on the target
+hdr = fits.getheader(image[0])
+ra = hdr['RA']
+dec = hdr['DEC']
+print('Extract Gaia targets for field centered on ' + repr(ra) + ', ' + repr(dec))
+
 coo = SkyCoord(ra=ra,dec=dec,unit='deg')
 
 target =  SkyCoord(ra=ra, dec=dec, unit=(u.degree, u.degree), frame='icrs')
@@ -45,8 +52,6 @@ if not gaia_catalog:
     raise IOError('No Gaia catalog could be retrieved for this field, either locally or online')
 
 coords = SkyCoord(ra=gaia_catalog['ra'].data, dec=gaia_catalog['dec'].data, unit=(u.degree, u.degree), frame='icrs')
- 
-images = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not in i)]
 
 cutout_region = [ra-0/60.,dec-0/60.,250]
 
