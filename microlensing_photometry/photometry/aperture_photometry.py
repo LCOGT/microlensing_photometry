@@ -261,8 +261,7 @@ class AperturePhotometryDataset(object):
                 ]
             )
             self.positions = np.array(f['positions'][:])
-            self.timestamps = Table([Column(name='MJD', data=np.array(f['timestamps'][:]), unit=u.day)])
-            self.exptimes = Table([Column(name='exptime', data=np.array(f['exptime']), unit=u.second)])
+            self.timestamps = Table([Column(name='HJD', data=np.array(f['HJD'][:]), unit=u.day)])
             self.flux = np.array(f['flux'])
             self.err_flux = np.array(f['err_flux'])
             self.pscale = np.array(f['pscale'])
@@ -293,7 +292,7 @@ class AperturePhotometryDataset(object):
         )
 
         lc = Table([
-            Column(name='MJD', data=self.timestamps['MJD'][valid]),
+            Column(name='HJD', data=self.timestamps['HJD'][valid]),
             Column(name='flux', data=self.flux[star_idx, valid]),
             Column(name='err_flux', data=self.err_flux[star_idx, valid]),
             Column(name='mag', data=mag),

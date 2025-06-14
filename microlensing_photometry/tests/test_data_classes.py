@@ -36,6 +36,8 @@ class TestObservationSet(unittest.TestCase):
             'CD2_1': -3.18163483965E-07,
             'CD2_2': -0.000108308535116,
             'WCSERR': 0,
+            'NAXIS1': 4096,
+            'NAXIS2': 4096,
             'WMSCLOUD': -18.6080000
         }
 
@@ -58,4 +60,4 @@ class TestObservationSet(unittest.TestCase):
         obs_set = data_classes.ObservationSet(file_path=test_path)
 
         assert(len(obs_set.table) == 1)
-        assert(len(obs_set.table.colnames) == 27)
+        assert(len(obs_set.table.colnames) == 29)

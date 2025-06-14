@@ -4,7 +4,7 @@ from astropy.coordinates import SkyCoord
 import scipy.spatial as sspa
 from skimage.measure import ransac
 from skimage import transform as tf
-from astropy.wcs import WCS,utils
+from astropy.wcs import WCS, utils
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
@@ -116,3 +116,32 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
     # print(shifts)
 
     return new_wcs
+
+def build_wcs_from_obs_set(obs_set):
+    """
+    Method to create an Astropy WCS object from a set of WCS keywords
+    :return: im_wcs list of image WCS objects
+    """
+    wcs_params = [
+        'CTYPE1',
+        'CTYPE2',
+        'CRPIX1',
+        'CRPIX2',
+        'CRVAL1',
+        'CRVAL2',
+        'CUNIT1',
+        'CUNIT2',
+        'CD1_1',
+        'CD1_2',
+        'CD2_1',
+        'CD2_2',
+        'NAXIS1',
+        'NAXIS2'
+    ]
+
+    im_wcs = []
+    for row in obs_set.table:
+        params = {key: row[key] for key in wcs_params}
+        im_wcs.append(WCS(header=params))
+
+    return im_wcs

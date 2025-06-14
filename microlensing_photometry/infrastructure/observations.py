@@ -47,6 +47,8 @@ def get_observation_metadata(args):
     # Store summary of the dataset information
     obs_set.save(obs_set_file)
 
+    return obs_set
+
 def update_wcs_parameters(src_hdr, dest_hdr):
     """
     Function transfers the WCS header keyworks from the src to the dest header objects
@@ -77,4 +79,4 @@ if __name__ == '__main__':
     parser.add_argument('directory', help='Path to input data directory')
     args = parser.parse_args()
 
-    get_observation_metadata(args)
+    obs_set = get_observation_metadata(args)

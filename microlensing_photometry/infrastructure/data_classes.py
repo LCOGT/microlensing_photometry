@@ -3,6 +3,7 @@ from astropy.table import Table, Column
 from astropy import units as u
 from astropy.io import ascii
 from astropy.coordinates import SkyCoord
+from astropy.wcs import WCS
 from astropy.coordinates import UnknownSiteException
 import numpy as np
 from microlensing_photometry.infrastructure import time_utils as lcotime
@@ -40,6 +41,8 @@ class ObservationSet(object):
             Column(name='CD2_1', data=np.array([]), dtype='float64'),
             Column(name='CD2_2', data=np.array([]), dtype='float64'),
             Column(name='WCSERR', data=np.array([]), dtype='int'),
+            Column(name='NAXIS1', data=np.array([]), dtype='int'),
+            Column(name='NAXIS2', data=np.array([]), dtype='int'),
             Column(name='WMSCLOUD', data=np.array([]), dtype='float64', unit=u.deg_C),
             ])
 
@@ -125,6 +128,8 @@ class ObservationSet(object):
             header['CD2_1'],
             header['CD2_2'],
             header['WCSERR'],
+            header['NAXIS1'],
+            header['NAXIS2'],
             header['WMSCLOUD']
         ]
 

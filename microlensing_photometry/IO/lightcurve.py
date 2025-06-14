@@ -52,7 +52,7 @@ def get_args():
     parser.add_argument('in_path', help='Path to aperture photometry HDF5 file')
     parser.add_argument('target_ra', help='RA of target star in degrees')
     parser.add_argument('target_dec', help='Dec of target star in degrees')
-    parser.add_argument('out_path', help='Path to aperture photometry HDF5 file')
+    parser.add_argument('out_path', help='Path to output lightcurve file')
     args = parser.parse_args()
 
     return args

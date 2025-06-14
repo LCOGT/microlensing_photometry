@@ -49,12 +49,8 @@ coords = SkyCoord(ra=gaia_catalog['ra'].data, dec=gaia_catalog['dec'].data, unit
 
 cutout_region = [target.ra.deg-0/60.,target.dec.deg-0/60.,250]
 
-
-### First run wcs+aperture
 cats = {}   # List of star catalogs for all images
 bad_agent = []
-#ims = []
-#errors = []
 nstars = {}
 
 for im in tqdm(obs_set.table['file']):#[::1]:
@@ -89,11 +85,17 @@ for im in tqdm(obs_set.table['file']):#[::1]:
         del hdul
 
 if len(obs_set.table) > 0:
-    #Create the aperture lightcurves
+    # Create the aperture lightcurves.  Default empty array is used to fill in
+    # the data cube for images where no photometry was possible
+    nodata = np.empty(len(gaia_catalog))
+    nodata.fill(np.nan)
 
-    f(x) if x is not None else ''
-    apsum = np.array([cats[i]['aperture_sum'] for i in range(len(obs_set)) if cats[i] else ])
-    eapsum = np.array([cats[i]['aperture_sum_err'] for i in range(len(obs_set)) if cats[i]])
+    apsum = np.array(
+        [cats[im]['aperture_sum'] if cats[im] else nodata for im in obs_set.table['file']]
+    )
+    eapsum = np.array(
+        [cats[im]['aperture_sum_err'] if cats[im] else nodata for im in obs_set.table['file']]
+    )
 
     lcs = apsum.T
     elcs = eapsum.T
@@ -104,16 +106,12 @@ if len(obs_set.table) > 0:
     flux = lcs/pscales[1]
     err_flux = (elcs**2/pscales[1]**2+lcs**2*epscales**2/pscales[1]**4)**0.5
 
-    #np.save('ap_phot.npy',np.c_[flux,err_flux])
-
     file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
     hdf5.output_photometry(
         gaia_catalog,
-        np.array(Time),
-        new_wcs,
+        obs_set,
         flux,
         err_flux,
-        np.array(exptime),
         pscales,
         epscales,
         file_path
