@@ -4,5 +4,5 @@ target:
   Dec: '-25:30:30.5'
 tom:
   upload: True
-  auth_config: /path/to/config
-  tom_url: 'https://foo.com'
+  config_file: /path/to/config
+  data_label: 'TEST'

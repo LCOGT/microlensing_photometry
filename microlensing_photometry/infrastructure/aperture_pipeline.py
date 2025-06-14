@@ -14,7 +14,7 @@ import microlensing_photometry.infrastructure.logs as lcologs
 import microlensing_photometry.photometry.aperture_photometry as lcoapphot
 import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
 import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
-from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve
+from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
 
 def run(args):
     """
@@ -32,6 +32,9 @@ def run(args):
 
     # Get observation set; this provides the list of images and associated information
     obs_set = lcoobs.get_observation_metadata(args, log=log)
+
+    # Establish label for the dataset
+    config['tom']['data_label'] = config['tom']['data_label'] + '_' + obs_set.table['filter'][0]
 
     # Use the header of the first image in the directory to
     # identify the expected target coordinates, assuming
@@ -157,10 +160,20 @@ def run(args):
             'phot_file': phot_file_path,
             'target_ra': config['target']['RA'],
             'target_dec': config['target']['Dec'],
-            'filter': obs_set.table['filter'][0],
+            'filter': config['tom']['data_label'],
             'lc_path': os.path.join(args.directory, config['target']['name'] + '_lc')
         }
         lc_status = lightcurve.aperture_timeseries(params, log=log)
+
+        # TOM lightcurve upload
+        if config['tom']['upload']:
+            params = {
+                'file_path': os.path.join(args.directory, config['target']['name'] + '_lc.csv'),
+                'data_label': config['tom']['data_label'],
+                'target_name': config['target']['name'],
+                'tom_config_file': config['tom']['config_file']
+            }
+            tom_utils. upload_lightcurve(params, log=log)
 
     else:
         lcologs.log(
