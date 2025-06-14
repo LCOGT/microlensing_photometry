@@ -7,13 +7,14 @@ from astropy.io import fits
 import argparse
 from tqdm import tqdm
 import copy
+import yaml
 
 import microlensing_photometry.infrastructure.observations as lcoobs
 import microlensing_photometry.infrastructure.logs as lcologs
 import microlensing_photometry.photometry.aperture_photometry as lcoapphot
 import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
 import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
-from microlensing_photometry.IO import fits_table_parser, hdf5
+from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve
 
 def run(args):
     """
@@ -24,6 +25,10 @@ def run(args):
 
     # Start logging
     log = lcologs.start_log(args.directory, 'aperture_pipeline')
+
+    # Load reduction configuration
+    config_file = os.path.join(args.directory, 'reduction_config.yaml')
+    config = yaml.safe_load(open(config_file))
 
     # Get observation set; this provides the list of images and associated information
     obs_set = lcoobs.get_observation_metadata(args, log=log)
@@ -134,8 +139,8 @@ def run(args):
         flux = lcs/pscales[1]
         err_flux = (elcs**2/pscales[1]**2+lcs**2*epscales**2/pscales[1]**4)**0.5
 
-        # Output timeseries photometry
-        file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
+        # Output timeseries photometry for the whole frame
+        phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
         hdf5.output_photometry(
             gaia_catalog,
             obs_set,
@@ -143,9 +148,18 @@ def run(args):
             err_flux,
             pscales,
             epscales,
-            file_path,
+            phot_file_path,
             log=log
         )
+
+        # Output the lightcurve of the object closest to the center of the field of view
+        params = {
+            'phot_file': phot_file_path,
+            'target_ra': config['target']['RA'],
+            'target_dec': config['target']['Dec'],
+            'lc_path': os.path.join(args.directory, config['target']['name'] + '_lc.dat')
+        }
+        lc_status = lightcurve.aperture_timeseries(params, log=log)
 
     else:
         lcologs.log(
