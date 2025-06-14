@@ -13,7 +13,6 @@ from tqdm import tqdm
 import gc
 import copy
 
-import microlensing_photometry.infrastructure.observations as lcoobs
 import microlensing_photometry.photometry.aperture_photometry as lcoapphot
 import microlensing_photometry.photometry.dia_photometry as lcodiaphot
 import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
@@ -30,8 +29,8 @@ do_dia_phot = False
 
 #directory = '/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/'
 
-# Get observation set; this provides the list of images and associated information
-obs_set = lcoobs.get_observation_metadata(args)
+# Build list of images in the reduction directory
+images = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not in i)]
 
 # Use the header of the first image in the directory to
 # identify the expected target coordinates, assuming
