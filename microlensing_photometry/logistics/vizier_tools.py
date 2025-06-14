@@ -3,6 +3,7 @@ from astroquery.vizier import Vizier
 from astroquery.gaia import Gaia
 from astropy import wcs, coordinates, units, visualization, table
 import requests
+from microlensing_photometry.infrastructure import logs as lcologs
 
 def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
                               coords='sexigesimal', timeout=60, log=None, debug=False):
@@ -64,15 +65,10 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
                            }
 
     (cat_id,cat_col_dict,cat_filters) = supported_catalogs[catalog]
-    #breakpoint()
-    #if catalog=='Gaia-EDR3':
-    #    v = Vizier(columns=["*","+_r"],column_filters=cat_filters)
-    #else:
-    #    v = Vizier(columns=list(cat_col_dict.keys()),\
-    #            column_filters=cat_filters)
+
     v = Vizier(columns=list(cat_col_dict.keys())+["+_r"], \
                column_filters=cat_filters)
-    #v = Vizier(column_filters=cat_filters)
+
     v.ROW_LIMIT = row_limit
 
     if 'sexigesimal' in coords:
@@ -82,10 +78,10 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
 
     r = radius * units.arcminute
 
-    catalog_list = Vizier.find_catalogs(cat_id)
-
     # query_vizier_service function depreciated by latest astroquery changes
+    catalog_list = Vizier.find_catalogs(cat_id)
     #(status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug,timeout=timeout)
+
     result = v.query_region(c, radius=r, catalog=cat_id)
 
     if result != None and len(result) > 0:
@@ -96,8 +92,20 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
             col_list.append(col)
 
         result = table.Table( col_list )
+
+        lcologs.log(
+            'Queried ' + cat_id + ' and found ' + str(len(result)) + ' stars within the field of view',
+            'info',
+            log=log
+        )
+
     else:
         result = table.Table([])
+        lcologs.error(
+            'No results returned from catalog query of ' + cat_id,
+            'info',
+            log=log
+        )
 
     return result
 

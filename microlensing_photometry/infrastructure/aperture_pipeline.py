@@ -22,28 +22,54 @@ def run(args):
     :return:
     """
 
+    # Start logging
+    log = lcologs.start_log(args.directory, 'aperture_pipeline')
+
     # Get observation set; this provides the list of images and associated information
-    obs_set = lcoobs.get_observation_metadata(args)
+    obs_set = lcoobs.get_observation_metadata(args, log=log)
 
     # Use the header of the first image in the directory to
     # identify the expected target coordinates, assuming
     # that the frame is centered on the target
     field_ra = obs_set.table['RA'][0]
-    field_dec = obs_set.table['Dec'][0]
+    field_dec: object = obs_set.table['Dec'][0]
     if ':' in str(field_ra):
         target = SkyCoord(ra=field_ra, dec=field_dec, unit=(u.hourangle, u.degree), frame='icrs')
     else:
-        target =  SkyCoord(ra=field_ra, dec=field_dec, unit=(u.degree, u.degree), frame='icrs')
-    print('Extract Gaia targets for field centered on ' + repr(field_ra) + ', ' + repr(field_dec))
+        target = SkyCoord(ra=field_ra, dec=field_dec, unit=(u.degree, u.degree), frame='icrs')
+
+    lcologs.log(
+        'Extracting Gaia targets for field centered on ' + repr(field_ra) + ', ' + repr(field_dec),
+        'info',
+        log=log
+    )
 
     # Load or query for known Gaia objects within this field
-    gaia_catalog = GC.collect_Gaia_catalog(target.ra.deg, target.dec.deg,20,row_limit = 10000,catalog_name='Gaia_catalog.dat',
-                             catalog_path=args.directory)
+    gaia_catalog = GC.collect_Gaia_catalog(
+        target.ra.deg,
+        target.dec.deg,
+        20,
+        row_limit = 10000,
+        catalog_name='Gaia_catalog.dat',
+        catalog_path=args.directory,
+        log=log
+    )
 
     if not gaia_catalog:
+        lcologs.lco(
+            'No Gaia catalog could be retrieved for this field, either locally or online',
+            'error',
+            log=log
+        )
+        lcologs.close_log(log)
         raise IOError('No Gaia catalog could be retrieved for this field, either locally or online')
 
-    coords = SkyCoord(ra=gaia_catalog['ra'].data, dec=gaia_catalog['dec'].data, unit=(u.degree, u.degree), frame='icrs')
+    coords = SkyCoord(
+        ra=gaia_catalog['ra'].data,
+        dec=gaia_catalog['dec'].data,
+        unit=(u.degree, u.degree),
+        frame='icrs'
+    )
 
     cutout_region = [target.ra.deg-0/60.,target.dec.deg-0/60.,250]
 
@@ -53,7 +79,7 @@ def run(args):
 
     for im in tqdm(obs_set.table['file']):#[::1]:
         image_path = os.path.join(args.directory,im)
-        print('Aperture photometry for ' + im)
+        lcologs.log('Aperture photometry for ' + im, 'info', log=log)
 
         with fits.open(image_path) as hdul:
 
@@ -62,27 +88,31 @@ def run(args):
             nstars[im] = len(hdul[1].data)
 
             # Check whether there is an existing photometry table available.
-            phot_table_index = fits_table_parser.find_phot_table(hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
+            phot_table_index = fits_table_parser.find_phot_table(
+                hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
 
             # If photometry has already been done, read the table
             if phot_table_index >= 0:
                 cats[im] = copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index]))
-                print(' -> Loaded existing photometry catalog')
+                lcologs.log(' -> Loaded existing photometry catalog', 'info', log=log)
 
             # If no photometry table is available, perform photometry:
             else:
                 agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog)
                 if agent.status == 'OK':
                     cats[im] = agent.aperture_photometry_table
-                    print(' -> Performed aperture photometry')
+                    lcologs.log(' -> Performed aperture photometry', 'info', log=log)
                 else:
                     cats[im] = None
-                    print(' -> WARNING: No photometry possible')
+                    lcologs.log(' -> WARNING: No photometry possible', 'info', log=log)
 
             hdul.close()
             del hdul
+    lcologs.log('Photometered all images', 'info', log=log)
 
     if len(obs_set.table) > 0:
+        lcologs.log('Computing photometric scale factors', 'info', log=log)
+
         # Create the aperture lightcurves.  Default empty array is used to fill in
         # the data cube for images where no photometry was possible
         nodata = np.empty(len(gaia_catalog))
@@ -104,6 +134,7 @@ def run(args):
         flux = lcs/pscales[1]
         err_flux = (elcs**2/pscales[1]**2+lcs**2*epscales**2/pscales[1]**4)**0.5
 
+        # Output timeseries photometry
         file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
         hdf5.output_photometry(
             gaia_catalog,
@@ -112,8 +143,20 @@ def run(args):
             err_flux,
             pscales,
             epscales,
-            file_path
+            file_path,
+            log=log
         )
+
+    else:
+        lcologs.log(
+            'Empty observations table, cannot calculate photometry timeseries',
+            'error',
+            log=log
+        )
+
+    # Wrap up
+    log.info('Aperture photometry reduction completed')
+    lcologs.close_log(log)
 
 def get_args():
 

@@ -3,17 +3,16 @@ from astropy.table import Table, Column
 from astropy import units as u
 from astropy.io import ascii
 from astropy.coordinates import SkyCoord
-from astropy.wcs import WCS
-from astropy.coordinates import UnknownSiteException
 import numpy as np
 from microlensing_photometry.infrastructure import time_utils as lcotime
+from microlensing_photometry.infrastructure import logs as lcologs
 
 class ObservationSet(object):
     """
     Metadata describing a sequence of observations
     """
 
-    def __init__(self, file_path=None):
+    def __init__(self, file_path=None, log=None):
         self.table = Table([
             Column(name='file', data=np.array([]), dtype='str'),
             Column(name='facility_code', data=np.array([]), dtype='str'),
@@ -47,17 +46,31 @@ class ObservationSet(object):
             ])
 
         if file_path:
-            self.load(file_path)
+            self.load(file_path, log=log)
 
-    def save(self, file_path):
+    def save(self, file_path, log=None):
         ascii.write(self.table, file_path, overwrite=True)
+        lcologs.log(
+            'Saved data summary of ' + str(len(self.table)) + ' to ' + file_path,
+            'info',
+            log=log
+        )
 
     def load(self, file_path, log=None):
         if os.path.isfile(file_path):
             self.table = ascii.read(file_path)
+            lcologs.log(
+                'Loaded data summary of ' + str(len(self.table)) + ' from ' + file_path,
+                'info',
+                log=log
+            )
+
         else:
-            if log:
-                log.info('No data summary found at ' + file_path + '; empty table returned')
+            lcologs.log(
+                'No data summary found at ' + file_path + '; empty table returned',
+                'warning',
+                log=log
+            )
 
     def get_facility_code(self, header):
         """Function to return the reference code used within the phot_db to

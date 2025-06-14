@@ -3,8 +3,9 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 from microlensing_photometry.astrometry import wcs as lcowcs
+from microlensing_photometry.infrastructure import logs as lcologs
 
-def output_photometry(catalog, obs_set, flux, err_flux, pscales, epscales, file_path):
+def output_photometry(catalog, obs_set, flux, err_flux, pscales, epscales, file_path, log=None):
     """
     Function to output a dataset photometry table to an HD5 file
 
@@ -20,6 +21,12 @@ def output_photometry(catalog, obs_set, flux, err_flux, pscales, epscales, file_
     Returns:
         Output HDF5 file
     """
+
+    lcologs.log(
+        'Outputting timeseries photometry to ' + file_path,
+        'info',
+        log=log
+    )
 
     # Build the source catalog
     source_id = catalog['source_id'].data

@@ -3,8 +3,9 @@ import copy
 import argparse
 from astropy.io import fits
 from microlensing_photometry.infrastructure import data_classes
+from microlensing_photometry.infrastructure import logs as lcologs
 
-def get_observation_metadata(args):
+def get_observation_metadata(args, log=None):
     """
     Function to review all available observations in a single dataset and extract
     header information necessary for the reduction.
@@ -15,10 +16,15 @@ def get_observation_metadata(args):
 
     # Load an existing observation set summary table if there is one; otherwise return an empty table
     obs_set_file = os.path.join(args.directory, 'data_summary.txt')
-    obs_set = data_classes.ObservationSet(file_path=obs_set_file)
+    obs_set = data_classes.ObservationSet(file_path=obs_set_file, log=log)
 
     # List all observations in the reduction directory
     obs_list = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not in i)]
+    lcologs.log(
+        'Identified ' + str(len(obs_list)) + ' observations in ' + args.directory,
+        'info',
+        log=log
+    )
 
     # Review all observations in the list and extract header data where necessary
     for file_name in obs_list:
@@ -45,7 +51,7 @@ def get_observation_metadata(args):
             del hdul
 
     # Store summary of the dataset information
-    obs_set.save(obs_set_file)
+    obs_set.save(obs_set_file, log=log)
 
     return obs_set
 
