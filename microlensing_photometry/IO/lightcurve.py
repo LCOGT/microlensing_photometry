@@ -13,11 +13,11 @@ def aperture_timeseries(params, log=None):
     Parameters
     ----------
     params    dict      Program arguments:
-        'phot_file', 'target_ra', 'target_dec', 'lc_path'
+        'phot_file', 'target_ra', 'target_dec', 'filter', 'lc_path'
 
     Outputs
     -------
-    ASCII format lightcurve file
+    ASCII format lightcurve file without suffix (path with root filename only)
     """
 
     # Load the photometry dataset
@@ -44,9 +44,11 @@ def aperture_timeseries(params, log=None):
 
     # If a valid entry exists, extract the lightcurve and output
     if entry:
-        lc = dataset.get_lightcurve(star_idx)
+        lc, tom_lc = dataset.get_lightcurve(star_idx, params['filter'])
 
-        lc.write(params['lc_path'], format='ascii', overwrite=True)
+        lc.write(params['lc_path']+'.dat', format='ascii', overwrite=True)
+
+        tom_lc.write(params['lc_path']+'.csv', format='csv', overwrite=True)
 
         lcologs.log('Output lightcurve data to ' + params['lc_path'], 'info', log=log)
         success = True
@@ -63,6 +65,7 @@ def get_args():
     parser.add_argument('in_path', help='Path to aperture photometry HDF5 file')
     parser.add_argument('target_ra', help='RA of target star in degrees')
     parser.add_argument('target_dec', help='Dec of target star in degrees')
+    parser.add_argument('filter', help='Filter used for observations')
     parser.add_argument('out_path', help='Path to output lightcurve file')
     args = parser.parse_args()
 
@@ -71,6 +74,7 @@ def get_args():
         'phot_file': args.in_path,
         'target_ra': args.target_ra,
         'target_dec': args.target_dec,
+        'filter': args.filter,
         'lc_path': args.out_path
     }
 

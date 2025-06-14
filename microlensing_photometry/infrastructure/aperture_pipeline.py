@@ -157,7 +157,8 @@ def run(args):
             'phot_file': phot_file_path,
             'target_ra': config['target']['RA'],
             'target_dec': config['target']['Dec'],
-            'lc_path': os.path.join(args.directory, config['target']['name'] + '_lc.dat')
+            'filter': obs_set.table['filter'][0],
+            'lc_path': os.path.join(args.directory, config['target']['name'] + '_lc')
         }
         lc_status = lightcurve.aperture_timeseries(params, log=log)
 

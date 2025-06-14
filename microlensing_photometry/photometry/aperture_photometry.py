@@ -267,7 +267,7 @@ class AperturePhotometryDataset(object):
             self.pscale = np.array(f['pscale'])
             self.epscale = np.array(f['epscale'])
 
-    def get_lightcurve(self, star_idx):
+    def get_lightcurve(self, star_idx, filter):
         """
 
         Parameters
@@ -291,6 +291,7 @@ class AperturePhotometryDataset(object):
             self.err_flux[star_idx, valid]
         )
 
+        # Dat format lightcurve for interactive inspection
         lc = Table([
             Column(name='HJD', data=self.timestamps['HJD'][valid]),
             Column(name='flux', data=self.flux[star_idx, valid]),
@@ -299,4 +300,12 @@ class AperturePhotometryDataset(object):
             Column(name='err_mag', data=err_mag),
         ])
 
-        return lc
+        # TOM-compatible format lightcurve
+        tom_lc = Table([
+            Column(name='time', data=self.timestamps['HJD'][valid]),
+            Column(name='filter', data=np.array([filter] * len(valid))),
+            Column(name='magnitude', data=mag),
+            Column(name='error', data=err_mag),
+        ])
+
+        return lc, tom_lc

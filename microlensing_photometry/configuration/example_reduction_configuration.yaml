@@ -2,3 +2,7 @@ target:
   name: 'TEST'
   RA: '17:30:25.5'
   Dec: '-25:30:30.5'
+tom:
+  upload: True
+  auth_config: /path/to/config
+  tom_url: 'https://foo.com'
