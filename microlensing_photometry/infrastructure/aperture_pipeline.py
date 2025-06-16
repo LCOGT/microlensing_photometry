@@ -119,28 +119,7 @@ def run(args):
     lcologs.log('Photometered all images', 'info', log=log)
 
     if len(obs_set.table) > 0:
-        lcologs.log('Computing photometric scale factors', 'info', log=log)
-
-        # Create the aperture lightcurves.  Default empty array is used to fill in
-        # the data cube for images where no photometry was possible
-        nodata = np.empty(len(gaia_catalog))
-        nodata.fill(np.nan)
-
-        apsum = np.array(
-            [cats[im]['aperture_sum'] if cats[im] else nodata for im in obs_set.table['file']]
-        )
-        eapsum = np.array(
-            [cats[im]['aperture_sum_err'] if cats[im] else nodata for im in obs_set.table['file']]
-        )
-
-        lcs = apsum.T
-        elcs = eapsum.T
-
-        #Compute the phot scale based on <950 stars
-        pscales = lcopscale.photometric_scale_factor_from_lightcurves(lcs[50:1000])
-        epscales = (pscales[2]-pscales[0])/2
-        flux = lcs/pscales[1]
-        err_flux = (elcs**2/pscales[1]**2+lcs**2*epscales**2/pscales[1]**4)**0.5
+        pscales, epscales, flux, err_flux = lcopscale.calculate_pscale(obs_set, cats, log=log)
 
         # Output timeseries photometry for the whole frame
         phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
@@ -185,6 +164,7 @@ def run(args):
     # Wrap up
     log.info('Aperture photometry reduction completed')
     lcologs.close_log(log)
+
 
 def get_args():
 
