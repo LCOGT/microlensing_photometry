@@ -28,7 +28,7 @@ class AperturePhotometryAnalyst(object):
 
     """
 
-    def __init__(self, image_name, image_path, gaia_catalog, log_path='./logs'):
+    def __init__(self, image_name, image_path, gaia_catalog, config, log_path='./logs'):
 
         self.log = lcologs.start_log(log_path, image_name)
         self.log.info('Initialize Aperture Photometry Analyst on '+image_name+' at this location '+image_path)
@@ -55,6 +55,7 @@ class AperturePhotometryAnalyst(object):
         self.image_data = self.image_layers[0].data
         self.image_errors = self.image_layers[3].data
         self.image_original_wcs = WCS(self.image_layers[0].header)
+        self.phot_aperture = config['photometry']['aperture_arcsec'] / self.image_layers[0].header['PIXSCALE']
 
         self.process_image()
 
@@ -124,6 +125,7 @@ class AperturePhotometryAnalyst(object):
         """
 
         try:
+            self.log.info('Performing photometry with aperture ' + str(self.phot_aperture) + ' pix')
 
             skycoord = SkyCoord(ra=self.gaia_catalog['ra'], dec=self.gaia_catalog['dec'], unit=(u.degree, u.degree))
             xx, yy = self.image_new_wcs.world_to_pixel(skycoord)
@@ -131,7 +133,7 @@ class AperturePhotometryAnalyst(object):
 
             #fwhm = self.image_layers[0].header['L1FWHM']
 
-            phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions,5)
+            phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions, self.phot_aperture)
             exptime = self.image_layers[0].header['EXPTIME']
 
             phot_table['aperture_sum'] /= exptime
@@ -161,12 +163,13 @@ class AperturePhotometryAnalyst(object):
         #Save Aperture Photometry  in a new layer
         aperture_hdu =  fits.BinTableHDU(data= self.aperture_photometry_table)
         aperture_hdu.header['EXTNAME'] = 'LCO MICROLENSING APERTURE PHOTOMETRY'
+        aperture_hdu.header['APRAD'] = self.phot_aperture
         self.image_layers.append(aperture_hdu)
 
         #Save updates
         self.image_layers.writeto(self.image_path, overwrite=True)
 
-def run_aperture_photometry(image, error, positions,radius):
+def run_aperture_photometry(image, error, positions, radius):
     """
     Aperture photometry on a image, using an error image, and fixed stars positions.
 

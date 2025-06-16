@@ -100,13 +100,13 @@ def run(args):
                 hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
 
             # If photometry has already been done, read the table
-            if phot_table_index >= 0:
+            if not args.update_phot and phot_table_index >= 0:
                 cats[im] = copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index]))
                 lcologs.log(' -> Loaded existing photometry catalog', 'info', log=log)
 
             # If no photometry table is available, perform photometry:
             else:
-                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog)
+                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog, config)
                 if agent.status == 'OK':
                     cats[im] = agent.aperture_photometry_table
                     lcologs.log(' -> Performed aperture photometry', 'info', log=log)
@@ -170,6 +170,7 @@ def get_args():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', help='Path to data directory of FITS images')
+    parser.add_argument('--update_phot', help='Force re-photometry of all frames', default=False, action='store_true')
     args = parser.parse_args()
 
     return args
