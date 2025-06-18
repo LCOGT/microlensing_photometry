@@ -304,6 +304,10 @@ class AperturePhotometryDataset(object):
         ])
 
         # TOM-compatible format lightcurve
+        print('Valid: ', valid)
+        print(self.timestamps['HJD'][valid], len(self.timestamps['HJD'][valid]))
+        print(mag, len(mag))
+        print(err_mag, len(err_mag))
         tom_lc = Table([
             Column(name='time', data=self.timestamps['HJD'][valid]),
             Column(name='filter', data=np.array([filter] * len(valid))),
