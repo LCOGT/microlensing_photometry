@@ -105,6 +105,12 @@ class ObservationSet(object):
         # Identify the facility from its header information
         facility_code = self.get_facility_code(header)
 
+        # Catch malformed header entries that won't parse into a table
+        if 'UNKNOWN' in str(header['WMSCLOUD'])
+            wmscloud = -9999.99
+        else:
+            wmscloud = header['WMSCLOUD']
+
         # Calculate HJD
         hjd, ltt_helio = lcotime.calc_hjd(
             header['DATE-OBS'],
@@ -143,7 +149,7 @@ class ObservationSet(object):
             header['WCSERR'],
             header['NAXIS1'],
             header['NAXIS2'],
-            header['WMSCLOUD']
+            wmscloud
         ]
 
         self.table.add_row(row)
