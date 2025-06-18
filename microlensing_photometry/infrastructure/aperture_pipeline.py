@@ -135,19 +135,20 @@ def run(args):
         )
 
         # Output the lightcurve of the object closest to the center of the field of view
+        lc_root_file_name = config['target']['name'] + '_' + obs_set.table['filter'][0] + '_lc'
         params = {
             'phot_file': phot_file_path,
             'target_ra': config['target']['RA'],
             'target_dec': config['target']['Dec'],
             'filter': config['tom']['data_label'],
-            'lc_path': os.path.join(args.directory, config['target']['name'] + '_lc')
+            'lc_path': os.path.join(args.directory, lc_root_file_name)
         }
         lc_status = lightcurve.aperture_timeseries(params, log=log)
 
         # TOM lightcurve upload
         if config['tom']['upload']:
             params = {
-                'file_path': os.path.join(args.directory, config['target']['name'] + '_lc.csv'),
+                'file_path': os.path.join(args.directory, lc_root_file_name + '.csv'),
                 'data_label': config['tom']['data_label'],
                 'target_name': config['target']['name'],
                 'tom_config_file': config['tom']['config_file']
