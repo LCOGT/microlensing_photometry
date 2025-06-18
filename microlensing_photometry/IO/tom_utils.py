@@ -29,7 +29,7 @@ def decide_whether_to_upload(params, log=None):
     if not os.path.isfile(params['file_path']):
         upload = False
         lcologs.log(
-            '-> Lightcurve upload to TOM aborted due to missing data file '+payload['file_path'],
+            '-> Lightcurve upload to TOM aborted due to missing data file '+params['file_path'],
             'warning',
             log=log
         )
@@ -89,11 +89,11 @@ def get_target_id(params, tom_config, log=None):
         )
 
     elif 'results' in response.keys() and len(response['results']) == 0:
-        lcologs.log('Targetname ' + payload['name'] + ' unknown to TOM', 'warning', log=log)
+        lcologs.log('Targetname ' + params['name'] + ' unknown to TOM', 'warning', log=log)
 
     elif 'results' in response.keys() and len(response['results']) > 1:
         lcologs.log(
-            'Ambiguous targetname ' + payload['name'] + ' multiple entries in TOM',
+            'Ambiguous targetname ' + params['name'] + ' multiple entries in TOM',
             'warning',
             log=log
         )
@@ -148,7 +148,7 @@ def list_dataproducts(params, tom_config, target_pk, log=None):
         )
     else:
         lcologs.log(
-            'No existing datafiles in TOM for target ' + payload['name'],
+            'No existing datafiles in TOM for target ' + params['name'],
             'info',
             log=log
         )
