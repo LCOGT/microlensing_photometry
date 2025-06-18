@@ -106,7 +106,7 @@ class ObservationSet(object):
         facility_code = self.get_facility_code(header)
 
         # Catch malformed header entries that won't parse into a table
-        if 'UNKNOWN' in str(header['WMSCLOUD'])
+        if 'UNKNOWN' in str(header['WMSCLOUD']):
             wmscloud = -9999.99
         else:
             wmscloud = header['WMSCLOUD']
