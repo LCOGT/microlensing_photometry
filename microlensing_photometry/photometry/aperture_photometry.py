@@ -319,5 +319,5 @@ class AperturePhotometryDataset(object):
         # Handle case of no valid measurements
         else:
             lcologs.log('No valid measurements in lightcurve', 'warning', log=log)
-            
+
             return None, None

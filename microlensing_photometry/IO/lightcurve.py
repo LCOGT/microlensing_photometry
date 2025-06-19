@@ -46,13 +46,15 @@ def aperture_timeseries(params, log=None):
     if entry:
         lc, tom_lc = dataset.get_lightcurve(star_idx, params['filter'], log=log)
 
-        lc.write(params['lc_path']+'.dat', format='ascii', overwrite=True)
+        if lc:
+            lc.write(params['lc_path']+'.dat', format='ascii', overwrite=True)
 
-        tom_lc.write(params['lc_path']+'.csv', format='csv', overwrite=True)
+            tom_lc.write(params['lc_path']+'.csv', format='csv', overwrite=True)
 
-        lcologs.log('Output lightcurve data to ' + params['lc_path'], 'info', log=log)
-        success = True
-
+            lcologs.log('Output lightcurve data to ' + params['lc_path'], 'info', log=log)
+            success = True
+        else:
+            success = False
     else:
         lcologs.log('No matching star found in source catalog', 'warning', log=log)
         success = False
