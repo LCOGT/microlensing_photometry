@@ -146,7 +146,7 @@ def run(args):
         lc_status = lightcurve.aperture_timeseries(params, log=log)
 
         # TOM lightcurve upload
-        if config['tom']['upload']:
+        if config['tom']['upload'] and lc_status:
             params = {
                 'file_path': os.path.join(args.directory, lc_root_file_name + '.csv'),
                 'data_label': config['tom']['data_label'],
@@ -155,6 +155,19 @@ def run(args):
             }
             tom_utils. upload_lightcurve(params, log=log)
 
+        elif not lc_status:
+            lcologs.log(
+                'No lightcurve for TOM upload',
+                'warning',
+                log=log
+            )
+
+        elif not config['tom']['upload']:
+            lcologs.log(
+                'TOM upload switched OFF in configuration',
+                'warning',
+                log=log
+            )
     else:
         lcologs.log(
             'Empty observations table, cannot calculate photometry timeseries',
