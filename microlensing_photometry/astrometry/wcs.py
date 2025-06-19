@@ -86,8 +86,8 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
 
 
         shiftx, shifty = find_images_shifts(model_gaia_image, model_image, image_fraction=0.25, upsample_factor=1)
-        lcologs.log('Calculated image shifts in x,y = ' + str(shiftx) + ', ' + str(shifty))
-        
+        lcologs.log('Calculated image shifts in x,y = ' + str(shiftx) + ', ' + str(shifty), 'info', log=log)
+
         dists = sspa.distance.cdist(stars_image[:star_limit,:2],
                                     np.c_[star_pix[0][:star_limit] - shiftx, star_pix[1][:star_limit] - shifty])
         mask = dists < 10

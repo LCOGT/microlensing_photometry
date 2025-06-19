@@ -116,7 +116,7 @@ class AperturePhotometryAnalyst(object):
                 lcologs.log('Problems with WCS update: image skipped', 'warning', log=self.log)
         except Exception as error:
             self.status = 'ERROR'
-            lcologs.log('Problems with WCS update: aboard Aperture Photometry! Details below', 'warning', log=self.log)
+            lcologs.log('Problems with WCS update: abort Aperture Photometry! Details below', 'warning', log=self.log)
             lcologs.log(
                 f"Aperture Photometry Error: %s, %s" % (error, type(error)),
                 'error',
