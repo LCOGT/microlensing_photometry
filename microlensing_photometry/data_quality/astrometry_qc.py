@@ -1,6 +1,7 @@
 import numpy as np
+from microlensing_photometry.infrastructure import logs as lcologs
 
-def check_stars_within_frame(image_shape, star_positions):
+def check_stars_within_frame(image_shape, star_positions, log=None):
     """
     Function to verify that the set of star pixel positions calculated from the image WCS
     actually lie within the frame boundaries.  This is a simple but effective test of
@@ -18,6 +19,8 @@ def check_stars_within_frame(image_shape, star_positions):
     idx = set(idx1).intersection(set(idx2)).intersection(set(idx3)).intersection(set(idx4))
 
     if len(idx) > 0:
+        lcologs.log('Catalog stars projected to be within frame boundaries', 'info', log=log)
         return True
     else:
+        lcologs.log('Catalog stars NOT within frame boundaries', 'warning', log=log)
         return False

@@ -10,6 +10,7 @@ from astropy.coordinates import SkyCoord
 
 from microlensing_photometry.logistics import image_tools
 from microlensing_photometry.data_quality import astrometry_qc
+from microlensing_photometry.infrastructure import logs as lcologs
 from matplotlib import pyplot as plt
 
 def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
@@ -45,7 +46,7 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     return shiftx,shifty
 
 
-def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1000):
+def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1000, log = None):
     """
     Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
     a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.
@@ -57,6 +58,7 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
     image_wcs : astropy.wcs, the original astropy WCS solution
     gaia_catalog : astropy.Table, the entire gaia catalog
     star_limit : int, the limit number of stars to use
+    log : object pipeline log
 
     Returns
     -------
@@ -69,10 +71,11 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
 
     fluxes = [1]*len(gaia_catalog['phot_g_mean_flux'].data)
     star_pix = image_wcs.world_to_pixel(skycoords)
+    lcologs.log('Calculated image coordinates for ' + str(len(star_pix)) + ' catalog stars', 'info', log=log)
 
     stars_positions = np.array(star_pix).T
 
-    wcs_check = astrometry_qc.check_stars_within_frame(image.shape, stars_positions)
+    wcs_check = astrometry_qc.check_stars_within_frame(image.shape, stars_positions, log=log)
 
     if wcs_check:
         model_gaia_image = image_tools.build_image(stars_positions, fluxes, image.shape,
@@ -83,6 +86,8 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
 
 
         shiftx, shifty = find_images_shifts(model_gaia_image, model_image, image_fraction=0.25, upsample_factor=1)
+        lcologs.log('Calculated image shifts in x,y = ' + str(shiftx) + ', ' + str(shifty))
+        
         dists = sspa.distance.cdist(stars_image[:star_limit,:2],
                                     np.c_[star_pix[0][:star_limit] - shiftx, star_pix[1][:star_limit] - shifty])
         mask = dists < 10
