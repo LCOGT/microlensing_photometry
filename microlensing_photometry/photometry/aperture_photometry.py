@@ -74,7 +74,7 @@ class AperturePhotometryAnalyst(object):
         self.find_star_catalog()
         lcologs.log(repr(time.time()-start), 'info', log=self.log)
         self.refine_wcs()
-        lcologs.log(reprtime.time()-start), 'info', log=self.log)
+        lcologs.log(repr(time.time()-start), 'info', log=self.log)
 
         if self.status == 'OK':
             self.run_aperture_photometry()
@@ -166,8 +166,9 @@ class AperturePhotometryAnalyst(object):
         :return:
         layer_idx int  Index of the layer in the HDUList or -1 if not present
         """
+
         layer_idx = -1
-        for i, im_layer in self.image_layers:
+        for i, im_layer in enumerate(self.image_layers):
             if im_layer.name == layer_name:
                 layer_idx = i
 
