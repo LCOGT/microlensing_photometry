@@ -106,7 +106,7 @@ def run(args):
 
             # If no photometry table is available, perform photometry:
             else:
-                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog, config)
+                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog, config, log=log)
                 if agent.status == 'OK':
                     cats[im] = agent.aperture_photometry_table
                     lcologs.log(' -> Performed aperture photometry', 'info', log=log)

@@ -10,7 +10,7 @@ import numpy as np
 import sys
 import os
 import h5py
-
+import time
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.infrastructure import logs as lcologs
 from microlensing_photometry.photometry import conversions
@@ -28,10 +28,14 @@ class AperturePhotometryAnalyst(object):
 
     """
 
-    def __init__(self, image_name, image_path, gaia_catalog, config, log_path='./logs'):
+    def __init__(self, image_name, image_path, gaia_catalog, config, log=None):
 
-        self.log = lcologs.start_log(log_path, image_name)
-        self.log.info('Initialize Aperture Photometry Analyst on '+image_name+' at this location '+image_path)
+        self.log = log
+        lcologs.log(
+            'Initializing Aperture Photometry Analyst on '+image_name+' at this location '+image_path,
+            'info',
+            log=self.log
+        )
 
         self.image_path = os.path.join(image_path, image_name)
 
@@ -40,12 +44,12 @@ class AperturePhotometryAnalyst(object):
         try:
 
             self.image_layers = fits.open(self.image_path)
-            self.log.info('Image found and open successfully!')
+            lcologs.log('Image found and open successfully!', 'info', log=log)
 
         except Exception as error:
 
-            self.log.info('Image not found: aboard Aperture Photometry! Details below')
-            self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
+            lcologs.log('Image not found: aboard Aperture Photometry! Details below', 'warning', log=log)
+            lcologs.log(f"Aperture Photometry Error: %s, %s" % (error, type(error)), 'error', log=log)
 
             sys.exit()
 
@@ -59,24 +63,22 @@ class AperturePhotometryAnalyst(object):
 
         self.process_image()
 
-        lcologs.close_log(self.log)
-
     def process_image(self):
         """
         Process the image following the various steps
         """
-        import time
+
         start = time.time()
-        self.log.info('Start Image Processing')
+        lcologs.log('Start Image Processing', 'info', log=self.log)
 
         self.find_star_catalog()
-        print(time.time()-start)
+        lcologs.log(repr(time.time()-start), 'info', log=self.log)
         self.refine_wcs()
-        print(time.time()-start)
+        lcologs.log(reprtime.time()-start), 'info', log=self.log)
 
         if self.status == 'OK':
             self.run_aperture_photometry()
-            print(time.time()-start)
+            lcologs.log(repr(time.time()-start), 'info', log=self.log)
 
             self.save_new_products_in_image()
 
@@ -87,7 +89,7 @@ class AperturePhotometryAnalyst(object):
 
         if self.image_layers[1].header['EXTNAME']=='CAT':
             #BANZAI image
-            self.log.info('Find and use the BANZAI catalog for the entire process')
+            lcologs.log('Find and use the BANZAI catalog for the entire process', 'info', log=self.log)
             self.star_catalog = np.c_[self.image_layers[1].data['x'],
                                       self.image_layers[1].data['y'],
                                       self.image_layers[1].data['flux']]
@@ -108,14 +110,18 @@ class AperturePhotometryAnalyst(object):
             self.image_new_wcs = wcs2
 
             if wcs2:
-                self.log.info('WCS successfully updated')
+                lcologs.log('WCS successfully updated', 'info', log=self.log)
             else:
                 self.status = 'ERROR'
-                self.log.error('Problems with WCS update: image skipped')
+                lcologs.log('Problems with WCS update: image skipped', 'warning', log=self.log)
         except Exception as error:
             self.status = 'ERROR'
-            self.log.info('Problems with WCS update: aboard Aperture Photometry! Details below')
-            self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
+            lcologs.log('Problems with WCS update: aboard Aperture Photometry! Details below', 'warning', log=self.log)
+            lcologs.log(
+                f"Aperture Photometry Error: %s, %s" % (error, type(error)),
+                'error',
+                log=self.log
+            )
 
             #sys.exit()
 
@@ -125,7 +131,10 @@ class AperturePhotometryAnalyst(object):
         """
 
         try:
-            self.log.info('Performing photometry with aperture ' + str(self.phot_aperture) + ' pix')
+            lcologs.log(
+                'Performing photometry with aperture ' + str(self.phot_aperture) + ' pix',
+                'info', log=self.log
+            )
 
             skycoord = SkyCoord(ra=self.gaia_catalog['ra'], dec=self.gaia_catalog['dec'], unit=(u.degree, u.degree))
             xx, yy = self.image_new_wcs.world_to_pixel(skycoord)
@@ -141,12 +150,15 @@ class AperturePhotometryAnalyst(object):
 
             self.aperture_photometry_table = phot_table
 
-            self.log.info('Aperture Photometry successfully estimated')
+            lcologs.log('Aperture Photometry successfully estimated', 'info', log=self.log)
 
         except Exception as error:
 
-            self.log.info('Problems with the aperture photometry: aboard Aperture Photometry! Details below')
-            self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
+            lcologs.log(
+                'Problems with the aperture photometry: aboard Aperture Photometry! Details below',
+                'warning', log=self.log
+            )
+            lcologs.log(f"Aperture Photometry Error: %s, %s" % (error, type(error)), 'error', log=self.log)
 
     def find_image_layer(self, layer_name):
         """
