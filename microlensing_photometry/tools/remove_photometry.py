@@ -26,6 +26,7 @@ def del_phot_extn(args):
                 print(hdu.header['EXTNAME'])
                 if hdu.header['EXTNAME'] in layer_names:
                     _ = hdul.pop(i)
+                    hdul.flush()
                     print('Popped ', len(hdul))
             print(hdul, len(hdul))
             hdul.writeto(file_path, overwrite=True)
