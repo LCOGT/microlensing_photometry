@@ -169,7 +169,7 @@ class AperturePhotometryAnalyst(object):
 
         layer_idx = -1
         for i, im_layer in enumerate(self.image_layers):
-            if im_layer.name == layer_name:
+            if im_layer.header['EXTNAME'] == layer_name:
                 layer_idx = i
 
         return layer_idx
@@ -183,22 +183,31 @@ class AperturePhotometryAnalyst(object):
         #Save updated wcs in a new layer or update an existing table extension if available
         layer_idx = self.find_image_layer('LCO MICROLENSING PHOTOMETRY UPDATED WCS')
         new_header = self.image_new_wcs.to_header()
+        print(new_header, type(new_header))
         new_header['EXTNAME'] = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
-        if layer_idx > -1:
-            new_wcs_hdu = fits.PrimaryHDU(header=new_header)
+        new_wcs_hdu = fits.ImageHDU(header=new_header)
+        print('New WCS layer index ' + str(layer_idx))
+        print('N layers: ' + str(len(self.image_layers)))
+        print(self.image_layers)
+        if layer_idx == -1:
             self.image_layers.append(new_wcs_hdu)
         else:
             self.image_layers[layer_idx] = new_wcs_hdu
+            print('N layers replace: ' + str(len(self.image_layers)))
+            print(self.image_layers)
 
         #Save Aperture Photometry  in a new layer or update an existing table extension if available
         layer_idx = self.find_image_layer('LCO MICROLENSING APERTURE PHOTOMETRY')
         aperture_hdu =  fits.BinTableHDU(data= self.aperture_photometry_table)
         aperture_hdu.header['EXTNAME'] = 'LCO MICROLENSING APERTURE PHOTOMETRY'
         aperture_hdu.header['APRAD'] = self.phot_aperture
-        if layer_idx > -1:
+        print('New photometry layer index ' + str(layer_idx))
+        if layer_idx == -1:
             self.image_layers.append(aperture_hdu)
         else:
             self.image_layers[layer_idx] = aperture_hdu
+            print('N phot layers replace: ' + str(len(self.image_layers)))
+            print(self.image_layers)
 
         #Save updates
         self.image_layers.writeto(self.image_path, overwrite=True)
