@@ -270,7 +270,7 @@ class AperturePhotometryDataset(object):
             self.pscale = np.array(f['pscale'])
             self.epscale = np.array(f['epscale'])
 
-    def get_lightcurve(self, star_idx, filter):
+    def get_lightcurve(self, star_idx, filter, log=None):
         """
 
         Parameters
@@ -287,32 +287,37 @@ class AperturePhotometryDataset(object):
         valid_flux = ~np.isnan(self.flux[star_idx, :])
         valid_err_flux = ~np.isnan(self.err_flux[star_idx, :])
         valid = np.logical_and(valid_flux, valid_err_flux)
+        if valid.all():
 
-        # Convert to magnitudes for convenience
-        mag, err_mag, _, _ = conversions.flux_to_mag(
-            self.flux[star_idx, valid],
-            self.err_flux[star_idx, valid]
-        )
+            # Convert to magnitudes for convenience
+            mag, err_mag, _, _ = conversions.flux_to_mag(
+                self.flux[star_idx, valid],
+                self.err_flux[star_idx, valid]
+            )
 
-        # Dat format lightcurve for interactive inspection
-        lc = Table([
-            Column(name='HJD', data=self.timestamps['HJD'][valid]),
-            Column(name='flux', data=self.flux[star_idx, valid]),
-            Column(name='err_flux', data=self.err_flux[star_idx, valid]),
-            Column(name='mag', data=mag),
-            Column(name='err_mag', data=err_mag),
-        ])
+            # Dat format lightcurve for interactive inspection
+            lc = Table([
+                Column(name='HJD', data=self.timestamps['HJD'][valid]),
+                Column(name='flux', data=self.flux[star_idx, valid]),
+                Column(name='err_flux', data=self.err_flux[star_idx, valid]),
+                Column(name='mag', data=mag),
+                Column(name='err_mag', data=err_mag),
+            ])
 
-        # TOM-compatible format lightcurve
-        print('Valid: ', valid)
-        print(self.timestamps['HJD'][valid], len(self.timestamps['HJD'][valid]))
-        print(mag, len(mag))
-        print(err_mag, len(err_mag))
-        tom_lc = Table([
-            Column(name='time', data=self.timestamps['HJD'][valid]),
-            Column(name='filter', data=np.array([filter] * len(valid))),
-            Column(name='magnitude', data=mag),
-            Column(name='error', data=err_mag),
-        ])
+            # TOM-compatible format lightcurve
+            tom_lc = Table([
+                Column(name='time', data=self.timestamps['HJD'][valid]),
+                Column(name='filter', data=np.array([filter] * len(valid))),
+                Column(name='magnitude', data=mag),
+                Column(name='error', data=err_mag),
+            ])
 
-        return lc, tom_lc
+            lcologs.log('Returned lightcurve with valid data', 'info', log=log)
+
+            return lc, tom_lc
+
+        # Handle case of no valid measurements
+        else:
+            lcologs.log('No valid measurements in lightcurve', 'warning', log=log)
+            
+            return None, None

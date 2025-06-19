@@ -44,7 +44,7 @@ def aperture_timeseries(params, log=None):
 
     # If a valid entry exists, extract the lightcurve and output
     if entry:
-        lc, tom_lc = dataset.get_lightcurve(star_idx, params['filter'])
+        lc, tom_lc = dataset.get_lightcurve(star_idx, params['filter'], log=log)
 
         lc.write(params['lc_path']+'.dat', format='ascii', overwrite=True)
 
