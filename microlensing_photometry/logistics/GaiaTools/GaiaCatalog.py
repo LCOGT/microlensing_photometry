@@ -55,7 +55,7 @@ def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000, catalog_name='Gaia_
 
     return  gaia_catalog
 
-def find_nearest(catalog, ra, dec, radius=(2.0/3600.0)*u.deg):
+def find_nearest(catalog, ra, dec, radius=(2.0/3600.0)*u.deg, log=None):
     """
     Function to identify the nearest catalog entry to the given coordinates, within a cut-off radius
 
@@ -81,7 +81,17 @@ def find_nearest(catalog, ra, dec, radius=(2.0/3600.0)*u.deg):
     idx = np.where(separations <= radius)[0]
 
     if len(idx) > 0:
+        lcologs.log(
+            'Found nearest matching star ' + str(idx[0]) + ' ' + repr(catalog[idx[0]),
+            'info',
+            log=log
+        )
         return idx[0], catalog[idx[0]]
 
     else:
+        lcologs.log(
+            'No matching star found within search radius=' + str(radius) + ' deg',
+            'warning',
+            log=log
+        )
         return None, None

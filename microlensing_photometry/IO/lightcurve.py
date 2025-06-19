@@ -27,7 +27,6 @@ def aperture_timeseries(params, log=None):
     try:
         target_ra = float(params['target_ra'])
         target_dec = float(params['target_dec'])
-
         target = SkyCoord(target_ra, target_dec, frame='icrs', unit=(u.deg, u.deg))
     except ValueError:
         target = SkyCoord(
@@ -36,11 +35,16 @@ def aperture_timeseries(params, log=None):
             frame='icrs',
             unit=(u.hourangle, u.deg)
         )
-        target_ra = target.ra
-        target_dec = target.dec
+    target_ra = target.ra.deg
+    target_dec = target.dec.deg
+    lcologs.log(
+        'Searching for photometry of target at RA=' + str(target_ra) + ', Dec=' + str(target_dec) + 'deg',
+        'info',
+        log=log
+    )
 
     # Search the catalog for the nearest entry
-    star_idx, entry = GC.find_nearest(dataset.source_wcs, target_ra, target_dec)
+    star_idx, entry = GC.find_nearest(dataset.source_wcs, target_ra, target_dec, log=log)
 
     # If a valid entry exists, extract the lightcurve and output
     if entry:
