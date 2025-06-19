@@ -148,23 +148,44 @@ class AperturePhotometryAnalyst(object):
             self.log.info('Problems with the aperture photometry: aboard Aperture Photometry! Details below')
             self.log.error(f"Aperture Photometry Error: %s, %s" % (error, type(error)))
 
+    def find_image_layer(self, layer_name):
+        """
+        Method to find an existing FITS extension in a HDUList by name if available
+        :return:
+        layer_idx int  Index of the layer in the HDUList or -1 if not present
+        """
+        layer_idx = -1
+        for i, im_layer in self.image_layers:
+            if im_layer.name == layer_name:
+                layer_idx = i
+
+        return layer_idx
+
     def save_new_products_in_image(self):
         """
         Save the new product, corrected WCS and aperture phot table, on the image
         directly
         """
 
-        #Save updated wcs in a new layer
+        #Save updated wcs in a new layer or update an existing table extension if available
+        layer_idx = self.find_image_layer('LCO MICROLENSING PHOTOMETRY UPDATED WCS')
         new_header = self.image_new_wcs.to_header()
         new_header['EXTNAME'] = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
-        new_wcs_hdu = fits.PrimaryHDU(header=new_header)
-        self.image_layers.append(new_wcs_hdu)
+        if layer_idx > -1:
+            new_wcs_hdu = fits.PrimaryHDU(header=new_header)
+            self.image_layers.append(new_wcs_hdu)
+        else:
+            self.image_layers[layer_idx] = new_wcs_hdu
 
-        #Save Aperture Photometry  in a new layer
+        #Save Aperture Photometry  in a new layer or update an existing table extension if available
+        layer_idx = self.find_image_layer('LCO MICROLENSING APERTURE PHOTOMETRY')
         aperture_hdu =  fits.BinTableHDU(data= self.aperture_photometry_table)
         aperture_hdu.header['EXTNAME'] = 'LCO MICROLENSING APERTURE PHOTOMETRY'
         aperture_hdu.header['APRAD'] = self.phot_aperture
-        self.image_layers.append(aperture_hdu)
+        if layer_idx > -1:
+            self.image_layers.append(aperture_hdu)
+        else:
+            self.image_layers[layer_idx] = aperture_hdu
 
         #Save updates
         self.image_layers.writeto(self.image_path, overwrite=True)
