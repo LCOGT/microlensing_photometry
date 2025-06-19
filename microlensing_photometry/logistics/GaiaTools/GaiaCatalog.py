@@ -82,7 +82,7 @@ def find_nearest(catalog, ra, dec, radius=(2.0/3600.0)*u.deg, log=None):
 
     if len(idx) > 0:
         lcologs.log(
-            'Found nearest matching star ' + str(idx[0]) + ' ' + repr(catalog[idx[0]),
+            'Found nearest matching star ' + str(idx[0]) + ' ' + repr(catalog[idx[0]]),
             'info',
             log=log
         )
