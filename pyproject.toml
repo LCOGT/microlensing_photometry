@@ -14,7 +14,7 @@ classifiers = [
     "Programming Language :: Python",
 ]
 dynamic = ["version"]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
 ]
 
@@ -33,15 +33,33 @@ dev = [
     "ruff", # Used for static linting of files
 ]
 
-[build-system]
-requires = [
-    "setuptools>=62", # Used to build and package the Python project
-    "setuptools_scm>=6.2", # Gets release version from git. Makes it available programmatically
-]
-build-backend = "setuptools.build_meta"
+[tool.poetry]
+name = "microlensing_photometry"
+version = "0.1.0"
+description = ""
+authors = ["Rachel Street <rstreet@lco.global>", "Etienne Bachelet <etibachelet@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "src/*/*py" },]
 
-[tool.setuptools_scm]
-write_to = "src/microlensing_photometry/_version.py"
+[tool.poetry.dependencies]
+astropy = "7.0.0"
+astroquery = "0.4.7"
+fsspec = "2024.10.0"
+photutils = "2.0.2"
+scikit-image = "0.24.0"
+pytest = "8.3.4"
+matplotlib = "v3.10.1"
+tqdm = "4.67.1"
+ipython = "9.2.0"
+h5py = "3.13.0"
+jplephem = "2.22"
+
+[tool.poetry.scripts]
+dia_phot_script = "trials.dia_phot_script:main"
+
+[build-system]
+requires = ["poetry-core >=1.0.0", "poetry-dynamic-versioning >=1.0.0, <2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -94,9 +112,6 @@ ignore = [
     "UP015", # Allow redundant open parameters
     "UP028", # Allow yield in for loop
 ]
-
-[tool.setuptools.package-data]
-microlensing_photometry = ["py.typed"]
 
 [tool.coverage.run]
 omit=["src/microlensing_photometry/_version.py"]
