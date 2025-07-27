@@ -9,12 +9,12 @@ from astropy.io import fits
 
 from tqdm import tqdm
 
-import microlensing_photometry.photometry.aperture_photometry as lcoapphot
-import microlensing_photometry.photometry.dia_photometry as lcodiaphot
-import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
-import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
-import microlensing_photometry.astrometry.wcs as lcowcs
-import microlensing_photometry.photometry as lcophot
+import src.photometry.aperture_photometry as lcoapphot
+import src.photometry.dia_photometry as lcodiaphot
+import src.photometry.photometric_scale_factor as lcopscale
+import src.logistics.GaiaTools.GaiaCatalog as GC
+import src.astrometry.wcs as lcowcs
+import src.photometry as lcophot
 
 
 
