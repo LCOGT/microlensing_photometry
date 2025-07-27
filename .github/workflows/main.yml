@@ -28,9 +28,9 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install "poetry>=2.0,<3.0"
-        poetry install --with-tests
+        poetry install 
 
     - name: Run tests
       run: |
-        poetry run python manage.py test
+        poetry run pytest
 
