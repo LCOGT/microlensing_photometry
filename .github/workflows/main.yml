@@ -27,13 +27,10 @@ jobs:
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip install poetry
-        poetry install --no-root
+        python3 -m pip install "poetry>=2.0,<3.0"
+        poetry install --with-tests
 
-    - name: Build project
+    - name: Run tests
       run: |
-        poetry build
+        poetry run python manage.py test
 
-    - name: Test with PyTest
-      run: |
-        pytest
