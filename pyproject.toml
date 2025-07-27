@@ -1,32 +1,102 @@
-[tool.poetry]
+
+[project]
 name = "microlensing_photometry"
-version = "0.1.0"
-description = ""
-authors = ["Rachel Street <rstreet@lco.global>", "Etienne Bachelet <etibachelet@gmail.com>"]
+license = {file = "LICENSE"}
 readme = "README.md"
-packages = []
+authors = [
+    { name = "Rachel Street, Etienne Bachelet", email = "rstreet@lco.global" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+]
+dynamic = ["version"]
+requires-python = ">=3.9"
+dependencies = [
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-astropy = "7.0.0"
-astroquery = "0.4.7"
-fsspec = "2024.10.0"
-photutils = "2.0.2"
-scikit-image = "0.24.0"
-pytest = "8.3.4"
-matplotlib = "v3.10.1"
-tqdm = "4.67.1"
-ipython = "9.2.0"
-h5py = "3.13.0"
-jplephem = "2.22"
+[project.urls]
+"Source Code" = "https://github.com/LCOGT/microlensing_photometry"
 
-[tool.poetry.scripts]
-dia_phot_script = "trials.dia_phot_script:main"
+# On a mac, install optional dependencies with `pip install '.[dev]'` (include the single quotes)
+[project.optional-dependencies]
+dev = [
+    "asv==0.6.4", # Used to compute performance benchmarks
+    "jupyter", # Clears output from Jupyter notebooks
+    "mypy", # Used for static type checking of files
+    "pre-commit", # Used to run checks before finalizing a git commit
+    "pytest",
+    "pytest-cov", # Used to report total code coverage
+    "ruff", # Used for static linting of files
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-packages = [
-    { include = "microlensing_photometry/*/*py" },
+requires = [
+    "setuptools>=62", # Used to build and package the Python project
+    "setuptools_scm>=6.2", # Gets release version from git. Makes it available programmatically
 ]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/microlensing_photometry/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "src",
+    "docs",
+]
+addopts = "--doctest-modules --doctest-glob=*.rst"
+
+[tool.ruff]
+line-length = 110
+target-version = "py39"
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    "W",
+    # Pyflakes
+    "F",
+    # pep8-naming
+    "N",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # docstrings
+    "D101",
+    "D102",
+    "D103",
+    "D106",
+    "D206",
+    "D207",
+    "D208",
+    "D300",
+    "D417",
+    "D419",
+    # Numpy v2.0 compatibility
+    "NPY201",
+]
+ignore = [
+    "UP006", # Allow non standard library generics in type hints
+    "UP007", # Allow Union in type hints
+    "SIM114", # Allow if with same arms
+    "B028", # Allow default warning level
+    "SIM117", # Allow nested with
+    "UP015", # Allow redundant open parameters
+    "UP028", # Allow yield in for loop
+]
+
+[tool.setuptools.package-data]
+microlensing_photometry = ["py.typed"]
+
+[tool.coverage.run]
+omit=["src/microlensing_photometry/_version.py"]

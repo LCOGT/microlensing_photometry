@@ -1,0 +1,24 @@
+# Changes here will be overwritten by Copier
+_commit: v2.0.7
+_src_path: gh:lincc-frameworks/python-project-template
+author_email: rstreet@lco.global
+author_name: Rachel Street, Etienne Bachelet
+create_example_module: true
+custom_install: true
+enforce_style:
+- ruff_lint
+- ruff_format
+failure_notification: []
+include_benchmarks: true
+include_docs: true
+include_notebooks: true
+mypy_type_checking: basic
+package_name: microlensing_photometry
+project_license: GPL3
+project_name: microlensing_photometry
+project_organization: LCOGT
+python_versions:
+- '3.9'
+- '3.10'
+- '3.13'
+test_lowest_version: direct
