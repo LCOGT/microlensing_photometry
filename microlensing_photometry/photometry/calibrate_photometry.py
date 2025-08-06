@@ -37,7 +37,6 @@ class CalibratePhotometryAnalyst(object):
 
         # Perform model fit to determine the transformation from instrumental to
         # calibrated photometry
-        # Q: How do we use Gaia Synthphot here?
 
         # Compose output arrays
 

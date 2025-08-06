@@ -54,13 +54,16 @@ def run(args):
     )
 
     # Load or query for known Gaia objects within this field
+    # This catalog should be the same for any given static target, so it should be stored one level
+    # above the data directory for a given filter or instrument class.
+    target_directory = path.join(args.directory, '..')
     gaia_catalog = GC.collect_Gaia_catalog(
         target.ra.deg,
         target.dec.deg,
         20,
         row_limit = 10000,
         catalog_name='Gaia_catalog.dat',
-        catalog_path=args.directory,
+        catalog_path=target_directory,
         log=log
     )
 
@@ -73,17 +76,16 @@ def run(args):
         lcologs.close_log(log)
         raise IOError('No Gaia catalog could be retrieved for this field, either locally or online')
 
-    coords = SkyCoord(
-        ra=gaia_catalog['ra'].data,
-        dec=gaia_catalog['dec'].data,
-        unit=(u.degree, u.degree),
-        frame='icrs'
-    )
+    # Convert Gaia fluxes to magnitudes
+    gaia_catalog = GC.calc_gaia_magnitudes(gaia_catalog)
 
-    cutout_region = [target.ra.deg-0/60.,target.dec.deg-0/60.,250]
+    # Calculate Gaia colors
+    gaia_catalog = GC.calc_gaia_colours(gaia_catalog)
+
+    # Transform Gaia photometry to SDSS passbands
+    gaia_catalog = GC.transform_gaia_phot_to_SDSS(gaia_catalog)
 
     cats = {}   # List of star catalogs for all images
-    bad_agent = []
     nstars = {}
 
     for im in tqdm(obs_set.table['file']):#[::1]:
@@ -91,8 +93,6 @@ def run(args):
         lcologs.log('Aperture photometry for ' + im, 'info', log=log)
 
         with fits.open(image_path) as hdul:
-
-            hdr0 = copy.deepcopy(hdul[0].header)
 
             nstars[im] = len(hdul[1].data)
 
