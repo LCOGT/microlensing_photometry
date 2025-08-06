@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.photometry.aperture_photometry &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.photometry.aperture_photometry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.photometry.aperture_photometry</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">photutils.aperture</span><span class="w"> </span><span class="kn">import</span> <span class="n">aperture_photometry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">photutils.aperture</span><span class="w"> </span><span class="kn">import</span> <span class="n">CircularAnnulus</span><span class="p">,</span> <span class="n">CircularAperture</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">photutils.aperture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ApertureStats</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.wcs</span><span class="w"> </span><span class="kn">import</span> <span class="n">WCS</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span><span class="p">,</span> <span class="n">Column</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.astrometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">wcs</span> <span class="k">as</span> <span class="n">lcowcs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.infrastructure</span><span class="w"> </span><span class="kn">import</span> <span class="n">logs</span> <span class="k">as</span> <span class="n">lcologs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.photometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">conversions</span>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AperturePhotometryAnalyst</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class of worker to perform WCS refinement and aperture photometry for one image</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    image_name : str, a name to the data</span>
+<span class="sd">    image_path : str, a path+name to the data</span>
+<span class="sd">    gaia_catalog : astropy.Table, the Gaia catalog of the field</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_name</span><span class="p">,</span> <span class="n">image_path</span><span class="p">,</span> <span class="n">gaia_catalog</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.log">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.log">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span></div>
+
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="s1">&#39;Initializing Aperture Photometry Analyst on &#39;</span><span class="o">+</span><span class="n">image_name</span><span class="o">+</span><span class="s1">&#39; at this location &#39;</span><span class="o">+</span><span class="n">image_path</span><span class="p">,</span>
+            <span class="s1">&#39;info&#39;</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.image_path">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_path">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">image_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.status">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.status">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;OK&#39;</span></div>
+
+
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">)</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Image found and open successfully!&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Image not found: aboard Aperture Photometry! Details below&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Aperture Photometry Error: %s, %s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)),</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.gaia_catalog">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.gaia_catalog">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gaia_catalog</span> <span class="o">=</span> <span class="n">gaia_catalog</span></div>
+
+
+        <span class="c1">### To fix with config files</span>
+<div class="viewcode-block" id="AperturePhotometryAnalyst.image_data">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_data">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.image_errors">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_errors">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">data</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.image_original_wcs">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_original_wcs">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_original_wcs</span> <span class="o">=</span> <span class="n">WCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.phot_aperture">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.phot_aperture">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phot_aperture</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;photometry&#39;</span><span class="p">][</span><span class="s1">&#39;aperture_arcsec&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PIXSCALE&#39;</span><span class="p">]</span></div>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_image</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.process_image">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.process_image">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process the image following the various steps</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Start Image Processing&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">find_star_catalog</span><span class="p">()</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">),</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refine_wcs</span><span class="p">()</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">),</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_aperture_photometry</span><span class="p">()</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">),</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_new_products_in_image</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.find_star_catalog">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.find_star_catalog">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_star_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the star catalog for an image. It uses BANZAI outputs if available, otherwise compute it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;CAT&#39;</span><span class="p">:</span>
+            <span class="c1">#BANZAI image</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Find and use the BANZAI catalog for the entire process&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">star_catalog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;flux&#39;</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">### run starfinder</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.refine_wcs">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.refine_wcs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refine_wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starting from approximate WCS solution, this function refine the WCS solution with the Gaia catalog.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">wcs2</span> <span class="o">=</span> <span class="n">lcowcs</span><span class="o">.</span><span class="n">refine_image_wcs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_data</span> <span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">star_catalog</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">image_original_wcs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gaia_catalog</span><span class="p">,</span>
+                                       <span class="n">star_limit</span> <span class="o">=</span> <span class="mi">5000</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_new_wcs</span> <span class="o">=</span> <span class="n">wcs2</span>
+
+            <span class="k">if</span> <span class="n">wcs2</span><span class="p">:</span>
+                <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;WCS successfully updated&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;ERROR&#39;</span>
+                <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Problems with WCS update: image skipped&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;ERROR&#39;</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Problems with WCS update: abort Aperture Photometry! Details below&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Aperture Photometry Error: %s, %s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)),</span>
+                <span class="s1">&#39;error&#39;</span><span class="p">,</span>
+                <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+            <span class="p">)</span></div>
+
+
+            <span class="c1">#sys.exit()</span>
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.run_aperture_photometry">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.run_aperture_photometry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_aperture_photometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run aperture photometry on the image using the star catalog of Gaia for time been.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="s1">&#39;Performing photometry with aperture &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phot_aperture</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; pix&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+            <span class="p">)</span>
+
+            <span class="n">skycoord</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">],</span> <span class="n">dec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">],</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">))</span>
+            <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_new_wcs</span><span class="o">.</span><span class="n">world_to_pixel</span><span class="p">(</span><span class="n">skycoord</span><span class="p">)</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">xx</span><span class="p">,</span><span class="n">yy</span><span class="p">]</span>
+
+            <span class="c1">#fwhm = self.image_layers[0].header[&#39;L1FWHM&#39;]</span>
+
+            <span class="n">phot_table</span> <span class="o">=</span> <span class="n">run_aperture_photometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_errors</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phot_aperture</span><span class="p">)</span>
+            <span class="n">exptime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXPTIME&#39;</span><span class="p">]</span>
+
+            <span class="n">phot_table</span><span class="p">[</span><span class="s1">&#39;aperture_sum&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">exptime</span>
+            <span class="n">phot_table</span><span class="p">[</span><span class="s1">&#39;aperture_sum_err&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">exptime</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">aperture_photometry_table</span> <span class="o">=</span> <span class="n">phot_table</span>
+
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Aperture Photometry successfully estimated&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="s1">&#39;Problems with the aperture photometry: aboard Aperture Photometry! Details below&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+            <span class="p">)</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Aperture Photometry Error: %s, %s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)),</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.find_image_layer">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.find_image_layer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_image_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to find an existing FITS extension in a HDUList by name if available</span>
+<span class="sd">        :return:</span>
+<span class="sd">        layer_idx int  Index of the layer in the HDUList or -1 if not present</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">layer_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">im_layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">im_layer</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">layer_name</span><span class="p">:</span>
+                <span class="n">layer_idx</span> <span class="o">=</span> <span class="n">i</span>
+
+        <span class="k">return</span> <span class="n">layer_idx</span></div>
+
+
+<div class="viewcode-block" id="AperturePhotometryAnalyst.save_new_products_in_image">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryAnalyst.save_new_products_in_image">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_new_products_in_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the new product, corrected WCS and aperture phot table, on the image</span>
+<span class="sd">        directly</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#Save updated wcs in a new layer or update an existing table extension if available</span>
+        <span class="n">layer_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_image_layer</span><span class="p">(</span><span class="s1">&#39;LCO MICROLENSING PHOTOMETRY UPDATED WCS&#39;</span><span class="p">)</span>
+        <span class="n">new_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_new_wcs</span><span class="o">.</span><span class="n">to_header</span><span class="p">()</span>
+        <span class="n">new_header</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;LCO MICROLENSING PHOTOMETRY UPDATED WCS&#39;</span>
+        <span class="n">new_wcs_hdu</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">new_header</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">layer_idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_wcs_hdu</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_wcs_hdu</span>
+
+        <span class="c1">#Save Aperture Photometry  in a new layer or update an existing table extension if available</span>
+        <span class="n">layer_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_image_layer</span><span class="p">(</span><span class="s1">&#39;LCO MICROLENSING APERTURE PHOTOMETRY&#39;</span><span class="p">)</span>
+        <span class="n">aperture_hdu</span> <span class="o">=</span>  <span class="n">fits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="p">(</span><span class="n">data</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aperture_photometry_table</span><span class="p">)</span>
+        <span class="n">aperture_hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;LCO MICROLENSING APERTURE PHOTOMETRY&#39;</span>
+        <span class="n">aperture_hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;APRAD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phot_aperture</span>
+        <span class="k">if</span> <span class="n">layer_idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aperture_hdu</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">aperture_hdu</span>
+
+        <span class="c1">#Save updates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="run_aperture_photometry">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.run_aperture_photometry">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_aperture_photometry</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Aperture photometry on a image, using an error image, and fixed stars positions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : array, the image data</span>
+<span class="sd">    error : array, the error data (2D)</span>
+<span class="sd">    positions: array, [X,Y] positions of the stars to place aperture</span>
+<span class="sd">    radius: float, the aperture radius use to extract flux</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phot_table : astropy.Table, the photometric table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">aperture</span> <span class="o">=</span> <span class="n">CircularAperture</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">radius</span><span class="p">)</span>
+    <span class="n">annulus_aperture</span> <span class="o">=</span> <span class="n">CircularAnnulus</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">r_in</span><span class="o">=</span><span class="n">radius</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span> <span class="n">r_out</span><span class="o">=</span><span class="n">radius</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+
+    <span class="n">aperstats</span> <span class="o">=</span> <span class="n">ApertureStats</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">annulus_aperture</span><span class="p">)</span>
+
+    <span class="n">bkg_mean</span> <span class="o">=</span> <span class="n">aperstats</span><span class="o">.</span><span class="n">mean</span>
+
+    <span class="n">phot_table</span> <span class="o">=</span> <span class="n">aperture_photometry</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">aperture</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+    <span class="n">total_bkg</span> <span class="o">=</span> <span class="n">aperture</span><span class="o">.</span><span class="n">area</span> <span class="o">*</span> <span class="n">bkg_mean</span>
+
+    <span class="n">phot_table</span><span class="p">[</span><span class="s1">&#39;aperture_sum&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">total_bkg</span>
+
+    <span class="k">return</span> <span class="n">phot_table</span></div>
+
+
+<div class="viewcode-block" id="AperturePhotometryDataset">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AperturePhotometryDataset</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to store and manipulate the results of the AperturePhotometryAnalyst for a set of multiple images</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to instantiate an AperturePhotometryDataset object and optionally load photometry data from</span>
+<span class="sd">        an HSF5 file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path   str     [optiona] Path to input HDF5 file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AperturePhotometryDataset.source_id">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.source_id">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]))])</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.wcs_positions">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.wcs_positions">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wcs_positions</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]),</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]),</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.positions">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.positions">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positions</span>  <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]),</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;pixel&#39;</span><span class="p">),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]),</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;pixel&#39;</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.timestamps">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.timestamps">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamps</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MJD&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]))])</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.exptimes">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.exptimes">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exptimes</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;exptime&#39;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">second</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]))])</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.flux">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.flux">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.err_flux">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.err_flux">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">err_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.pscale">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.pscale">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pscale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span></div>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.epscale">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.epscale">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epscale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span></div>
+
+
+        <span class="k">if</span> <span class="n">file_path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_hdf5</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AperturePhotometryDataset.load_hdf5">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.load_hdf5">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to load</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path  str     Path to input HDF5 file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        object with attributes populated with photometry from the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Cannot find aperture photometry dataset file at &#39;</span> <span class="o">+</span> <span class="n">file_path</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;source_id&#39;</span><span class="p">][:]))])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_wcs</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;source_wcs&#39;</span><span class="p">][:])[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                    <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;source_wcs&#39;</span><span class="p">][:])[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;positions&#39;</span><span class="p">][:])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timestamps</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;HJD&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;HJD&#39;</span><span class="p">][:]),</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">day</span><span class="p">)])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;flux&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">err_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;err_flux&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pscale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;pscale&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">epscale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;epscale&#39;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="AperturePhotometryDataset.get_lightcurve">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/aperture_photometry/index.html#src.photometry.aperture_photometry.AperturePhotometryDataset.get_lightcurve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_lightcurve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">star_idx</span><span class="p">,</span> <span class="nb">filter</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        star_idx int    Index (not ID) of star in source catalog</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lc  Table  Lightcurve data for the star with columns MJD, flux, err_flux, mag, err_mag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check for valid flux and err_flux measurements for this star&#39;s lightcurve</span>
+        <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">star_idx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">valid_flux</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">star_idx</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">valid_err_flux</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">err_flux</span><span class="p">[</span><span class="n">star_idx</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">valid_flux</span><span class="p">,</span> <span class="n">valid_err_flux</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">valid</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+
+            <span class="c1"># Convert to magnitudes for convenience</span>
+            <span class="n">mag</span><span class="p">,</span> <span class="n">err_mag</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">conversions</span><span class="o">.</span><span class="n">flux_to_mag</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">star_idx</span><span class="p">,</span> <span class="n">valid</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">err_flux</span><span class="p">[</span><span class="n">star_idx</span><span class="p">,</span> <span class="n">valid</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Dat format lightcurve for interactive inspection</span>
+            <span class="n">lc</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;HJD&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamps</span><span class="p">[</span><span class="s1">&#39;HJD&#39;</span><span class="p">][</span><span class="n">valid</span><span class="p">]),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">star_idx</span><span class="p">,</span> <span class="n">valid</span><span class="p">]),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;err_flux&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">err_flux</span><span class="p">[</span><span class="n">star_idx</span><span class="p">,</span> <span class="n">valid</span><span class="p">]),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mag&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">mag</span><span class="p">),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;err_mag&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">err_mag</span><span class="p">),</span>
+            <span class="p">])</span>
+
+            <span class="c1"># TOM-compatible format lightcurve</span>
+            <span class="n">tom_lc</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamps</span><span class="p">[</span><span class="s1">&#39;HJD&#39;</span><span class="p">][</span><span class="n">valid</span><span class="p">]),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;filter&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">filter</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">))),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;magnitude&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">mag</span><span class="p">),</span>
+                <span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">err_mag</span><span class="p">),</span>
+            <span class="p">])</span>
+
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Returned lightcurve with valid data&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">lc</span><span class="p">,</span> <span class="n">tom_lc</span>
+
+        <span class="c1"># Handle case of no valid measurements</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;No valid measurements in lightcurve&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

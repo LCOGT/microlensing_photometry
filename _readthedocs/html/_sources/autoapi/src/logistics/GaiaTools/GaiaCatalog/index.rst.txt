@@ -1,0 +1,53 @@
+src.logistics.GaiaTools.GaiaCatalog
+===================================
+
+.. py:module:: src.logistics.GaiaTools.GaiaCatalog
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.logistics.GaiaTools.GaiaCatalog.collect_Gaia_catalog
+   src.logistics.GaiaTools.GaiaCatalog.find_nearest
+
+
+Module Contents
+---------------
+
+.. py:function:: collect_Gaia_catalog(ra, dec, radius=15, row_limit=10000, catalog_name='Gaia_catalog.dat', catalog_path='./', timeout=60, log=None)
+
+   Collect the Gaia catalog for the field centered at ra,dec and radius.
+
+   :param ra:
+   :type ra: right ascenscion in degree
+   :param dec:
+   :type dec: right ascenscion in degree
+   :param radius:
+   :type radius: radius in arcmin
+   :param row_limit:
+   :type row_limit: the maximum number of stars (default:10000)
+   :param catalog_name:
+   :type catalog_name: the name of the catalog to save/load
+   :param catalog_path:
+   :type catalog_path: the path where to find the catalog
+
+   :returns: **gaia_catalog**
+   :rtype: astropy.Table, sorted by magnitude (brighter to fainter)
+
+
+.. py:function:: find_nearest(catalog, ra, dec, radius=2.0 / 3600.0 * u.deg, log=None)
+
+   Function to identify the nearest catalog entry to the given coordinates, within a cut-off radius
+
+   :param catalog catalog Table of objects within the image:
+   :param ra float    RA of location to search at [decimal deg]:
+   :param dec float   Dec of location to search at [decimal deg]:
+   :param radius float Search cut-off radius [decimal deg:
+   :param default = 2 arcsec]:
+
+   :returns: * *star_idx int    Index of star within the catalog*
+             * *closest match   catalog Table row for the closest match or None if no object is* -- within the search radius
+
+

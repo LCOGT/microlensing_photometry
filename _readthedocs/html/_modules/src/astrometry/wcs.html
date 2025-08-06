@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.astrometry.wcs &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.astrometry.wcs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.astrometry.wcs</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">skimage.registration</span><span class="w"> </span><span class="kn">import</span> <span class="n">phase_cross_correlation</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sspa</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.measure</span><span class="w"> </span><span class="kn">import</span> <span class="n">ransac</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform</span> <span class="k">as</span> <span class="n">tf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.wcs</span><span class="w"> </span><span class="kn">import</span> <span class="n">WCS</span><span class="p">,</span> <span class="n">utils</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkyCoord</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.logistics</span><span class="w"> </span><span class="kn">import</span> <span class="n">image_tools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.data_quality</span><span class="w"> </span><span class="kn">import</span> <span class="n">astrometry_qc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.infrastructure</span><span class="w"> </span><span class="kn">import</span> <span class="n">logs</span> <span class="k">as</span> <span class="n">lcologs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<div class="viewcode-block" id="find_images_shifts">
+<a class="viewcode-back" href="../../../autoapi/src/astrometry/wcs/index.html#src.astrometry.wcs.find_images_shifts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_images_shifts</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">image_fraction</span> <span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">upsample_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate the shifts (X,Y) between two images. Generally a good idea to do only a fraction of the field of view</span>
+<span class="sd">    centred in the middle, where the effect of rotation is minimal.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference : array,  an image acting as the reference</span>
+<span class="sd">    image : array,  the image we want to align</span>
+<span class="sd">    image_fraction : float, the fraction of image around the center we want to analyze</span>
+<span class="sd">    upsample_factor : float, the degree of upsampling, if one wants subpixel accuracy</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    shiftx : float, the shift in pixels in the x direction</span>
+<span class="sd">    shifty : float, the shift in pixels in the y direction</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">leny</span><span class="p">,</span> <span class="n">lenx</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">image_fraction</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">starty</span><span class="p">,</span><span class="n">startx</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="mf">0.5</span><span class="o">-</span><span class="p">[</span><span class="n">leny</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">lenx</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">subref</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)[</span><span class="n">starty</span><span class="p">:</span><span class="n">starty</span><span class="o">+</span><span class="n">leny</span><span class="p">,</span><span class="n">startx</span><span class="p">:</span><span class="n">startx</span><span class="o">+</span><span class="n">lenx</span><span class="p">]</span>
+    <span class="n">subimage</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)[</span><span class="n">starty</span><span class="p">:</span><span class="n">starty</span><span class="o">+</span><span class="n">leny</span><span class="p">,</span><span class="n">startx</span><span class="p">:</span><span class="n">startx</span><span class="o">+</span><span class="n">lenx</span><span class="p">]</span>
+
+    <span class="n">shifts</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">phasediff</span> <span class="o">=</span> <span class="n">phase_cross_correlation</span><span class="p">(</span><span class="n">subref</span><span class="p">,</span><span class="n">subimage</span><span class="p">,</span>
+                                                        <span class="n">normalization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                        <span class="n">upsample_factor</span><span class="o">=</span><span class="n">upsample_factor</span><span class="p">)</span>
+    <span class="n">shifty</span><span class="p">,</span><span class="n">shiftx</span> <span class="o">=</span> <span class="n">shifts</span>
+
+    <span class="k">return</span> <span class="n">shiftx</span><span class="p">,</span><span class="n">shifty</span></div>
+
+
+
+<div class="viewcode-block" id="refine_image_wcs">
+<a class="viewcode-back" href="../../../autoapi/src/astrometry/wcs/index.html#src.astrometry.wcs.refine_image_wcs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">refine_image_wcs</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">stars_image</span><span class="p">,</span> <span class="n">image_wcs</span><span class="p">,</span> <span class="n">gaia_catalog</span><span class="p">,</span> <span class="n">star_limit</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and</span>
+<span class="sd">    a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : array, the image to refine the WCS solution</span>
+<span class="sd">    stars_image : array, the x,y positions of stars in the image</span>
+<span class="sd">    image_wcs : astropy.wcs, the original astropy WCS solution</span>
+<span class="sd">    gaia_catalog : astropy.Table, the entire gaia catalog</span>
+<span class="sd">    star_limit : int, the limit number of stars to use</span>
+<span class="sd">    log : object pipeline log</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_wcs : astropy.wcs, an updated astropy WCS object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">skycoords</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="n">star_limit</span><span class="p">],</span>
+                      <span class="n">dec</span><span class="o">=</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="n">star_limit</span><span class="p">],</span>
+                      <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">)</span>
+
+    <span class="n">fluxes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;phot_g_mean_flux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">star_pix</span> <span class="o">=</span> <span class="n">image_wcs</span><span class="o">.</span><span class="n">world_to_pixel</span><span class="p">(</span><span class="n">skycoords</span><span class="p">)</span>
+    <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Calculated image coordinates for &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">star_pix</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39; catalog stars&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+    <span class="n">stars_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">star_pix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">wcs_check</span> <span class="o">=</span> <span class="n">astrometry_qc</span><span class="o">.</span><span class="n">check_stars_within_frame</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">stars_positions</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">wcs_check</span><span class="p">:</span>
+        <span class="n">model_gaia_image</span> <span class="o">=</span> <span class="n">image_tools</span><span class="o">.</span><span class="n">build_image</span><span class="p">(</span><span class="n">stars_positions</span><span class="p">,</span> <span class="n">fluxes</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                    <span class="n">image_fraction</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">star_limit</span> <span class="o">=</span>  <span class="n">star_limit</span><span class="p">)</span>
+
+        <span class="n">model_image</span> <span class="o">=</span> <span class="n">image_tools</span><span class="o">.</span><span class="n">build_image</span><span class="p">(</span><span class="n">stars_image</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">stars_image</span><span class="p">),</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">image_fraction</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                              <span class="n">star_limit</span> <span class="o">=</span> <span class="n">star_limit</span><span class="p">)</span>
+
+
+        <span class="n">shiftx</span><span class="p">,</span> <span class="n">shifty</span> <span class="o">=</span> <span class="n">find_images_shifts</span><span class="p">(</span><span class="n">model_gaia_image</span><span class="p">,</span> <span class="n">model_image</span><span class="p">,</span> <span class="n">image_fraction</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">upsample_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Calculated image shifts in x,y = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shiftx</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shifty</span><span class="p">),</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">sspa</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">stars_image</span><span class="p">[:</span><span class="n">star_limit</span><span class="p">,:</span><span class="mi">2</span><span class="p">],</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">star_pix</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="n">star_limit</span><span class="p">]</span> <span class="o">-</span> <span class="n">shiftx</span><span class="p">,</span> <span class="n">star_pix</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="n">star_limit</span><span class="p">]</span> <span class="o">-</span> <span class="n">shifty</span><span class="p">])</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">dists</span> <span class="o">&lt;</span> <span class="mi">10</span>
+        <span class="n">lines</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="n">pts1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">star_pix</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">star_pix</span><span class="p">[</span><span class="mi">1</span><span class="p">]][:</span><span class="n">star_limit</span><span class="p">][</span><span class="n">cols</span><span class="p">]</span>
+        <span class="n">pts2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">stars_image</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">stars_image</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]][:</span><span class="n">star_limit</span><span class="p">][</span><span class="n">lines</span><span class="p">]</span>
+        <span class="n">model_robust</span><span class="p">,</span> <span class="n">inliers</span> <span class="o">=</span> <span class="n">ransac</span><span class="p">((</span><span class="n">pts2</span><span class="p">,</span> <span class="n">pts1</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">AffineTransform</span><span class="p">,</span> <span class="n">min_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">residual_threshold</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                                       <span class="n">max_trials</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+
+        <span class="n">new_wcs</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">fit_wcs_from_points</span><span class="p">(</span><span class="n">pts2</span><span class="p">[:</span><span class="n">star_limit</span><span class="p">][</span><span class="n">inliers</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">skycoords</span><span class="p">[</span><span class="n">cols</span><span class="p">][</span><span class="n">inliers</span><span class="p">])</span>
+
+    <span class="c1"># Case where bad image_wcs causes misleading object positions</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_wcs</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#breakpoint()</span>
+    <span class="c1">### might be valuable some looping here</span>
+
+    <span class="c1"># Refining???</span>
+    <span class="c1"># dists2 = distance.cdist(np.c_[sources[&#39;xcentroid&#39;],sources[&#39;ycentroid&#39;]][:500],projected2[:500])</span>
+    <span class="c1"># mask2 = dists2&lt;1</span>
+    <span class="c1"># lines2,cols2 = np.where(mask2)</span>
+    <span class="c1"># pts12 = np.c_[star_pix[0],star_pix[1]][:500][cols2]</span>
+    <span class="c1"># pts22 = np.c_[sources[&#39;xcentroid&#39;],sources[&#39;ycentroid&#39;]][:500][lines2]</span>
+
+    <span class="c1"># model_robust2, inliers2 = ransac(( pts22,pts12), tf. AffineTransform,min_samples=10, residual_threshold=1, max_trials=300)</span>
+    <span class="c1"># projected22 = model_robust2.inverse(pts12)</span>
+    <span class="c1"># projected222 = model_robust2.inverse(np.c_[star_pix[0],star_pix[1]])</span>
+
+    <span class="c1"># print(shifts)</span>
+
+    <span class="k">return</span> <span class="n">new_wcs</span></div>
+
+
+<div class="viewcode-block" id="build_wcs_from_obs_set">
+<a class="viewcode-back" href="../../../autoapi/src/astrometry/wcs/index.html#src.astrometry.wcs.build_wcs_from_obs_set">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_wcs_from_obs_set</span><span class="p">(</span><span class="n">obs_set</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to create an Astropy WCS object from a set of WCS keywords</span>
+<span class="sd">    :return: im_wcs list of image WCS objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">wcs_params</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;CTYPE1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CTYPE2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CRPIX1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CRPIX2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CRVAL1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CRVAL2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CUNIT1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CUNIT2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CD1_1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CD1_2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CD2_1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CD2_2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;NAXIS1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;NAXIS2&#39;</span>
+    <span class="p">]</span>
+
+    <span class="n">im_wcs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">wcs_params</span><span class="p">}</span>
+        <span class="n">im_wcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WCS</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">params</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">im_wcs</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

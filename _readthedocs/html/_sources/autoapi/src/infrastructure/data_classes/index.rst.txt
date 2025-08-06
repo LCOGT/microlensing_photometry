@@ -1,0 +1,50 @@
+src.infrastructure.data_classes
+===============================
+
+.. py:module:: src.infrastructure.data_classes
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   src.infrastructure.data_classes.ObservationSet
+
+
+Module Contents
+---------------
+
+.. py:class:: ObservationSet(file_path=None, log=None)
+
+   Bases: :py:obj:`object`
+
+
+   Metadata describing a sequence of observations
+
+
+   .. py:attribute:: table
+
+
+   .. py:method:: save(file_path, log=None)
+
+
+   .. py:method:: load(file_path, log=None)
+
+
+   .. py:method:: get_facility_code(header)
+
+      Function to return the reference code used within the phot_db to
+      refer to a specific facility as site-enclosure-tel-instrument
+
+
+
+   .. py:method:: add_observation(file_path, header)
+
+      Method to extract observation from the FITS header of a single file
+
+      :param header: Astropy FITS header object
+      :return: Information added to self.table
+
+
+

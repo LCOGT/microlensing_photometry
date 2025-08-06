@@ -1,0 +1,65 @@
+src.astrometry.wcs
+==================
+
+.. py:module:: src.astrometry.wcs
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.astrometry.wcs.find_images_shifts
+   src.astrometry.wcs.refine_image_wcs
+   src.astrometry.wcs.build_wcs_from_obs_set
+
+
+Module Contents
+---------------
+
+.. py:function:: find_images_shifts(reference, image, image_fraction=0.25, upsample_factor=1)
+
+   Estimate the shifts (X,Y) between two images. Generally a good idea to do only a fraction of the field of view
+   centred in the middle, where the effect of rotation is minimal.
+
+   :param reference:
+   :type reference: array,  an image acting as the reference
+   :param image:
+   :type image: array,  the image we want to align
+   :param image_fraction:
+   :type image_fraction: float, the fraction of image around the center we want to analyze
+   :param upsample_factor:
+   :type upsample_factor: float, the degree of upsampling, if one wants subpixel accuracy
+
+   :returns: * **shiftx** (*float, the shift in pixels in the x direction*)
+             * **shifty** (*float, the shift in pixels in the y direction*)
+
+
+.. py:function:: refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit=1000, log=None)
+
+   Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
+   a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.
+
+   :param image:
+   :type image: array, the image to refine the WCS solution
+   :param stars_image:
+   :type stars_image: array, the x,y positions of stars in the image
+   :param image_wcs:
+   :type image_wcs: astropy.wcs, the original astropy WCS solution
+   :param gaia_catalog:
+   :type gaia_catalog: astropy.Table, the entire gaia catalog
+   :param star_limit:
+   :type star_limit: int, the limit number of stars to use
+   :param log:
+   :type log: object pipeline log
+
+   :returns: **new_wcs**
+   :rtype: astropy.wcs, an updated astropy WCS object
+
+
+.. py:function:: build_wcs_from_obs_set(obs_set)
+
+   Method to create an Astropy WCS object from a set of WCS keywords
+   :return: im_wcs list of image WCS objects
+
+

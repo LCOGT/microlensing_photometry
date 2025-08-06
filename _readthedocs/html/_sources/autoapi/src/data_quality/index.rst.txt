@@ -1,0 +1,15 @@
+src.data_quality
+================
+
+.. py:module:: src.data_quality
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/data_quality/astrometry_qc/index
+
+

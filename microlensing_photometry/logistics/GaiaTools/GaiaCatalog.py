@@ -40,8 +40,17 @@ def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000, catalog_name='Gaia_
 
     except:
 
-        gaia_catalog = vizier_tools.search_vizier_for_sources(ra, dec, radius, 'Gaia-EDR3', row_limit=row_limit,
-                                  coords='degree', timeout=timeout,log=log, debug=True)
+        gaia_catalog = vizier_tools.search_vizier_for_sources(
+            ra,
+            dec,
+            radius,
+            'Gaia-EDR3',
+            row_limit=row_limit,
+            coords='degree',
+            timeout=timeout,
+            log=log,
+            debug=True
+        )
 
         if len(gaia_catalog):
             mask = np.isfinite(gaia_catalog['phot_g_mean_flux'])

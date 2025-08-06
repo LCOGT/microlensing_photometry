@@ -1,0 +1,15 @@
+src.astrometry
+==============
+
+.. py:module:: src.astrometry
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/astrometry/wcs/index
+
+

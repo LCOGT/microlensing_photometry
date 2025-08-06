@@ -1,0 +1,212 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.astrometry.wcs &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="src.data_quality" href="../../data_quality/index.html" />
+    <link rel="prev" title="src.astrometry" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Home page</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">src</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../IO/index.html">src.IO</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">src.astrometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../data_quality/index.html">src.data_quality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../infrastructure/index.html">src.infrastructure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../logistics/index.html">src.logistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../microlensing_photometry/index.html">src.microlensing_photometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../photometry/index.html">src.photometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../plots/index.html">src.plots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../prototypes/index.html">src.prototypes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../starfinder/index.html">src.starfinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../trials/index.html">src.trials</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../remove_photometry/index.html">remove_photometry</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">src</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">src.astrometry</a></li>
+      <li class="breadcrumb-item active">src.astrometry.wcs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.astrometry.wcs">
+<span id="src-astrometry-wcs"></span><h1>src.astrometry.wcs<a class="headerlink" href="#module-src.astrometry.wcs" title="Link to this heading"></a></h1>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.astrometry.wcs.find_images_shifts" title="src.astrometry.wcs.find_images_shifts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_images_shifts</span></code></a>(reference, image[, image_fraction, ...])</p></td>
+<td><p>Estimate the shifts (X,Y) between two images. Generally a good idea to do only a fraction of the field of view</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.astrometry.wcs.refine_image_wcs" title="src.astrometry.wcs.refine_image_wcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refine_image_wcs</span></code></a>(image, stars_image, image_wcs, ...[, ...])</p></td>
+<td><p>Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.astrometry.wcs.build_wcs_from_obs_set" title="src.astrometry.wcs.build_wcs_from_obs_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_wcs_from_obs_set</span></code></a>(obs_set)</p></td>
+<td><p>Method to create an Astropy WCS object from a set of WCS keywords</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.astrometry.wcs.find_images_shifts">
+<span class="sig-name descname"><span class="pre">find_images_shifts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upsample_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/astrometry/wcs.html#find_images_shifts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.astrometry.wcs.find_images_shifts" title="Link to this definition"></a></dt>
+<dd><p>Estimate the shifts (X,Y) between two images. Generally a good idea to do only a fraction of the field of view
+centred in the middle, where the effect of rotation is minimal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>array</em><em>,  </em><em>an image acting as the reference</em>)</p></li>
+<li><p><strong>image</strong> (<em>array</em><em>,  </em><em>the image we want to align</em>)</p></li>
+<li><p><strong>image_fraction</strong> (<em>float</em><em>, </em><em>the fraction</em><em> of </em><em>image around the center we want to analyze</em>)</p></li>
+<li><p><strong>upsample_factor</strong> (<em>float</em><em>, </em><em>the degree</em><em> of </em><em>upsampling</em><em>, </em><em>if one wants subpixel accuracy</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>shiftx</strong> (<em>float, the shift in pixels in the x direction</em>)</p></li>
+<li><p><strong>shifty</strong> (<em>float, the shift in pixels in the y direction</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.astrometry.wcs.refine_image_wcs">
+<span class="sig-name descname"><span class="pre">refine_image_wcs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stars_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_wcs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaia_catalog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">star_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/astrometry/wcs.html#refine_image_wcs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.astrometry.wcs.refine_image_wcs" title="Link to this definition"></a></dt>
+<dd><p>Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
+a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>array</em><em>, </em><em>the image to refine the WCS solution</em>)</p></li>
+<li><p><strong>stars_image</strong> (<em>array</em><em>, </em><em>the x</em><em>,</em><em>y positions</em><em> of </em><em>stars in the image</em>)</p></li>
+<li><p><strong>image_wcs</strong> (<em>astropy.wcs</em><em>, </em><em>the original astropy WCS solution</em>)</p></li>
+<li><p><strong>gaia_catalog</strong> (<em>astropy.Table</em><em>, </em><em>the entire gaia catalog</em>)</p></li>
+<li><p><strong>star_limit</strong> (<em>int</em><em>, </em><em>the limit number</em><em> of </em><em>stars to use</em>)</p></li>
+<li><p><strong>log</strong> (<em>object pipeline log</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>new_wcs</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>astropy.wcs, an updated astropy WCS object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.astrometry.wcs.build_wcs_from_obs_set">
+<span class="sig-name descname"><span class="pre">build_wcs_from_obs_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/astrometry/wcs.html#build_wcs_from_obs_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.astrometry.wcs.build_wcs_from_obs_set" title="Link to this definition"></a></dt>
+<dd><p>Method to create an Astropy WCS object from a set of WCS keywords
+:return: im_wcs list of image WCS objects</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="src.astrometry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../data_quality/index.html" class="btn btn-neutral float-right" title="src.data_quality" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

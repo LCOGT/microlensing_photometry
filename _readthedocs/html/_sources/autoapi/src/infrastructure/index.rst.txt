@@ -1,0 +1,19 @@
+src.infrastructure
+==================
+
+.. py:module:: src.infrastructure
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/infrastructure/aperture_pipeline/index
+   /autoapi/src/infrastructure/data_classes/index
+   /autoapi/src/infrastructure/logs/index
+   /autoapi/src/infrastructure/observations/index
+   /autoapi/src/infrastructure/time_utils/index
+
+

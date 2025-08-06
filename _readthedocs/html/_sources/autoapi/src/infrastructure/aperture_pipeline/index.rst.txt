@@ -1,0 +1,39 @@
+src.infrastructure.aperture_pipeline
+====================================
+
+.. py:module:: src.infrastructure.aperture_pipeline
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.infrastructure.aperture_pipeline.args
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.infrastructure.aperture_pipeline.run
+   src.infrastructure.aperture_pipeline.get_args
+
+
+Module Contents
+---------------
+
+.. py:function:: run(args)
+
+   Pipeline to run an aperture photometry reduction for a single dataset.
+   :param args:
+   :return:
+
+
+.. py:function:: get_args()
+
+.. py:data:: args
+   :value: None
+
+

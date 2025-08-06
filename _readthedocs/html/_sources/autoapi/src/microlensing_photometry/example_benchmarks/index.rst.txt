@@ -1,0 +1,33 @@
+src.microlensing_photometry.example_benchmarks
+==============================================
+
+.. py:module:: src.microlensing_photometry.example_benchmarks
+
+.. autoapi-nested-parse::
+
+   An example module containing simplistic methods under benchmarking.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.microlensing_photometry.example_benchmarks.runtime_computation
+   src.microlensing_photometry.example_benchmarks.memory_computation
+
+
+Module Contents
+---------------
+
+.. py:function:: runtime_computation() -> None
+
+   Runtime computation consuming between 0 and 5 seconds.
+
+
+.. py:function:: memory_computation() -> list[int]
+
+   Memory computation for a random list up to 512 samples.
+
+

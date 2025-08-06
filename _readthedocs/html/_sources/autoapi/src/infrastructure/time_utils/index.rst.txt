@@ -1,0 +1,50 @@
+src.infrastructure.time_utils
+=============================
+
+.. py:module:: src.infrastructure.time_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.infrastructure.time_utils.parser
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.infrastructure.time_utils.calc_hjd
+   src.infrastructure.time_utils.fetch_observatory_location
+
+
+Module Contents
+---------------
+
+.. py:function:: calc_hjd(dateobs, RA, Dec, tel_code, exp_time, debug=False)
+
+   Function to calculate the Heliocentric Julian Date of the center of a image,
+   for the mid-point of an exposure
+
+   :param dateobs  str  Datetime in UTC of the exposure start: %M:%S
+   :param in ISOT format %Y-%m-%dT%H: %M:%S
+   :param RA       str  RA of the target or frame center in decimal degrees:
+   :param J2000.0:
+   :param Dec      str  Dec of the target or frame center in decimal degrees:
+   :param J2000.0:
+   :param tel_code str  Identifer code of the observatory site where the data were taken;: used with a look-up table to find the geographic location
+   :param exp_time  float Exposure time in seconds:
+
+   :returns: hjd      float Calculated HJD
+
+   This function is based on a recipe from Astropy's documentation:
+   https://docs.astropy.org/en/stable/time/
+
+
+.. py:function:: fetch_observatory_location(tel_code)
+
+.. py:data:: parser
+

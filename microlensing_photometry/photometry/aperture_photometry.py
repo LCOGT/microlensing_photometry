@@ -25,6 +25,7 @@ class AperturePhotometryAnalyst(object):
     image_name : str, a name to the data
     image_path : str, a path+name to the data
     gaia_catalog : astropy.Table, the Gaia catalog of the field
+    log: logger object
 
     """
 

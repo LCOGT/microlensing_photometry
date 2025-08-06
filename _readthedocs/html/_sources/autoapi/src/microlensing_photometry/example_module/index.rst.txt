@@ -1,0 +1,51 @@
+src.microlensing_photometry.example_module
+==========================================
+
+.. py:module:: src.microlensing_photometry.example_module
+
+.. autoapi-nested-parse::
+
+   An example module containing simplistic functions.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.microlensing_photometry.example_module.greetings
+   src.microlensing_photometry.example_module.meaning
+
+
+Module Contents
+---------------
+
+.. py:function:: greetings() -> str
+
+   A friendly greeting for a future friend.
+
+   Example:
+   >>> greetings()
+   'Hello from LINCC-Frameworks!'
+
+   Note: this example becomes a unit test via doctests
+
+   :returns: A typical greeting from a software engineer.
+   :rtype: str
+
+
+.. py:function:: meaning() -> int
+
+   The meaning of life, the universe, and everything.
+
+   Example:
+   >>> meaning()
+   42
+
+   Note: this example becomes a unit test via doctests
+
+   :returns: The meaning of life.
+   :rtype: int
+
+

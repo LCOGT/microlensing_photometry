@@ -1,0 +1,41 @@
+src.IO.fits_table_parser
+========================
+
+.. py:module:: src.IO.fits_table_parser
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.IO.fits_table_parser.fits_rec_to_table
+   src.IO.fits_table_parser.find_phot_table
+
+
+Module Contents
+---------------
+
+.. py:function:: fits_rec_to_table(fits_rec_array)
+
+   This module exists to handle the conversion from FITS binary table records
+   to Astropy tables This is necessary because while the current Astropy has methods to convert
+   existing Astropy tables to FITS record tables, it doesn't seem to have
+   methods to reverse that conversion.  Providing the functionality here
+   avoids having to re-load FITS tables from file
+
+   :param rec_array   FITS record array:
+
+   :rtype: data        Astropy Table
+
+
+.. py:function:: find_phot_table(hdul, table_name)
+
+   Function to identify which HDUList extension holds the named table
+
+   :param hdul    Astropy HDUList (open):
+   :param tabel_name str  Name of FITS extension to search for:
+
+   :rtype: table_index int     Index of the table in the HDUList or -1 if not present
+
+

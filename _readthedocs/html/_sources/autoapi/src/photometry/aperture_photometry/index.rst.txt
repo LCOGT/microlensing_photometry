@@ -1,0 +1,188 @@
+src.photometry.aperture_photometry
+==================================
+
+.. py:module:: src.photometry.aperture_photometry
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   src.photometry.aperture_photometry.AperturePhotometryAnalyst
+   src.photometry.aperture_photometry.AperturePhotometryDataset
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.photometry.aperture_photometry.run_aperture_photometry
+
+
+Module Contents
+---------------
+
+.. py:class:: AperturePhotometryAnalyst(image_name, image_path, gaia_catalog, config, log=None)
+
+   Bases: :py:obj:`object`
+
+
+   Class of worker to perform WCS refinement and aperture photometry for one image
+
+   .. attribute:: image_name
+
+
+
+      :type: str, a name to the data
+
+   .. attribute:: image_path
+
+
+
+      :type: str, a path+name to the data
+
+   .. attribute:: gaia_catalog
+
+
+
+      :type: astropy.Table, the Gaia catalog of the field
+
+
+   .. py:attribute:: log
+      :value: None
+
+
+
+   .. py:attribute:: image_path
+
+
+   .. py:attribute:: status
+      :value: 'OK'
+
+
+
+   .. py:attribute:: gaia_catalog
+
+
+   .. py:attribute:: image_data
+
+
+   .. py:attribute:: image_errors
+
+
+   .. py:attribute:: image_original_wcs
+
+
+   .. py:attribute:: phot_aperture
+
+
+   .. py:method:: process_image()
+
+      Process the image following the various steps
+
+
+
+   .. py:method:: find_star_catalog()
+
+      Find the star catalog for an image. It uses BANZAI outputs if available, otherwise compute it.
+
+
+
+   .. py:method:: refine_wcs()
+
+      Starting from approximate WCS solution, this function refine the WCS solution with the Gaia catalog.
+
+
+
+   .. py:method:: run_aperture_photometry()
+
+      Run aperture photometry on the image using the star catalog of Gaia for time been.
+
+
+
+   .. py:method:: find_image_layer(layer_name)
+
+      Method to find an existing FITS extension in a HDUList by name if available
+      :return:
+      layer_idx int  Index of the layer in the HDUList or -1 if not present
+
+
+
+   .. py:method:: save_new_products_in_image()
+
+      Save the new product, corrected WCS and aperture phot table, on the image
+      directly
+
+
+
+.. py:function:: run_aperture_photometry(image, error, positions, radius)
+
+   Aperture photometry on a image, using an error image, and fixed stars positions.
+
+   :param image:
+   :type image: array, the image data
+   :param error:
+   :type error: array, the error data (2D)
+   :param positions:
+   :type positions: array, [X,Y] positions of the stars to place aperture
+   :param radius:
+   :type radius: float, the aperture radius use to extract flux
+
+   :returns: **phot_table**
+   :rtype: astropy.Table, the photometric table
+
+
+.. py:class:: AperturePhotometryDataset(file_path=None)
+
+   Bases: :py:obj:`object`
+
+
+   Class to store and manipulate the results of the AperturePhotometryAnalyst for a set of multiple images
+
+
+   .. py:attribute:: source_id
+
+
+   .. py:attribute:: wcs_positions
+
+
+   .. py:attribute:: positions
+
+
+   .. py:attribute:: timestamps
+
+
+   .. py:attribute:: exptimes
+
+
+   .. py:attribute:: flux
+
+
+   .. py:attribute:: err_flux
+
+
+   .. py:attribute:: pscale
+
+
+   .. py:attribute:: epscale
+
+
+   .. py:method:: load_hdf5(file_path)
+
+      Method to load
+      :param file_path  str     Path to input HDF5 file:
+
+      :rtype: object with attributes populated with photometry from the file
+
+
+
+   .. py:method:: get_lightcurve(star_idx, filter, log=None)
+
+      :param star_idx int    Index (not ID) of star in source catalog:
+
+      :rtype: lc  Table  Lightcurve data for the star with columns MJD, flux, err_flux, mag, err_mag
+
+
+

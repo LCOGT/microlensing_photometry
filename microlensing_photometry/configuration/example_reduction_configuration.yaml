@@ -4,6 +4,7 @@ target:
   Dec: '-25:30:30.5'
 photometry:
   aperture_arcsec: 2.0
+  reference_image: 'auto'
 tom:
   upload: True
   config_file: /path/to/config

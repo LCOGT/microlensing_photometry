@@ -1,0 +1,46 @@
+src.infrastructure.observations
+===============================
+
+.. py:module:: src.infrastructure.observations
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.infrastructure.observations.parser
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.infrastructure.observations.get_observation_metadata
+   src.infrastructure.observations.update_wcs_parameters
+
+
+Module Contents
+---------------
+
+.. py:function:: get_observation_metadata(args, log=None)
+
+   Function to review all available observations in a single dataset and extract
+   header information necessary for the reduction.
+
+   :param args:
+   :return: ObservationSet object
+
+
+.. py:function:: update_wcs_parameters(src_hdr, dest_hdr)
+
+   Function transfers the WCS header keyworks from the src to the dest header objects
+
+   :param src_hdr: Source FITS header object for the WCS parameters to be copied
+   :param dest_hdr: Destination FITS header object to be updated
+   :return: dest_hdr
+
+
+.. py:data:: parser
+

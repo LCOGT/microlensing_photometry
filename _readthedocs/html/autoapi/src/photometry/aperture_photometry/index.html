@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.photometry.aperture_photometry &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="src.photometry.conversions" href="../conversions/index.html" />
+    <link rel="prev" title="src.photometry" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Home page</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">src</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../IO/index.html">src.IO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../astrometry/index.html">src.astrometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../data_quality/index.html">src.data_quality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../infrastructure/index.html">src.infrastructure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../logistics/index.html">src.logistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../microlensing_photometry/index.html">src.microlensing_photometry</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">src.photometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../plots/index.html">src.plots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../prototypes/index.html">src.prototypes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../starfinder/index.html">src.starfinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../trials/index.html">src.trials</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../remove_photometry/index.html">remove_photometry</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">src</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">src.photometry</a></li>
+      <li class="breadcrumb-item active">src.photometry.aperture_photometry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.photometry.aperture_photometry">
+<span id="src-photometry-aperture-photometry"></span><h1>src.photometry.aperture_photometry<a class="headerlink" href="#module-src.photometry.aperture_photometry" title="Link to this heading"></a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst" title="src.photometry.aperture_photometry.AperturePhotometryAnalyst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AperturePhotometryAnalyst</span></code></a></p></td>
+<td><p>Class of worker to perform WCS refinement and aperture photometry for one image</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.photometry.aperture_photometry.AperturePhotometryDataset" title="src.photometry.aperture_photometry.AperturePhotometryDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AperturePhotometryDataset</span></code></a></p></td>
+<td><p>Class to store and manipulate the results of the AperturePhotometryAnalyst for a set of multiple images</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.photometry.aperture_photometry.run_aperture_photometry" title="src.photometry.aperture_photometry.run_aperture_photometry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_aperture_photometry</span></code></a>(image, error, positions, radius)</p></td>
+<td><p>Aperture photometry on a image, using an error image, and fixed stars positions.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AperturePhotometryAnalyst</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaia_catalog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class of worker to perform WCS refinement and aperture photometry for one image</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_name">
+<span class="sig-name descname"><span class="pre">image_name</span></span><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_name" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str, a name to the data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_path">
+<span class="sig-name descname"><span class="pre">image_path</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.image_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_path" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str, a path+name to the data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.gaia_catalog">
+<span class="sig-name descname"><span class="pre">gaia_catalog</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.gaia_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.gaia_catalog" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>astropy.Table, the Gaia catalog of the field</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.log">
+<span class="sig-name descname"><span class="pre">log</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.log" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">image_path</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.image_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.status">
+<span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'OK'</span></em><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">gaia_catalog</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.gaia_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_data">
+<span class="sig-name descname"><span class="pre">image_data</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.image_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_errors">
+<span class="sig-name descname"><span class="pre">image_errors</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.image_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_errors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_original_wcs">
+<span class="sig-name descname"><span class="pre">image_original_wcs</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.image_original_wcs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.image_original_wcs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.phot_aperture">
+<span class="sig-name descname"><span class="pre">phot_aperture</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.phot_aperture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.phot_aperture" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.process_image">
+<span class="sig-name descname"><span class="pre">process_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.process_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.process_image" title="Link to this definition"></a></dt>
+<dd><p>Process the image following the various steps</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.find_star_catalog">
+<span class="sig-name descname"><span class="pre">find_star_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.find_star_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.find_star_catalog" title="Link to this definition"></a></dt>
+<dd><p>Find the star catalog for an image. It uses BANZAI outputs if available, otherwise compute it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.refine_wcs">
+<span class="sig-name descname"><span class="pre">refine_wcs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.refine_wcs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.refine_wcs" title="Link to this definition"></a></dt>
+<dd><p>Starting from approximate WCS solution, this function refine the WCS solution with the Gaia catalog.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.run_aperture_photometry">
+<span class="sig-name descname"><span class="pre">run_aperture_photometry</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.run_aperture_photometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.run_aperture_photometry" title="Link to this definition"></a></dt>
+<dd><p>Run aperture photometry on the image using the star catalog of Gaia for time been.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.find_image_layer">
+<span class="sig-name descname"><span class="pre">find_image_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.find_image_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.find_image_layer" title="Link to this definition"></a></dt>
+<dd><p>Method to find an existing FITS extension in a HDUList by name if available
+:return:
+layer_idx int  Index of the layer in the HDUList or -1 if not present</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryAnalyst.save_new_products_in_image">
+<span class="sig-name descname"><span class="pre">save_new_products_in_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryAnalyst.save_new_products_in_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryAnalyst.save_new_products_in_image" title="Link to this definition"></a></dt>
+<dd><p>Save the new product, corrected WCS and aperture phot table, on the image
+directly</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.run_aperture_photometry">
+<span class="sig-name descname"><span class="pre">run_aperture_photometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#run_aperture_photometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.run_aperture_photometry" title="Link to this definition"></a></dt>
+<dd><p>Aperture photometry on a image, using an error image, and fixed stars positions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>array</em><em>, </em><em>the image data</em>)</p></li>
+<li><p><strong>error</strong> (<em>array</em><em>, </em><em>the error data</em><em> (</em><em>2D</em><em>)</em>)</p></li>
+<li><p><strong>positions</strong> (<em>array</em><em>, </em><em>[</em><em>X</em><em>,</em><em>Y</em><em>] </em><em>positions</em><em> of </em><em>the stars to place aperture</em>)</p></li>
+<li><p><strong>radius</strong> (<em>float</em><em>, </em><em>the aperture radius use to extract flux</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>phot_table</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>astropy.Table, the photometric table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AperturePhotometryDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to store and manipulate the results of the AperturePhotometryAnalyst for a set of multiple images</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.source_id">
+<span class="sig-name descname"><span class="pre">source_id</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.source_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.source_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.wcs_positions">
+<span class="sig-name descname"><span class="pre">wcs_positions</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.wcs_positions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.wcs_positions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.positions">
+<span class="sig-name descname"><span class="pre">positions</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.positions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.positions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.timestamps">
+<span class="sig-name descname"><span class="pre">timestamps</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.timestamps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.timestamps" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.exptimes">
+<span class="sig-name descname"><span class="pre">exptimes</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.exptimes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.exptimes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.flux">
+<span class="sig-name descname"><span class="pre">flux</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.flux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.flux" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.err_flux">
+<span class="sig-name descname"><span class="pre">err_flux</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.err_flux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.err_flux" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.pscale">
+<span class="sig-name descname"><span class="pre">pscale</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.pscale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.pscale" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.epscale">
+<span class="sig-name descname"><span class="pre">epscale</span></span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.epscale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.epscale" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.load_hdf5">
+<span class="sig-name descname"><span class="pre">load_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.load_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.load_hdf5" title="Link to this definition"></a></dt>
+<dd><p>Method to load
+:param file_path  str     Path to input HDF5 file:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object with attributes populated with photometry from the file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.aperture_photometry.AperturePhotometryDataset.get_lightcurve">
+<span class="sig-name descname"><span class="pre">get_lightcurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">star_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/aperture_photometry.html#AperturePhotometryDataset.get_lightcurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.aperture_photometry.AperturePhotometryDataset.get_lightcurve" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>catalog</strong> (<em>star_idx int    Index</em><em> (</em><em>not ID</em><em>) of </em><em>star in source</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>lc  Table  Lightcurve data for the star with columns MJD, flux, err_flux, mag, err_mag</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="src.photometry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../conversions/index.html" class="btn btn-neutral float-right" title="src.photometry.conversions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

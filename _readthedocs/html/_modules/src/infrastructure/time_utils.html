@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.infrastructure.time_utils &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.infrastructure.time_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.infrastructure.time_utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.time</span><span class="w"> </span><span class="kn">import</span> <span class="n">Time</span><span class="p">,</span> <span class="n">TimeDelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarthLocation</span><span class="p">,</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+
+<div class="viewcode-block" id="calc_hjd">
+<a class="viewcode-back" href="../../../autoapi/src/infrastructure/time_utils/index.html#src.infrastructure.time_utils.calc_hjd">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_hjd</span><span class="p">(</span><span class="n">dateobs</span><span class="p">,</span> <span class="n">RA</span><span class="p">,</span> <span class="n">Dec</span><span class="p">,</span> <span class="n">tel_code</span><span class="p">,</span> <span class="n">exp_time</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to calculate the Heliocentric Julian Date of the center of a image,</span>
+<span class="sd">    for the mid-point of an exposure</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        dateobs  str  Datetime in UTC of the exposure start, in ISOT format %Y-%m-%dT%H:%M:%S</span>
+<span class="sd">        RA       str  RA of the target or frame center in decimal degrees, J2000.0</span>
+<span class="sd">        Dec      str  Dec of the target or frame center in decimal degrees, J2000.0</span>
+<span class="sd">        tel_code str  Identifer code of the observatory site where the data were taken;</span>
+<span class="sd">                      used with a look-up table to find the geographic location</span>
+<span class="sd">        exp_time  float Exposure time in seconds</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        hjd      float Calculated HJD</span>
+
+<span class="sd">    This function is based on a recipe from Astropy&#39;s documentation:</span>
+<span class="sd">    https://docs.astropy.org/en/stable/time/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Get the geographic location of the telescope</span>
+    <span class="n">observatory_site</span> <span class="o">=</span> <span class="n">fetch_observatory_location</span><span class="p">(</span><span class="n">tel_code</span><span class="p">)</span>
+
+    <span class="c1"># Convert the timestamp string to a time object with this location, then</span>
+    <span class="c1"># add half the exposure time to arrive at the mid-point of the exposure</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">Time</span><span class="p">(</span><span class="n">dateobs</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;isot&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="s1">&#39;utc&#39;</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">observatory_site</span><span class="p">)</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">TimeDelta</span><span class="p">(</span><span class="n">exp_time</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;sec&#39;</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">dt</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating HJD for &#39;</span> <span class="o">+</span> <span class="n">tel_code</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;DATE-OBS = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dateobs</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exposure time = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">exp_time</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Mid-point of exposure (UTC) = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">mjd</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Mid-point of exposure (TT) = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">tt</span><span class="o">.</span><span class="n">mjd</span><span class="p">))</span>
+
+    <span class="c1"># Produce a SkyCoord object for the target coordinates, frame ICRS</span>
+    <span class="n">star</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">RA</span><span class="p">,</span> <span class="n">Dec</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Star position: &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">star</span><span class="p">))</span>
+
+    <span class="c1"># Calculate the light travel time from the observatory to the Sun heliocenter</span>
+    <span class="n">ltt_helio</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">light_travel_time</span><span class="p">(</span><span class="n">star</span><span class="p">,</span> <span class="s1">&#39;heliocentric&#39;</span><span class="p">,</span> <span class="n">ephemeris</span><span class="o">=</span><span class="s1">&#39;jpl&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Light travel time correction: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ltt_helio</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)))</span>
+
+    <span class="c1"># Apply the correction to arrive at the HJD</span>
+    <span class="n">hjd</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">utc</span> <span class="o">+</span> <span class="n">ltt_helio</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;HJD (astropy) = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">hjd</span><span class="o">.</span><span class="n">jd</span><span class="p">))</span>
+
+    <span class="c1"># Calculate radial velocity, helicentric correction</span>
+    <span class="n">heliocorr</span> <span class="o">=</span> <span class="n">star</span><span class="o">.</span><span class="n">radial_velocity_correction</span><span class="p">(</span>
+        <span class="s1">&#39;heliocentric&#39;</span><span class="p">,</span>
+        <span class="n">obstime</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Heliocentric RV correction: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">heliocorr</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">km</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">hjd</span><span class="o">.</span><span class="n">jd</span><span class="p">,</span> <span class="n">ltt_helio</span></div>
+
+<div class="viewcode-block" id="fetch_observatory_location">
+<a class="viewcode-back" href="../../../autoapi/src/infrastructure/time_utils/index.html#src.infrastructure.time_utils.fetch_observatory_location">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fetch_observatory_location</span><span class="p">(</span><span class="n">tel_code</span><span class="p">):</span>
+    <span class="n">lco_facilities</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;ogg-clma-2m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;20d42m25.5sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;156d15m27.4sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">3055.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;ogg-clma-0m4b&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;20d42m25.1sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;156d15m27.11sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">3037.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;ogg-clma-0m4c&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;20d42m25.1sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;156d15m27.12sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">3037.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;coj-clma-2m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;31d16m23.4sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;149d4m13.0sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1111.8</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;coj-doma-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;31d16m22.56sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;149d4m14.33sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1168.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;coj-domb-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;31d16m22.89sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;149d4m14.75sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1168.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;coj-clma-0m4a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;31d16m22.38sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;149d4m15.05sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1191.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;coj-clma-0m4b&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;31d16m22.48sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;149d4m14.91sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1191.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;elp-doma-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d40m47.53sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;104d0m54.63sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2010.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;elp-domb-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d40m48.00sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;104d0m55.74sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2029.4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;elp-aqwa-0m4a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d40m48.15sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;104d0m54.24sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2027.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;lsc-doma-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d10m2.58sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;70d48m17.24sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2201.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;lsc-domb-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d10m2.39sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;70d48m16.78sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2201.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;lsc-domc-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d10m2.81sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;70d48m16.85sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2201.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;lsc-aqwa-0m4a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d10m3.79sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;70d48m16.88sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2202.5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;lsc-aqwb-0m4a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;30d10m3.56sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;70d48m16.74sW&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2202.5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;cpt-doma-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;32d22m50.0sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;20d48m36.65sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1807.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;cpt-domb-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;32d22m50.0sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;20d48m36.13sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1807.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;cpt-domc-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;32d22m50.38sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;20d48m36.39sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1807.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;cpt-aqwa-0m4a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;32d22m50.25sS&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;20d48m35.54sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">1804.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;tfn-doma-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;28d18m1.56sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;16d30m41.82sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2406.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;tfn-domb-1m0a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;28d18m1.8720sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;16d30m41.4360sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2406.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;tfn-aqwa-0m4a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;28d18m1.11sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;16d30m42.13sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2390.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s1">&#39;tfn-aqwa-0m4a&#39;</span><span class="p">:</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="s1">&#39;28d18m1.11sN&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="s1">&#39;16d30m42.21sE&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2390.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Center of the Earth</span>
+    <span class="k">if</span> <span class="n">tel_code</span> <span class="o">==</span> <span class="s1">&#39;geocenter&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">EarthLocation</span><span class="o">.</span><span class="n">from_geocentric</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="c1"># Check to see if it is an LCO facility code first, because we have more precise</span>
+    <span class="c1"># coordinates for each telescope than a generic site location</span>
+    <span class="k">if</span> <span class="n">tel_code</span> <span class="ow">in</span> <span class="n">lco_facilities</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">lco_facilities</span><span class="p">[</span><span class="n">tel_code</span><span class="p">]</span>
+
+    <span class="c1"># If not found, use Astropy&#39;s built-in look-up table.  If this is fed an invalid</span>
+    <span class="c1"># site ID code, it will automatically raise an UnknownSiteException, which is</span>
+    <span class="c1"># the desired behaviour</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">EarthLocation</span><span class="o">.</span><span class="n">of_site</span><span class="p">(</span><span class="n">tel_code</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+<div class="viewcode-block" id="parser">
+<a class="viewcode-back" href="../../../autoapi/src/infrastructure/time_utils/index.html#src.infrastructure.time_utils.parser">[docs]</a>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span></div>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;dateobs&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Datetime in UTC of the exposure start, in ISOT format %Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;RA&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;RA of the target or frame center in sexigesimal format, J2000.0&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;Dec&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Dec of the target or frame center in sexigesimal format, J2000.0&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;tel_code&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Identifer code of the observatory site where the data were taken;</span>
+<span class="s2">                      used with a look-up table to find the geographic location&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;exp_time&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Exposure time in seconds&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">hjd</span><span class="p">,</span> <span class="n">ltt_helio</span> <span class="o">=</span> <span class="n">calc_hjd</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">dateobs</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">RA</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">Dec</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">tel_code</span><span class="p">,</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">exp_time</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculated HJD=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">hjd</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; and LTT helio=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ltt_helio</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

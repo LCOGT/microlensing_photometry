@@ -1,0 +1,53 @@
+src.infrastructure.logs
+=======================
+
+.. py:module:: src.infrastructure.logs
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.infrastructure.logs.start_log
+   src.infrastructure.logs.log
+   src.infrastructure.logs.ifverbose
+   src.infrastructure.logs.close_log
+
+
+Module Contents
+---------------
+
+.. py:function:: start_log(log_dir, log_name)
+
+   Function to initialize a log file for a single entity.  The new file will automatically overwrite any
+   previously-existing logfile with the same name
+
+   This function also configures the log file to provide timestamps for
+   all entries.
+
+   :param log_dir:
+   :type log_dir: str, the path of the log file
+   :param log_name:
+   :type log_name: str, the name of the log file
+
+   :returns: **log**
+   :rtype: logger, an open logger object
+
+
+.. py:function:: log(report, report_type, log=None)
+
+.. py:function:: ifverbose(log, setup, string)
+
+   Function to write to a logfile only if the verbose parameter in the
+   metadata is set to True
+
+
+.. py:function:: close_log(log)
+
+   Function that closes a log.
+
+   :param log:
+   :type log: logger, a logger instance to close
+
+

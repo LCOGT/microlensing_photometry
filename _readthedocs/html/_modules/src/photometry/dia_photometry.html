@@ -1,0 +1,647 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.photometry.dia_photometry &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.photometry.dia_photometry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.photometry.dia_photometry</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.wcs</span><span class="w"> </span><span class="kn">import</span> <span class="n">WCS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">photutils.aperture</span><span class="w"> </span><span class="kn">import</span> <span class="n">aperture_photometry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">photutils.aperture</span><span class="w"> </span><span class="kn">import</span> <span class="n">CircularAnnulus</span><span class="p">,</span> <span class="n">CircularAperture</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">photutils.aperture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ApertureStats</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.measure</span><span class="w"> </span><span class="kn">import</span> <span class="n">ransac</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform</span> <span class="k">as</span> <span class="n">tf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndimage</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.infrastructure</span><span class="w"> </span><span class="kn">import</span> <span class="n">logs</span> <span class="k">as</span> <span class="n">lcologs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.photometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">aperture_photometry</span> <span class="k">as</span> <span class="n">lcoaphot</span>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DIAPhotometryAnalyst</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class of worker to perform DIA photometry for one image</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    reference_name : str, a name to the reference</span>
+<span class="sd">    reference_path : str, a path to the reference</span>
+<span class="sd">    image_name : str, a name to the data</span>
+<span class="sd">    image_path : str, a path+name to the data</span>
+<span class="sd">    reference_catalog : astropy.Table, the star catalog of the reference</span>
+<span class="sd">    image_catalog : astropy.Table, the star catalog of the image</span>
+<span class="sd">    cutout_region : list, [RA,DEC,pixel_size] the size in pixels of the cutout image around RA,DEC</span>
+<span class="sd">    kernel_size: int, the size of the numerical kernel use</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_name</span><span class="p">,</span> <span class="n">reference_path</span><span class="p">,</span><span class="n">image_name</span><span class="p">,</span> <span class="n">image_path</span><span class="p">,</span> <span class="n">reference_catalog</span><span class="p">,</span> <span class="n">image_catalog</span><span class="p">,</span>
+                 <span class="n">cutout_region</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span><span class="n">log_path</span><span class="o">=</span><span class="s1">&#39;./logs&#39;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.log">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.log">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">lcologs</span><span class="o">.</span><span class="n">start_log</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="n">image_name</span><span class="p">)</span></div>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initialize DIA Photometry Analyst&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.reference_path">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_path">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_path</span> <span class="o">=</span> <span class="n">reference_path</span><span class="o">+</span><span class="n">reference_name</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.reference_layers">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_layers">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_layers</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.reference_image">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_image">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.reference_wcs">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_wcs">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_wcs</span> <span class="o">=</span> <span class="n">WCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_layers</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)</span></div>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reference found and open successfully!&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.image_path">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_path">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_path</span> <span class="o">=</span> <span class="n">image_path</span><span class="o">+</span><span class="n">image_name</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.image_layers">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_layers">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.image">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.image">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span></div>
+
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fwhm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;L1FWHM&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fwhm</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_layers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.image_wcs">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_wcs">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_wcs</span> <span class="o">=</span> <span class="n">WCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)</span></div>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reference found and open successfully!&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.ref_catalog">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.ref_catalog">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span> <span class="o">=</span> <span class="n">reference_catalog</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.image_catalog">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_catalog">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_catalog</span> <span class="o">=</span> <span class="n">image_catalog</span></div>
+
+
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="n">cutout_region</span>
+<div class="viewcode-block" id="DIAPhotometryAnalyst.ra">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.ra">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ra</span> <span class="o">=</span> <span class="n">ra</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.dec">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.dec">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dec</span> <span class="o">=</span> <span class="n">dec</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.size">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.size">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span></div>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.kernel_size">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.kernel_size">[docs]</a>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span></div>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_image</span><span class="p">()</span>
+
+        <span class="c1">#self.update_image_with_new_layers()</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">close_log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.process_image">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.process_image">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process the image following the various steps</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Start Image Processing&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_image_and_ref</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">align_image_to_ref</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_dia_photometry</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.cut_image_and_ref">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.cut_image_and_ref">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cut_image_and_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Cut the image and ref around the ra,dec center</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">kernel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dec</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span>
+        <span class="n">kernel_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kernel_size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">coo2</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span><span class="n">dec</span><span class="o">=</span><span class="n">dec</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;deg&#39;</span><span class="p">)</span>
+        <span class="n">xx</span><span class="p">,</span><span class="n">yy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_wcs</span><span class="o">.</span><span class="n">world_to_pixel</span><span class="p">(</span><span class="n">coo2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin_ref_x</span> <span class="o">=</span> <span class="n">xx</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin_ref_y</span> <span class="o">=</span> <span class="n">yy</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_image</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">),</span>
+                     <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_reference_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_mask</span><span class="p">[</span>
+                                <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">),</span>
+                                <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">)]</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;xcenter&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">xx</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;ycenter&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">yy</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog_mask</span> <span class="o">=</span> <span class="n">mask</span>
+
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_wcs</span><span class="o">.</span><span class="n">world_to_pixel</span><span class="p">(</span><span class="n">coo2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin_image_x</span> <span class="o">=</span> <span class="n">xx</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin_image_y</span> <span class="o">=</span> <span class="n">yy</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">[</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">),</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_mask</span><span class="p">[</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">),</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">)]</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kernel_size</span><span class="p">)]</span>
+
+        <span class="n">indi</span><span class="p">,</span><span class="n">indj</span> <span class="o">=</span> <span class="n">build_the_U_indexes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_image</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">indi</span> <span class="o">=</span> <span class="n">indi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indj</span> <span class="o">=</span> <span class="n">indj</span></div>
+
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.align_image_to_ref">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.align_image_to_ref">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">align_image_to_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform image alignement to the reference&quot;&quot;&quot;</span>
+        <span class="n">matching</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">inde</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog_mask</span><span class="p">]):</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_catalog</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]:</span>
+
+                <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_catalog</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">matching</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">inde</span><span class="p">,</span> <span class="n">index</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="k">pass</span>
+
+        <span class="n">matching</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matching</span><span class="p">)</span>
+
+        <span class="n">pts1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;xcenter&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog_mask</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin_ref_x</span><span class="p">,</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;ycenter&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog_mask</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin_ref_y</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">matching</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]]</span>
+
+        <span class="n">pts2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_catalog</span><span class="p">[</span><span class="s1">&#39;xcenter&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin_image_x</span><span class="p">,</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">image_catalog</span><span class="p">[</span><span class="s1">&#39;ycenter&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin_image_y</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">matching</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]]</span>
+
+        <span class="n">model_robust</span><span class="p">,</span> <span class="n">inliers</span> <span class="o">=</span> <span class="n">ransac</span><span class="p">((</span><span class="n">pts2</span><span class="p">[:</span><span class="mi">1000</span><span class="p">],</span> <span class="n">pts1</span><span class="p">[:</span><span class="mi">1000</span><span class="p">]),</span> <span class="n">tf</span><span class="o">.</span><span class="n">AffineTransform</span><span class="p">,</span>
+                                       <span class="n">min_samples</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">pts1</span><span class="p">[:</span><span class="mi">1000</span><span class="p">])),</span> <span class="n">residual_threshold</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">max_trials</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+
+        <span class="n">aligned_image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+                                <span class="n">model_robust</span><span class="o">.</span><span class="n">inverse</span><span class="p">,</span>
+                                <span class="n">output_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">aligned_mask</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">model_robust</span><span class="o">.</span><span class="n">inverse</span><span class="p">,</span>
+                               <span class="n">output_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">aligned_errors</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_errors</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                                 <span class="n">model_robust</span><span class="o">.</span><span class="n">inverse</span><span class="p">,</span>
+                                 <span class="n">output_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_aligned_image</span> <span class="o">=</span> <span class="n">aligned_image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_aligned_mask</span> <span class="o">=</span> <span class="n">aligned_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutout_aligned_errors</span> <span class="o">=</span> <span class="n">aligned_errors</span><span class="o">**</span><span class="mf">0.5</span></div>
+
+
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.run_dia_photometry">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.run_dia_photometry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_dia_photometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run DIA photometry on the image using the star catalog of Gaia for time been.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="n">kernel_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutout_aligned_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutout_reference_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+            <span class="n">dia_image</span><span class="p">,</span><span class="n">image_model</span><span class="p">,</span><span class="n">dia_mask</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span><span class="n">bkg_coeffs</span><span class="p">,</span><span class="n">kernel_errors</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">run_difference_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_reference</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutout_aligned_image</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">,</span>
+                                     <span class="n">indi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indi</span><span class="p">,</span> <span class="n">indj</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indj</span><span class="p">))</span>
+
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;xcenter&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog_mask</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin_ref_x</span><span class="p">,</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;ycenter&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog_mask</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin_ref_y</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1">#phot_table = lcoaphot.run_aperture_photometry(dia_image,</span>
+            <span class="c1">#                                              np.abs(</span>
+            <span class="c1">#                                              self.cutout_aligned_errors[kernel_size:-kernel_size, kernel_size:-kernel_size] ),</span>
+            <span class="c1">#                                              positions, self.fwhm)</span>
+
+            <span class="n">phot_table</span> <span class="o">=</span> <span class="n">run_dia_photometry</span><span class="p">(</span><span class="n">dia_image</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cutout_aligned_errors</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">]</span> <span class="p">),</span>
+                                            <span class="n">positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fwhm</span><span class="p">)</span>
+            <span class="n">phot_table</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_catalog_mask</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">dia_photometry</span> <span class="o">=</span> <span class="n">phot_table</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bkg_coeffs</span> <span class="o">=</span> <span class="n">bkg_coeffs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_errors</span> <span class="o">=</span> <span class="n">kernel_errors</span>
+            <span class="c1">#self.bkg_coeffs_errors =</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_model</span> <span class="o">=</span> <span class="n">image_model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dia_image</span> <span class="o">=</span> <span class="n">dia_image</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dia_mask</span> <span class="o">=</span> <span class="n">dia_mask</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;DIA Photometry successfully estimated&#39;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Problems with the DIA photometry: aboard DIA Photometry! Details below&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DIA Photometry Error: %s, %s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="DIAPhotometryAnalyst.update_image_with_new_layers">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.DIAPhotometryAnalyst.update_image_with_new_layers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_image_with_new_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+            <span class="n">update_wcs_layer</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_header</span><span class="p">)</span>
+            <span class="n">update_wcs_layer</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;LCO MICROLENSING UPDATED WCS&#39;</span>
+            <span class="n">update_wcs_layer</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_new_wcs</span><span class="o">.</span><span class="n">to_header</span><span class="p">())</span>
+
+            <span class="k">try</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_wcs_layer</span>
+
+            <span class="k">except</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">update_wcs_layer</span><span class="p">)</span>
+
+            <span class="n">aperture_photometry_table</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aperture_photometry_table</span><span class="p">)</span>
+            <span class="n">aperture_photometry_table</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;LCO MICROLENSING APERTURE PHOTOMETRY&#39;</span>
+
+            <span class="k">try</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">aperture_photometry_table</span>
+
+            <span class="k">except</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aperture_photometry_table</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_layers</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">,</span><span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="run_difference_image">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.run_difference_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_difference_image</span><span class="p">(</span><span class="n">reference_image</span><span class="p">,</span> <span class="n">aligned_image</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">indi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Difference image, given an aligned image to a reference.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reference_image : array, the reference data</span>
+<span class="sd">        aligned_image: array, the image aligned to the data</span>
+<span class="sd">        kernel_size: int, the size of the kernel in pixels</span>
+<span class="sd">        mask : array, a boolean of data to ignore (i.e. 1 = ignored)</span>
+<span class="sd">        error : array, the error data (2D)</span>
+<span class="sd">        indi: array, the indexes in i for the U matrix construction</span>
+<span class="sd">        indj: array, the indexes in j for the U matric construction</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dia_image : array, the difference image</span>
+<span class="sd">        image_model : array, the model of the image</span>
+<span class="sd">        kernel: array, the estimated kernel</span>
+<span class="sd">        bkg_coeffs: array, the estimated bkg coefficients (polynomial)</span>
+<span class="sd">        kernel_errors: array, the errors on the kernel estimate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">reference_image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">error</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">reference_image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1">#Extend the mask a bit</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">binary_dilation</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">),</span>
+                                   <span class="n">iterations</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">indi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">indj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+
+        <span class="k">pass</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="n">indi</span><span class="p">,</span><span class="n">indj</span> <span class="o">=</span> <span class="n">build_the_U_indexes</span><span class="p">(</span><span class="n">reference_image</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">))</span>
+
+    <span class="n">kernel_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kernel_size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">Umatrix</span> <span class="o">=</span> <span class="p">((</span><span class="n">reference_image</span><span class="o">-</span><span class="n">reference_image</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="n">noise</span><span class="p">)[</span><span class="n">indi</span><span class="p">,</span> <span class="n">indj</span><span class="p">]</span>
+    <span class="n">Umatrix2</span> <span class="o">=</span> <span class="n">Umatrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">Umatrix2</span><span class="p">[</span><span class="n">mask</span><span class="p">[</span><span class="n">indi</span><span class="p">,</span> <span class="n">indj</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">tofit</span> <span class="o">=</span> <span class="p">((</span><span class="n">aligned_image</span> <span class="o">-</span> <span class="n">aligned_image</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="n">noise</span><span class="p">)</span>
+    <span class="n">tofit</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">ones</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">tofit</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="n">noise</span><span class="p">)</span>
+    <span class="n">ones</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">Y</span><span class="p">,</span> <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">tofit</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">xxx</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span> <span class="o">/</span> <span class="n">noise</span><span class="p">)</span>
+    <span class="n">xxx</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">yyy</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y</span> <span class="o">/</span> <span class="n">noise</span><span class="p">)</span>
+    <span class="n">yyy</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">bkg_coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">ones</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">,</span>
+                       <span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+    <span class="n">xxx</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+    <span class="n">yyy</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span>
+    <span class="c1">#bkg_coeffs = ones[kernel_size:-kernel_size,kernel_size:-kernel_size].ravel()</span>
+    <span class="n">bigU</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Umatrix2</span><span class="p">,</span> <span class="n">bkg_coeffs</span><span class="p">]</span>
+    <span class="n">solution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">bigU</span><span class="p">,</span>
+                               <span class="n">tofit</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+    <span class="c1">#breakpoint()</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="nb">breakpoint</span><span class="p">()</span>
+
+    <span class="c1">#model = ((((Umatrix @ solution[0][:-3]).reshape(</span>
+    <span class="c1">#    reference_image[kernel_size:-kernel_size, kernel_size:-kernel_size].shape) +</span>
+    <span class="c1">#           solution[0][-3] + X[kernel_size:-kernel_size,</span>
+    <span class="c1">#    #           kernel_size:-kernel_size] * solution[0][-2]) +</span>
+    <span class="c1">#          Y[kernel_size:-kernel_size, kernel_size:-kernel_size] * solution[0][</span>
+    <span class="c1">#    #          -1]) +</span>
+    <span class="c1">#         aligned_image.mean())</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Umatrix</span><span class="p">,</span> <span class="n">bkg_coeffs</span><span class="p">]</span> <span class="o">@</span> <span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">reference_image</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="n">aligned_image</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+
+    <span class="n">residus</span> <span class="o">=</span> <span class="n">aligned_image</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">:</span><span class="o">-</span><span class="n">kernel_size</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span>
+    <span class="c1">#residus[mask[kernel_size:-kernel_size, kernel_size:-kernel_size]] = 0</span>
+
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">kernel_size</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">kernel_size</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="n">bkg_coeffs</span> <span class="o">=</span> <span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span>
+
+    <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">Umatrix</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Umatrix</span><span class="p">)</span>
+    <span class="n">chisq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">residus</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cov</span> <span class="o">*=</span> <span class="n">chisq</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tofit</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+
+    <span class="n">kernel_errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">((</span><span class="n">cov</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="c1"># bkg_coeffs_errors = TODO</span>
+    <span class="n">image_model</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="n">dia_image</span> <span class="o">=</span> <span class="n">residus</span>
+    <span class="n">dia_mask</span> <span class="o">=</span> <span class="n">mask</span>
+
+    <span class="c1">#import scipy.signal as ss</span>
+
+    <span class="c1">#model2 = ss.fftconvolve(reference_image - reference_image.mean(),kernel,</span>
+    <span class="c1">#                         mode=&#39;same&#39; )</span>
+    <span class="c1">#breakpoint()</span>
+
+    <span class="k">return</span> <span class="n">dia_image</span><span class="p">,</span><span class="n">image_model</span><span class="p">,</span><span class="n">dia_mask</span><span class="p">,</span><span class="n">kernel</span><span class="p">,</span><span class="n">bkg_coeffs</span><span class="p">,</span><span class="n">kernel_errors</span></div>
+
+
+<div class="viewcode-block" id="run_dia_photometry">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.run_dia_photometry">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_dia_photometry</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span><span class="n">radius</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DIA photometry on a image, using an error image, and fixed stars positions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : array, the image data</span>
+<span class="sd">    error : array, the error data (2D)</span>
+<span class="sd">    positions: array, [X,Y] positions of the stars to place aperture</span>
+<span class="sd">    radius: float, the aperture radius use to extract flux</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phot_table : astropy.Table, the photometric table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">aperture</span> <span class="o">=</span> <span class="n">CircularAperture</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">radius</span><span class="p">)</span>
+    <span class="c1">#annulus_aperture = CircularAnnulus(positions, r_in=radius+3, r_out=radius+5)</span>
+
+    <span class="c1">#aperstats = ApertureStats(image, annulus_aperture)</span>
+
+    <span class="c1">#bkg_mean = aperstats.mean</span>
+
+    <span class="n">phot_table</span> <span class="o">=</span> <span class="n">aperture_photometry</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">aperture</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+    <span class="c1">#total_bkg = aperture.area * bkg_mean</span>
+
+    <span class="c1">#phot_table[&#39;aperture_sum&#39;] -= total_bkg</span>
+    <span class="c1">#breakpoint()</span>
+    <span class="k">return</span> <span class="n">phot_table</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="build_the_U_matrix">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.build_the_U_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_the_U_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">K</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;To save to make X,Y dependent kernel, might be of use later&quot;&quot;&quot;</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="n">n</span> <span class="o">-</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">q</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="c1">#YY, XX = np.indices(X.shape)</span>
+    <span class="c1">#UX = np.zeros(U.shape)</span>
+    <span class="c1">#UY = np.zeros(U.shape)</span>
+    <span class="c1">#UXX = np.zeros(U.shape)</span>
+    <span class="c1">#UYY = np.zeros(U.shape)</span>
+    <span class="c1">#UXY = np.zeros(U.shape)</span>
+    <span class="n">indi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">indj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">iii</span><span class="p">,</span> <span class="n">jjj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">line</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">line</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">q</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">q</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>  <span class="c1"># *MASK[i:i+q,j:j+q].ravel()</span>
+            <span class="c1">#UX[line] = xx[i:i + q, j:j + q].ravel() * XX[i:i + q, j:j + q].ravel()  # *MASK[i:i+q,j:j+q].ravel()</span>
+            <span class="c1">#UY[line] = xx[i:i + q, j:j + q].ravel() * YY[i:i + q, j:j + q].ravel()  # *MASK[i:i+q,j:j+q].ravel()</span>
+            <span class="c1">#UXX[line] = xx[i:i + q, j:j + q].ravel() * XX[i:i + q, j:j + q].ravel() ** 2  # *MASK[i:i+q,j:j+q].ravel()</span>
+            <span class="c1">#UYY[line] = xx[i:i + q, j:j + q].ravel() * YY[i:i + q, j:j + q].ravel() ** 2  # *MASK[i:i+q,j:j+q].ravel()</span>
+            <span class="c1">#UXY[line] = xx[i:i + q, j:j + q].ravel() * XX[i:i + q, j:j + q].ravel() * YY[i:i + q,</span>
+            <span class="c1">#                                                                          j:j + q].ravel()  # *MASK[i:i+q,j:j+q].ravel()</span>
+
+            <span class="n">indi</span><span class="p">[</span><span class="n">line</span><span class="p">]</span> <span class="o">=</span> <span class="n">iii</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">q</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">q</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="n">indj</span><span class="p">[</span><span class="n">line</span><span class="p">]</span> <span class="o">=</span> <span class="n">jjj</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">q</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">q</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">indi</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">indj</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_the_U_indexes">
+<a class="viewcode-back" href="../../../autoapi/src/photometry/dia_photometry/index.html#src.photometry.dia_photometry.build_the_U_indexes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_the_U_indexes</span><span class="p">(</span><span class="n">reference_image</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct the indi,inj indexes to build quickly the umatrix for kernel solution</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : array, the image data</span>
+<span class="sd">    error : array, the error data (2D)</span>
+<span class="sd">    positions: array, [X,Y] positions of the stars to place aperture</span>
+<span class="sd">    radius: float, the aperture radius use to extract flux</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phot_table : astropy.Table, the photometric table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">reference_image</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">iii</span><span class="p">,</span> <span class="n">jjj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">reference_image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">indi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="n">n</span> <span class="o">-</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">q</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">indj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="n">n</span> <span class="o">-</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">q</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">line</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+
+            <span class="n">indi</span><span class="p">[</span><span class="n">line</span><span class="p">]</span> <span class="o">=</span> <span class="n">iii</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">q</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">q</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="n">indj</span><span class="p">[</span><span class="n">line</span><span class="p">]</span> <span class="o">=</span> <span class="n">jjj</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">q</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">q</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">indi</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">indj</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

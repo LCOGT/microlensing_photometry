@@ -1,0 +1,25 @@
+src
+===
+
+.. py:module:: src
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/IO/index
+   /autoapi/src/astrometry/index
+   /autoapi/src/data_quality/index
+   /autoapi/src/infrastructure/index
+   /autoapi/src/logistics/index
+   /autoapi/src/microlensing_photometry/index
+   /autoapi/src/photometry/index
+   /autoapi/src/plots/index
+   /autoapi/src/prototypes/index
+   /autoapi/src/starfinder/index
+   /autoapi/src/trials/index
+
+

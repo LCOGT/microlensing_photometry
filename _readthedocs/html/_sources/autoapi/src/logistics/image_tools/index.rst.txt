@@ -1,0 +1,36 @@
+src.logistics.image_tools
+=========================
+
+.. py:module:: src.logistics.image_tools
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.logistics.image_tools.build_image
+
+
+Module Contents
+---------------
+
+.. py:function:: build_image(star_positions, fluxes, image_shape, image_fraction=0.25, star_limit=1000)
+
+   Construct an image with fake stars on top of a null background. Only the star inside the image fraction are computed
+
+   :param image:
+   :type image: array, the image to refine the WCS solution
+   :param stars_image:
+   :type stars_image: array, the x,y positions of stars in the image
+   :param image_wcs:
+   :type image_wcs: astropy.wcs, the original astropy WCS solution
+   :param gaia_catalog:
+   :type gaia_catalog: astropy.Table, the entire gaia catalog
+   :param star_limit:
+   :type star_limit: int, the limit number of stars to use
+
+   :returns: **model_image**
+   :rtype: array, a model image of the field
+
+

@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.trials.dia_phot_script &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="remove_photometry" href="../../../remove_photometry/index.html" />
+    <link rel="prev" title="src.trials.amend_phot_tables" href="../amend_phot_tables/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Home page</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">src</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../IO/index.html">src.IO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../astrometry/index.html">src.astrometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../data_quality/index.html">src.data_quality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../infrastructure/index.html">src.infrastructure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../logistics/index.html">src.logistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../microlensing_photometry/index.html">src.microlensing_photometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../photometry/index.html">src.photometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../plots/index.html">src.plots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../prototypes/index.html">src.prototypes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../starfinder/index.html">src.starfinder</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">src.trials</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../remove_photometry/index.html">remove_photometry</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">src</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">src.trials</a></li>
+      <li class="breadcrumb-item active">src.trials.dia_phot_script</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.trials.dia_phot_script">
+<span id="src-trials-dia-phot-script"></span><h1>src.trials.dia_phot_script<a class="headerlink" href="#module-src.trials.dia_phot_script" title="Link to this heading"></a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.parser" title="src.trials.dia_phot_script.parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parser</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.args" title="src.trials.dia_phot_script.args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">args</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.do_dia_phot" title="src.trials.dia_phot_script.do_dia_phot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_dia_phot</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.images" title="src.trials.dia_phot_script.images"><code class="xref py py-obj docutils literal notranslate"><span class="pre">images</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.hdr" title="src.trials.dia_phot_script.hdr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdr</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.ra" title="src.trials.dia_phot_script.ra"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ra</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.dec" title="src.trials.dia_phot_script.dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dec</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.coo" title="src.trials.dia_phot_script.coo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coo</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.target" title="src.trials.dia_phot_script.target"><code class="xref py py-obj docutils literal notranslate"><span class="pre">target</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.gaia_catalog" title="src.trials.dia_phot_script.gaia_catalog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gaia_catalog</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.coords" title="src.trials.dia_phot_script.coords"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coords</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id0" title="src.trials.dia_phot_script.cutout_region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cutout_region</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.new_wcs" title="src.trials.dia_phot_script.new_wcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_wcs</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.cats" title="src.trials.dia_phot_script.cats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cats</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.Time" title="src.trials.dia_phot_script.Time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Time</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.exptime" title="src.trials.dia_phot_script.exptime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exptime</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.bad_agent" title="src.trials.dia_phot_script.bad_agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bad_agent</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.nstars" title="src.trials.dia_phot_script.nstars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nstars</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.l1fwhm" title="src.trials.dia_phot_script.l1fwhm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">l1fwhm</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.image_path" title="src.trials.dia_phot_script.image_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_path</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.trials.dia_phot_script.apsum" title="src.trials.dia_phot_script.apsum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apsum</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id0" title="src.trials.dia_phot_script.cutout_region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cutout_region</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.parser">
+<span class="sig-name descname"><span class="pre">parser</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.parser" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.args">
+<span class="sig-name descname"><span class="pre">args</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.args" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.do_dia_phot">
+<span class="sig-name descname"><span class="pre">do_dia_phot</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#do_dia_phot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.do_dia_phot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.images">
+<span class="sig-name descname"><span class="pre">images</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.images" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.hdr">
+<span class="sig-name descname"><span class="pre">hdr</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#hdr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.hdr" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.ra">
+<span class="sig-name descname"><span class="pre">ra</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#ra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.ra" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.dec">
+<span class="sig-name descname"><span class="pre">dec</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#dec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.dec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.coo">
+<span class="sig-name descname"><span class="pre">coo</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#coo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.coo" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.target" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.gaia_catalog">
+<span class="sig-name descname"><span class="pre">gaia_catalog</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#gaia_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.gaia_catalog" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.coords" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.cutout_region">
+<span class="sig-name descname"><span class="pre">cutout_region</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#cutout_region"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.cutout_region" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.new_wcs">
+<span class="sig-name descname"><span class="pre">new_wcs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#new_wcs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.new_wcs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.cats">
+<span class="sig-name descname"><span class="pre">cats</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#cats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.cats" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.Time">
+<span class="sig-name descname"><span class="pre">Time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#Time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.Time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.exptime">
+<span class="sig-name descname"><span class="pre">exptime</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#exptime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.exptime" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.bad_agent">
+<span class="sig-name descname"><span class="pre">bad_agent</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#bad_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.bad_agent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.nstars">
+<span class="sig-name descname"><span class="pre">nstars</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#nstars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.nstars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.l1fwhm">
+<span class="sig-name descname"><span class="pre">l1fwhm</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#l1fwhm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.l1fwhm" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.image_path">
+<span class="sig-name descname"><span class="pre">image_path</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#image_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.image_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="src.trials.dia_phot_script.apsum">
+<span class="sig-name descname"><span class="pre">apsum</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#apsum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.trials.dia_phot_script.apsum" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">cutout_region</span></span><a class="reference internal" href="../../../../_modules/src/trials/dia_phot_script.html#cutout_region"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../amend_phot_tables/index.html" class="btn btn-neutral float-left" title="src.trials.amend_phot_tables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../../remove_photometry/index.html" class="btn btn-neutral float-right" title="remove_photometry" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

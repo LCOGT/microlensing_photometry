@@ -1,0 +1,19 @@
+src.starfinder.starfinder
+=========================
+
+.. py:module:: src.starfinder.starfinder
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.starfinder.starfinder.find_star_catalog
+
+
+Module Contents
+---------------
+
+.. py:function:: find_star_catalog(image)
+

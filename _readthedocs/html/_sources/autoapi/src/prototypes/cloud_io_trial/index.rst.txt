@@ -1,0 +1,22 @@
+src.prototypes.cloud_io_trial
+=============================
+
+.. py:module:: src.prototypes.cloud_io_trial
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.prototypes.cloud_io_trial.fsspec_kwargs
+   src.prototypes.cloud_io_trial.s3_uri
+
+
+Module Contents
+---------------
+
+.. py:data:: fsspec_kwargs
+
+.. py:data:: s3_uri
+

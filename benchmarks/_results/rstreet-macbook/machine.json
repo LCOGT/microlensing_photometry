@@ -1,0 +1,9 @@
+{
+    "arch": "Apple M2",
+    "cpu": "Apple M2",
+    "machine": "rstreet-macbook",
+    "num_cpu": "8",
+    "os": "Mac OS-X Sequoia 15.5",
+    "ram": "17179869184",
+    "version": 1
+}

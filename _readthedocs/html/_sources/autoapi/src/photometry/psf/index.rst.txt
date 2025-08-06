@@ -1,0 +1,40 @@
+src.photometry.psf
+==================
+
+.. py:module:: src.photometry.psf
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.photometry.psf.Gaussian2d
+
+
+Module Contents
+---------------
+
+.. py:function:: Gaussian2d(intensity, x_center, y_center, width_x, width_y, X_star, Y_star)
+
+   A 2d Gaussian model, to ingest stars in image model
+
+   :param intensity:
+   :type intensity: float, the intensity of the gaussian
+   :param x_center:
+   :type x_center: float,  the gaussian center in x direction
+   :param y_center:
+   :type y_center: float, the gaussian center in y direction
+   :param width_x:
+   :type width_x: float, the gaussian sigma x
+   :param width_y:
+   :type width_y: float, the gaussian sigma y
+   :param X_star:
+   :type X_star: array, 2D  array containing the X value
+   :param Y_star:
+   :type Y_star: array,  2D  array containing the Y value
+
+   :returns: **model**
+   :rtype: array,  return the 2D gaussiam
+
+

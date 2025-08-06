@@ -1,0 +1,220 @@
+src.photometry.dia_photometry
+=============================
+
+.. py:module:: src.photometry.dia_photometry
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   src.photometry.dia_photometry.DIAPhotometryAnalyst
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.photometry.dia_photometry.run_difference_image
+   src.photometry.dia_photometry.run_dia_photometry
+   src.photometry.dia_photometry.build_the_U_matrix
+   src.photometry.dia_photometry.build_the_U_indexes
+
+
+Module Contents
+---------------
+
+.. py:class:: DIAPhotometryAnalyst(reference_name, reference_path, image_name, image_path, reference_catalog, image_catalog, cutout_region, kernel_size, log_path='./logs')
+
+   Bases: :py:obj:`object`
+
+
+   Class of worker to perform DIA photometry for one image
+
+   .. attribute:: reference_name
+
+
+
+      :type: str, a name to the reference
+
+   .. attribute:: reference_path
+
+
+
+      :type: str, a path to the reference
+
+   .. attribute:: image_name
+
+
+
+      :type: str, a name to the data
+
+   .. attribute:: image_path
+
+
+
+      :type: str, a path+name to the data
+
+   .. attribute:: reference_catalog
+
+
+
+      :type: astropy.Table, the star catalog of the reference
+
+   .. attribute:: image_catalog
+
+
+
+      :type: astropy.Table, the star catalog of the image
+
+   .. attribute:: cutout_region
+
+
+
+      :type: list, [RA,DEC,pixel_size] the size in pixels of the cutout image around RA,DEC
+
+   .. attribute:: kernel_size
+
+
+
+      :type: int, the size of the numerical kernel use
+
+
+   .. py:attribute:: log
+
+
+   .. py:attribute:: reference_path
+
+
+   .. py:attribute:: reference_layers
+
+
+   .. py:attribute:: reference_image
+
+
+   .. py:attribute:: reference_wcs
+
+
+   .. py:attribute:: image_path
+
+
+   .. py:attribute:: image_layers
+
+
+   .. py:attribute:: image
+
+
+   .. py:attribute:: image_wcs
+
+
+   .. py:attribute:: ref_catalog
+
+
+   .. py:attribute:: image_catalog
+
+
+   .. py:attribute:: ra
+
+
+   .. py:attribute:: dec
+
+
+   .. py:attribute:: size
+
+
+   .. py:attribute:: kernel_size
+
+
+   .. py:method:: process_image()
+
+      Process the image following the various steps
+
+
+
+   .. py:method:: cut_image_and_ref()
+
+      Cut the image and ref around the ra,dec center
+
+
+
+   .. py:method:: align_image_to_ref()
+
+      Perform image alignement to the reference
+
+
+
+   .. py:method:: run_dia_photometry()
+
+      Run DIA photometry on the image using the star catalog of Gaia for time been.
+
+
+
+   .. py:method:: update_image_with_new_layers()
+
+
+.. py:function:: run_difference_image(reference_image, aligned_image, kernel_size, mask=None, error=None, indi=None, indj=None)
+
+   Difference image, given an aligned image to a reference.
+
+   :param reference_image:
+   :type reference_image: array, the reference data
+   :param aligned_image:
+   :type aligned_image: array, the image aligned to the data
+   :param kernel_size:
+   :type kernel_size: int, the size of the kernel in pixels
+   :param mask:
+   :type mask: array, a boolean of data to ignore (i.e. 1 = ignored)
+   :param error:
+   :type error: array, the error data (2D)
+   :param indi:
+   :type indi: array, the indexes in i for the U matrix construction
+   :param indj:
+   :type indj: array, the indexes in j for the U matric construction
+
+   :returns: * **dia_image** (*array, the difference image*)
+             * **image_model** (*array, the model of the image*)
+             * **kernel** (*array, the estimated kernel*)
+             * **bkg_coeffs** (*array, the estimated bkg coefficients (polynomial)*)
+             * **kernel_errors** (*array, the errors on the kernel estimate*)
+
+
+.. py:function:: run_dia_photometry(image, error, positions, radius)
+
+   DIA photometry on a image, using an error image, and fixed stars positions.
+
+   :param image:
+   :type image: array, the image data
+   :param error:
+   :type error: array, the error data (2D)
+   :param positions:
+   :type positions: array, [X,Y] positions of the stars to place aperture
+   :param radius:
+   :type radius: float, the aperture radius use to extract flux
+
+   :returns: **phot_table**
+   :rtype: astropy.Table, the photometric table
+
+
+.. py:function:: build_the_U_matrix(X, K)
+
+   To save to make X,Y dependent kernel, might be of use later
+
+
+.. py:function:: build_the_U_indexes(reference_image, kernel)
+
+   Construct the indi,inj indexes to build quickly the umatrix for kernel solution
+   :param image:
+   :type image: array, the image data
+   :param error:
+   :type error: array, the error data (2D)
+   :param positions:
+   :type positions: array, [X,Y] positions of the stars to place aperture
+   :param radius:
+   :type radius: float, the aperture radius use to extract flux
+
+   :returns: **phot_table**
+   :rtype: astropy.Table, the photometric table
+
+

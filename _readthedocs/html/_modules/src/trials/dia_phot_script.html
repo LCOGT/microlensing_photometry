@@ -1,0 +1,354 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.trials.dia_phot_script &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.trials.dia_phot_script</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.trials.dia_phot_script</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.wcs</span><span class="w"> </span><span class="kn">import</span> <span class="n">WCS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.photometry.aperture_photometry</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcoapphot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.photometry.dia_photometry</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcodiaphot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.photometry.photometric_scale_factor</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcopscale</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.logistics.GaiaTools.GaiaCatalog</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">GC</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.astrometry.wcs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcowcs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.photometry</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcophot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.IO</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits_table_parser</span><span class="p">,</span> <span class="n">hdf5</span>
+
+<div class="viewcode-block" id="parser">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.parser">[docs]</a>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span></div>
+
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;directory&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to data directory of FITS images&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="args">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.args">[docs]</a>
+<span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="do_dia_phot">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.do_dia_phot">[docs]</a>
+<span class="n">do_dia_phot</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<span class="c1">#directory = &#39;/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/&#39;</span>
+
+<span class="c1"># Build list of images in the reduction directory</span>
+<div class="viewcode-block" id="images">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.images">[docs]</a>
+<span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;.fits&#39;</span> <span class="ow">in</span> <span class="n">i</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="s1">&#39;.fz&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">i</span><span class="p">)]</span></div>
+
+
+<span class="c1"># Use the header of the first image in the directory to</span>
+<span class="c1"># identify the expected target coordinates, assuming</span>
+<span class="c1"># that the frame is centered on the target</span>
+<div class="viewcode-block" id="hdr">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.hdr">[docs]</a>
+<span class="n">hdr</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">getheader</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="ra">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.ra">[docs]</a>
+<span class="n">ra</span> <span class="o">=</span> <span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="dec">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.dec">[docs]</a>
+<span class="n">dec</span> <span class="o">=</span> <span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;DEC&#39;</span><span class="p">]</span></div>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Extract Gaia targets for field centered on &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">dec</span><span class="p">))</span>
+
+<div class="viewcode-block" id="coo">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.coo">[docs]</a>
+<span class="n">coo</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span><span class="n">dec</span><span class="o">=</span><span class="n">dec</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;deg&#39;</span><span class="p">)</span></div>
+
+<span class="k">if</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">ra</span><span class="p">):</span>
+<div class="viewcode-block" id="target">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.target">[docs]</a>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="n">dec</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">hourangle</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">)</span></div>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">target</span> <span class="o">=</span>  <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="n">dec</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="gaia_catalog">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.gaia_catalog">[docs]</a>
+<span class="n">gaia_catalog</span> <span class="o">=</span> <span class="n">GC</span><span class="o">.</span><span class="n">collect_Gaia_catalog</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="n">row_limit</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span><span class="n">catalog_name</span><span class="o">=</span><span class="s1">&#39;Gaia_catalog.dat&#39;</span><span class="p">,</span>
+                         <span class="n">catalog_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">gaia_catalog</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;No Gaia catalog could be retrieved for this field, either locally or online&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="coords">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.coords">[docs]</a>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">)</span></div>
+
+
+<span class="n">cutout_region</span> <span class="o">=</span> <span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">deg</span><span class="o">-</span><span class="mi">0</span><span class="o">/</span><span class="mf">60.</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">deg</span><span class="o">-</span><span class="mi">0</span><span class="o">/</span><span class="mf">60.</span><span class="p">,</span><span class="mi">250</span><span class="p">]</span>
+
+
+<span class="c1">### First run wcs+aperture</span>
+<div class="viewcode-block" id="new_wcs">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.new_wcs">[docs]</a>
+<span class="n">new_wcs</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="cats">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.cats">[docs]</a>
+<span class="n">cats</span> <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># List of star catalogs for all images</span></div>
+
+<div class="viewcode-block" id="Time">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.Time">[docs]</a>
+<span class="n">Time</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="exptime">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.exptime">[docs]</a>
+<span class="n">exptime</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="bad_agent">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.bad_agent">[docs]</a>
+<span class="n">bad_agent</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<span class="c1">#ims = []</span>
+<span class="c1">#errors = []</span>
+<div class="viewcode-block" id="nstars">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.nstars">[docs]</a>
+<span class="n">nstars</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="l1fwhm">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.l1fwhm">[docs]</a>
+<span class="n">l1fwhm</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">images</span><span class="p">):</span><span class="c1">#[::1]:</span>
+<div class="viewcode-block" id="image_path">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.image_path">[docs]</a>
+    <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span><span class="n">im</span><span class="p">)</span></div>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Aperture photometry for &#39;</span> <span class="o">+</span> <span class="n">im</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdul</span><span class="p">:</span>
+
+        <span class="n">hdr0</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+
+        <span class="c1">#image = fits.open(directory+im)</span>
+        <span class="c1">#ims.append(hdul[0].data)</span>
+        <span class="c1">#errors.append(hdul[3].data)</span>
+        <span class="n">nstars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">l1fwhm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdr0</span><span class="p">[</span><span class="s1">&#39;L1FWHM&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Check whether there is an existing photometry table available.</span>
+        <span class="n">phot_table_index</span> <span class="o">=</span> <span class="n">fits_table_parser</span><span class="o">.</span><span class="n">find_phot_table</span><span class="p">(</span><span class="n">hdul</span><span class="p">,</span> <span class="s1">&#39;LCO MICROLENSING APERTURE PHOTOMETRY&#39;</span><span class="p">)</span>
+        <span class="c1"># If photometry has already been done, read the table</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">phot_table_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">fits_table_parser</span><span class="o">.</span><span class="n">fits_rec_to_table</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="n">phot_table_index</span><span class="p">])))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -&gt; Loaded existing photometry catalog&#39;</span><span class="p">)</span>
+
+        <span class="c1"># If no photometry table is available, perform photometry:</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">agent</span> <span class="o">=</span> <span class="n">lcoapphot</span><span class="o">.</span><span class="n">AperturePhotometryAnalyst</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">gaia_catalog</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span><span class="p">:</span>
+                <span class="n">cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">aperture_photometry_table</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -&gt; Performed aperture photometry&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Store FITS header information only if photometry is successful</span>
+        <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+            <span class="n">new_wcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">WCS</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)))</span>
+            <span class="n">Time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdr0</span><span class="p">[</span><span class="s1">&#39;MJD-OBS&#39;</span><span class="p">])</span>
+            <span class="n">exptime</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdr0</span><span class="p">[</span><span class="s1">&#39;EXPTIME&#39;</span><span class="p">])</span>
+
+        <span class="n">hdul</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">hdul</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_wcs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">Time</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">exptime</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cats</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cats</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="c1">#Create the aperture lightcurves</span>
+<div class="viewcode-block" id="apsum">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.apsum">[docs]</a>
+    <span class="n">apsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cats</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;aperture_sum&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Time</span><span class="p">))])</span></div>
+
+    <span class="n">eapsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cats</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;aperture_sum_err&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Time</span><span class="p">))])</span>
+
+    <span class="n">lcs</span> <span class="o">=</span> <span class="n">apsum</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">elcs</span> <span class="o">=</span> <span class="n">eapsum</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="c1">#Compute the phot scale based on &lt;950 stars</span>
+    <span class="n">pscales</span> <span class="o">=</span> <span class="n">lcopscale</span><span class="o">.</span><span class="n">photometric_scale_factor_from_lightcurves</span><span class="p">(</span><span class="n">lcs</span><span class="p">[</span><span class="mi">50</span><span class="p">:</span><span class="mi">1000</span><span class="p">])</span>
+    <span class="n">epscales</span> <span class="o">=</span> <span class="p">(</span><span class="n">pscales</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">pscales</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">flux</span> <span class="o">=</span> <span class="n">lcs</span><span class="o">/</span><span class="n">pscales</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">err_flux</span> <span class="o">=</span> <span class="p">(</span><span class="n">elcs</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">pscales</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">lcs</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">epscales</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">pscales</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+
+    <span class="c1">#np.save(&#39;ap_phot.npy&#39;,np.c_[flux,err_flux])</span>
+
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;aperture_photometry.hdf5&#39;</span><span class="p">)</span>
+    <span class="n">hdf5</span><span class="o">.</span><span class="n">output_photometry</span><span class="p">(</span>
+        <span class="n">gaia_catalog</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Time</span><span class="p">),</span>
+        <span class="n">new_wcs</span><span class="p">,</span>
+        <span class="n">flux</span><span class="p">,</span>
+        <span class="n">err_flux</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">exptime</span><span class="p">),</span>
+        <span class="n">pscales</span><span class="p">,</span>
+        <span class="n">epscales</span><span class="p">,</span>
+        <span class="n">file_path</span>
+    <span class="p">)</span>
+
+<span class="nb">breakpoint</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">do_dia_phot</span><span class="p">:</span>
+
+    <span class="c1">#Location of the DIA cutout</span>
+<div class="viewcode-block" id="cutout_region">
+<a class="viewcode-back" href="../../../autoapi/src/trials/dia_phot_script/index.html#src.trials.dia_phot_script.cutout_region">[docs]</a>
+    <span class="n">cutout_region</span> <span class="o">=</span> <span class="p">[</span><span class="n">ra</span><span class="p">,</span><span class="n">dec</span><span class="p">,</span><span class="mi">250</span><span class="p">]</span></div>
+
+    <span class="n">kernel_size</span> <span class="o">=</span> <span class="mi">17</span>
+    <span class="c1">#Choose the ref as the max number of stars detected by BANZAI, could be updated of course</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">nstars</span><span class="p">)</span>
+
+    <span class="n">dia_phots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dia_kers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dia_ekers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1">#breakpoint()</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">im</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">images</span><span class="p">[:])):</span><span class="c1">#[::1]:</span>
+
+            <span class="n">agent</span> <span class="o">=</span> <span class="n">lcodiaphot</span><span class="o">.</span><span class="n">DIAPhotometryAnalyst</span><span class="p">(</span> <span class="n">images</span><span class="p">[</span><span class="n">ref</span><span class="p">],</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span><span class="n">images</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span><span class="n">cats</span><span class="p">[</span><span class="n">ref</span><span class="p">],</span> <span class="n">cats</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span>
+                     <span class="n">cutout_region</span><span class="p">,</span><span class="n">kernel_size</span><span class="p">)</span>
+            <span class="n">dia_phots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">dia_photometry</span><span class="p">)</span>
+            <span class="n">dia_kers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">kernel</span><span class="p">)</span>
+            <span class="n">dia_ekers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">kernel_errors</span><span class="p">)</span>
+
+    <span class="nb">breakpoint</span><span class="p">()</span>
+    <span class="c1">#Create de DIA lightcurves</span>
+    <span class="n">ppp</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dia_kers</span><span class="p">]</span>
+
+    <span class="n">lcs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">elcs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">star</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">dia_phots</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">])):</span>
+        <span class="c1">#if star==17505:</span>
+        <span class="c1">#    breakpoint()</span>
+        <span class="n">cible</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cats</span><span class="p">[</span><span class="n">ref</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">star</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">phph</span> <span class="o">=</span> <span class="p">[</span><span class="n">cats</span><span class="p">[</span><span class="n">ref</span><span class="p">][</span><span class="s1">&#39;aperture_sum&#39;</span><span class="p">][</span><span class="n">cible</span><span class="p">]</span><span class="o">+</span><span class="n">dia_phots</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">ind</span><span class="p">][</span><span class="s1">&#39;aperture_sum&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">ppp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">exptime</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dia_phots</span><span class="p">))]</span>
+        <span class="n">ephph</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">cats</span><span class="p">[</span><span class="n">ref</span><span class="p">][</span><span class="s1">&#39;aperture_sum_err&#39;</span><span class="p">][</span><span class="n">cible</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">+</span><span class="n">dia_phots</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">ind</span><span class="p">][</span><span class="s1">&#39;aperture_sum_err&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">ppp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">exptime</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">+</span><span class="n">dia_phots</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">ind</span><span class="p">][</span><span class="s1">&#39;aperture_sum&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">ppp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dia_ekers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">exptime</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dia_phots</span><span class="p">))]</span>
+
+        <span class="n">lcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phph</span><span class="p">)</span>
+        <span class="n">elcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ephph</span><span class="p">)</span>
+
+
+
+    <span class="nb">breakpoint</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

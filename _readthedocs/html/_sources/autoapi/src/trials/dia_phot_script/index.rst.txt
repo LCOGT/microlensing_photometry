@@ -1,0 +1,100 @@
+src.trials.dia_phot_script
+==========================
+
+.. py:module:: src.trials.dia_phot_script
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.trials.dia_phot_script.parser
+   src.trials.dia_phot_script.args
+   src.trials.dia_phot_script.do_dia_phot
+   src.trials.dia_phot_script.images
+   src.trials.dia_phot_script.hdr
+   src.trials.dia_phot_script.ra
+   src.trials.dia_phot_script.dec
+   src.trials.dia_phot_script.coo
+   src.trials.dia_phot_script.target
+   src.trials.dia_phot_script.gaia_catalog
+   src.trials.dia_phot_script.coords
+   src.trials.dia_phot_script.cutout_region
+   src.trials.dia_phot_script.new_wcs
+   src.trials.dia_phot_script.cats
+   src.trials.dia_phot_script.Time
+   src.trials.dia_phot_script.exptime
+   src.trials.dia_phot_script.bad_agent
+   src.trials.dia_phot_script.nstars
+   src.trials.dia_phot_script.l1fwhm
+   src.trials.dia_phot_script.image_path
+   src.trials.dia_phot_script.apsum
+   src.trials.dia_phot_script.cutout_region
+
+
+Module Contents
+---------------
+
+.. py:data:: parser
+
+.. py:data:: args
+   :value: None
+
+
+.. py:data:: do_dia_phot
+   :value: False
+
+
+.. py:data:: images
+
+.. py:data:: hdr
+
+.. py:data:: ra
+
+.. py:data:: dec
+
+.. py:data:: coo
+
+.. py:data:: target
+
+.. py:data:: gaia_catalog
+
+.. py:data:: coords
+
+.. py:data:: cutout_region
+
+.. py:data:: new_wcs
+   :value: []
+
+
+.. py:data:: cats
+   :value: []
+
+
+.. py:data:: Time
+   :value: []
+
+
+.. py:data:: exptime
+   :value: []
+
+
+.. py:data:: bad_agent
+   :value: []
+
+
+.. py:data:: nstars
+   :value: []
+
+
+.. py:data:: l1fwhm
+   :value: []
+
+
+.. py:data:: image_path
+
+.. py:data:: apsum
+
+.. py:data:: cutout_region
+

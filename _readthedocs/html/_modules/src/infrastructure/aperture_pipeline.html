@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.infrastructure.aperture_pipeline &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.infrastructure.aperture_pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.infrastructure.aperture_pipeline</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.infrastructure.observations</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcoobs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.infrastructure.logs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcologs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.photometry.aperture_photometry</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcoapphot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.photometry.photometric_scale_factor</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lcopscale</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.logistics.GaiaTools.GaiaCatalog</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">GC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.IO</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits_table_parser</span><span class="p">,</span> <span class="n">hdf5</span><span class="p">,</span> <span class="n">lightcurve</span><span class="p">,</span> <span class="n">tom_utils</span>
+
+<div class="viewcode-block" id="run">
+<a class="viewcode-back" href="../../../autoapi/src/infrastructure/aperture_pipeline/index.html#src.infrastructure.aperture_pipeline.run">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pipeline to run an aperture photometry reduction for a single dataset.</span>
+<span class="sd">    :param args:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Start logging</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">lcologs</span><span class="o">.</span><span class="n">start_log</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;aperture_pipeline&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Load reduction configuration</span>
+    <span class="n">config_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;reduction_config.yaml&#39;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">))</span>
+
+    <span class="c1"># Get observation set; this provides the list of images and associated information</span>
+    <span class="n">obs_set</span> <span class="o">=</span> <span class="n">lcoobs</span><span class="o">.</span><span class="n">get_observation_metadata</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+    <span class="c1"># Establish label for the dataset</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tom&#39;</span><span class="p">][</span><span class="s1">&#39;data_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tom&#39;</span><span class="p">][</span><span class="s1">&#39;data_label&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Use the header of the first image in the directory to</span>
+    <span class="c1"># identify the expected target coordinates, assuming</span>
+    <span class="c1"># that the frame is centered on the target</span>
+    <span class="n">field_ra</span> <span class="o">=</span> <span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">field_dec</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">&#39;Dec&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">field_ra</span><span class="p">):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">field_ra</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="n">field_dec</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">hourangle</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">field_ra</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="n">field_dec</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">)</span>
+
+    <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+        <span class="s1">&#39;Extracting Gaia targets for field centered on &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">field_ra</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">field_dec</span><span class="p">),</span>
+        <span class="s1">&#39;info&#39;</span><span class="p">,</span>
+        <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Load or query for known Gaia objects within this field</span>
+    <span class="n">gaia_catalog</span> <span class="o">=</span> <span class="n">GC</span><span class="o">.</span><span class="n">collect_Gaia_catalog</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="mi">20</span><span class="p">,</span>
+        <span class="n">row_limit</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+        <span class="n">catalog_name</span><span class="o">=</span><span class="s1">&#39;Gaia_catalog.dat&#39;</span><span class="p">,</span>
+        <span class="n">catalog_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span>
+        <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">gaia_catalog</span><span class="p">:</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">lco</span><span class="p">(</span>
+            <span class="s1">&#39;No Gaia catalog could be retrieved for this field, either locally or online&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;error&#39;</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+        <span class="p">)</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">close_log</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;No Gaia catalog could be retrieved for this field, either locally or online&#39;</span><span class="p">)</span>
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span>
+        <span class="n">ra</span><span class="o">=</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">dec</span><span class="o">=</span><span class="n">gaia_catalog</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">),</span>
+        <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">cutout_region</span> <span class="o">=</span> <span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">deg</span><span class="o">-</span><span class="mi">0</span><span class="o">/</span><span class="mf">60.</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">deg</span><span class="o">-</span><span class="mi">0</span><span class="o">/</span><span class="mf">60.</span><span class="p">,</span><span class="mi">250</span><span class="p">]</span>
+
+    <span class="n">cats</span> <span class="o">=</span> <span class="p">{}</span>   <span class="c1"># List of star catalogs for all images</span>
+    <span class="n">bad_agent</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nstars</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]):</span><span class="c1">#[::1]:</span>
+        <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span><span class="n">im</span><span class="p">)</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Aperture photometry for &#39;</span> <span class="o">+</span> <span class="n">im</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdul</span><span class="p">:</span>
+
+            <span class="n">hdr0</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+
+            <span class="n">nstars</span><span class="p">[</span><span class="n">im</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+            <span class="c1"># Check whether there is an existing photometry table available.</span>
+            <span class="n">phot_table_index</span> <span class="o">=</span> <span class="n">fits_table_parser</span><span class="o">.</span><span class="n">find_phot_table</span><span class="p">(</span>
+                <span class="n">hdul</span><span class="p">,</span> <span class="s1">&#39;LCO MICROLENSING APERTURE PHOTOMETRY&#39;</span><span class="p">)</span>
+
+            <span class="c1"># If photometry has already been done, read the table</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">update_phot</span> <span class="ow">and</span> <span class="n">phot_table_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cats</span><span class="p">[</span><span class="n">im</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">fits_table_parser</span><span class="o">.</span><span class="n">fits_rec_to_table</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="n">phot_table_index</span><span class="p">]))</span>
+                <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39; -&gt; Loaded existing photometry catalog&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+            <span class="c1"># If no photometry table is available, perform photometry:</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">agent</span> <span class="o">=</span> <span class="n">lcoapphot</span><span class="o">.</span><span class="n">AperturePhotometryAnalyst</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">gaia_catalog</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span><span class="p">:</span>
+                    <span class="n">cats</span><span class="p">[</span><span class="n">im</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">aperture_photometry_table</span>
+                    <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39; -&gt; Performed aperture photometry&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cats</span><span class="p">[</span><span class="n">im</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39; -&gt; WARNING: No photometry possible&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+            <span class="n">hdul</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">hdul</span>
+    <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Photometered all images&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pscales</span><span class="p">,</span> <span class="n">epscales</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">err_flux</span> <span class="o">=</span> <span class="n">lcopscale</span><span class="o">.</span><span class="n">calculate_pscale</span><span class="p">(</span><span class="n">obs_set</span><span class="p">,</span> <span class="n">cats</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="c1"># Output timeseries photometry for the whole frame</span>
+        <span class="n">phot_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;aperture_photometry.hdf5&#39;</span><span class="p">)</span>
+        <span class="n">hdf5</span><span class="o">.</span><span class="n">output_photometry</span><span class="p">(</span>
+            <span class="n">gaia_catalog</span><span class="p">,</span>
+            <span class="n">obs_set</span><span class="p">,</span>
+            <span class="n">flux</span><span class="p">,</span>
+            <span class="n">err_flux</span><span class="p">,</span>
+            <span class="n">pscales</span><span class="p">,</span>
+            <span class="n">epscales</span><span class="p">,</span>
+            <span class="n">phot_file_path</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Output the lightcurve of the object closest to the center of the field of view</span>
+        <span class="n">lc_root_file_name</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_lc&#39;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;phot_file&#39;</span><span class="p">:</span> <span class="n">phot_file_path</span><span class="p">,</span>
+            <span class="s1">&#39;target_ra&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;RA&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;target_dec&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;Dec&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;filter&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tom&#39;</span><span class="p">][</span><span class="s1">&#39;data_label&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;lc_path&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">lc_root_file_name</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">lc_status</span> <span class="o">=</span> <span class="n">lightcurve</span><span class="o">.</span><span class="n">aperture_timeseries</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="c1"># TOM lightcurve upload</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tom&#39;</span><span class="p">][</span><span class="s1">&#39;upload&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">lc_status</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;file_path&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">lc_root_file_name</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;data_label&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tom&#39;</span><span class="p">][</span><span class="s1">&#39;data_label&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;target_name&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;tom_config_file&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tom&#39;</span><span class="p">][</span><span class="s1">&#39;config_file&#39;</span><span class="p">]</span>
+            <span class="p">}</span>
+            <span class="n">tom_utils</span><span class="o">.</span> <span class="n">upload_lightcurve</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">lc_status</span><span class="p">:</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="s1">&#39;No lightcurve for TOM upload&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+                <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tom&#39;</span><span class="p">][</span><span class="s1">&#39;upload&#39;</span><span class="p">]:</span>
+            <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="s1">&#39;TOM upload switched OFF in configuration&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+                <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="s1">&#39;Empty observations table, cannot calculate photometry timeseries&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;error&#39;</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Wrap up</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Aperture photometry reduction completed&#39;</span><span class="p">)</span>
+    <span class="n">lcologs</span><span class="o">.</span><span class="n">close_log</span><span class="p">(</span><span class="n">log</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_args">
+<a class="viewcode-back" href="../../../autoapi/src/infrastructure/aperture_pipeline/index.html#src.infrastructure.aperture_pipeline.get_args">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_args</span><span class="p">():</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;directory&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to data directory of FITS images&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--update_phot&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Force re-photometry of all frames&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">args</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<div class="viewcode-block" id="args">
+<a class="viewcode-back" href="../../../autoapi/src/infrastructure/aperture_pipeline/index.html#src.infrastructure.aperture_pipeline.args">[docs]</a>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">()</span></div>
+
+    <span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

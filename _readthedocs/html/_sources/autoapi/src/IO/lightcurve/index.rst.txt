@@ -1,0 +1,40 @@
+src.IO.lightcurve
+=================
+
+.. py:module:: src.IO.lightcurve
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.IO.lightcurve.params
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.IO.lightcurve.aperture_timeseries
+   src.IO.lightcurve.get_args
+
+
+Module Contents
+---------------
+
+.. py:function:: aperture_timeseries(params, log=None)
+
+   Function to plot an aperture photometry timeseries from an HDF5 output file
+
+   :param params    dict      Program arguments: 'phot_file', 'target_ra', 'target_dec', 'filter', 'lc_path'
+   :param Outputs:
+   :param -------:
+   :param ASCII format lightcurve file without suffix (path with root filename only):
+
+
+.. py:function:: get_args()
+
+.. py:data:: params
+

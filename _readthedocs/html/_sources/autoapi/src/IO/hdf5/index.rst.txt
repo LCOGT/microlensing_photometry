@@ -1,0 +1,32 @@
+src.IO.hdf5
+===========
+
+.. py:module:: src.IO.hdf5
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.IO.hdf5.output_photometry
+
+
+Module Contents
+---------------
+
+.. py:function:: output_photometry(catalog, obs_set, flux, err_flux, pscales, epscales, file_path, log=None)
+
+   Function to output a dataset photometry table to an HD5 file
+
+   :param catalog  Gaia catalog object containing all known objects in the field of view:
+   :param obs_set ObservationSet object for the current dataset:
+   :param flux    array  Normalized fluxes:
+   :param err_flux array Normalized flux uncertainties:
+   :param pscales array Photometric scale factor for each image and star:
+   :param epscales array Uncertainty on the scale factor per image and star:
+   :param file_path str Path to output file:
+
+   :returns: Output HDF5 file
+
+

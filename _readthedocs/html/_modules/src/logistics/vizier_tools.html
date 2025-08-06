@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.logistics.vizier_tools &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.logistics.vizier_tools</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.logistics.vizier_tools</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sys</span><span class="w"> </span><span class="kn">import</span> <span class="n">argv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astroquery.vizier</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vizier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astroquery.gaia</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gaia</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">visualization</span><span class="p">,</span> <span class="n">table</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.infrastructure</span><span class="w"> </span><span class="kn">import</span> <span class="n">logs</span> <span class="k">as</span> <span class="n">lcologs</span>
+
+<div class="viewcode-block" id="search_vizier_for_sources">
+<a class="viewcode-back" href="../../../autoapi/src/logistics/vizier_tools/index.html#src.logistics.vizier_tools.search_vizier_for_sources">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search_vizier_for_sources</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">catalog</span><span class="p">,</span> <span class="n">row_limit</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                              <span class="n">coords</span><span class="o">=</span><span class="s1">&#39;sexigesimal&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to perform online query of the catalog and return</span>
+<span class="sd">    a catalogue of known objects within the field of view</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ra : str or float, RA J2000 in sexigesimal or degree</span>
+<span class="sd">    dec : str or float, DEC J2000 in sexigesimal or degree</span>
+<span class="sd">    catalog : str, the catalog to query</span>
+<span class="sd">    row_limit : int, the maximum number of row desired</span>
+<span class="sd">    coords : str, the type of coordinates given, i.e. sexagesimal or degree</span>
+<span class="sd">    log : logger, a logger object to write in (not in use it seems)</span>
+<span class="sd">    debug: bool, debug mode or not</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : astropy.Table, an astropy.Table containing the catalog</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">supported_catalogs</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;2MASS&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;2MASS&#39;</span><span class="p">,</span>
+                                     <span class="p">{</span><span class="s1">&#39;_RAJ2000&#39;</span><span class="p">:</span><span class="s1">&#39;_RAJ2000&#39;</span><span class="p">,</span> <span class="s1">&#39;_DEJ2000&#39;</span><span class="p">:</span><span class="s1">&#39;_DEJ2000&#39;</span><span class="p">,</span> <span class="s1">&#39;Jmag&#39;</span><span class="p">:</span><span class="s1">&#39;Jmag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_Jmag&#39;</span><span class="p">:</span><span class="s1">&#39;e_Jmag&#39;</span><span class="p">,</span> \
+                                    <span class="s1">&#39;Hmag&#39;</span><span class="p">:</span><span class="s1">&#39;Hmag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_Hmag&#39;</span><span class="p">:</span><span class="s1">&#39;e_Hmag&#39;</span><span class="p">,</span><span class="s1">&#39;Kmag&#39;</span><span class="p">:</span><span class="s1">&#39;Kmag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_Kmag&#39;</span><span class="p">:</span><span class="s1">&#39;e_Kmag&#39;</span><span class="p">},</span>
+                                    <span class="p">{</span><span class="s1">&#39;Jmag&#39;</span><span class="p">:</span><span class="s1">&#39;&lt;20&#39;</span><span class="p">}],</span>
+                           <span class="s1">&#39;VPHAS+&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;II/341&#39;</span><span class="p">,</span>
+                                      <span class="p">{</span><span class="s1">&#39;sourceID&#39;</span><span class="p">:</span><span class="s1">&#39;sourceID&#39;</span><span class="p">,</span> <span class="s1">&#39;RAJ2000&#39;</span><span class="p">:</span><span class="s1">&#39;_RAJ2000&#39;</span><span class="p">,</span> <span class="s1">&#39;DEJ2000&#39;</span><span class="p">:</span><span class="s1">&#39;_DEJ2000&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;gmag&#39;</span><span class="p">:</span><span class="s1">&#39;gmag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_gmag&#39;</span><span class="p">:</span><span class="s1">&#39;e_gmag&#39;</span><span class="p">,</span> <span class="s1">&#39;rmag&#39;</span><span class="p">:</span><span class="s1">&#39;rmag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_rmag&#39;</span><span class="p">:</span><span class="s1">&#39;e_rmag&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;imag&#39;</span><span class="p">:</span><span class="s1">&#39;imag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_imag&#39;</span><span class="p">:</span><span class="s1">&#39;e_imag&#39;</span><span class="p">,</span> <span class="s1">&#39;clean&#39;</span><span class="p">:</span><span class="s1">&#39;clean&#39;</span><span class="p">},</span>
+                                    <span class="p">{}],</span>
+                            <span class="s1">&#39;Gaia-DR2&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;I/345/gaia2&#39;</span><span class="p">,</span>
+                                      <span class="p">{</span><span class="s1">&#39;RA_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span> <span class="s1">&#39;DE_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="s1">&#39;Source&#39;</span><span class="p">:</span><span class="s1">&#39;source_id&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;e_RA_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;ra_error&#39;</span><span class="p">,</span> <span class="s1">&#39;e_DE_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;dec_error&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;FG&#39;</span><span class="p">:</span><span class="s1">&#39;phot_g_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FG&#39;</span><span class="p">:</span><span class="s1">&#39;phot_g_mean_flux_error&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;FBP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_bp_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FBP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_bp_mean_flux_error&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;FRP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_rp_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FRP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_rp_mean_flux_error&#39;</span> <span class="p">},</span>
+                                    <span class="p">{}],</span>
+                            <span class="s1">&#39;Gaia-EDR3&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;I/350/gaiaedr3&#39;</span><span class="p">,</span>
+                                    <span class="p">{</span><span class="s1">&#39;RA_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span> <span class="s1">&#39;DE_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="s1">&#39;Source&#39;</span><span class="p">:</span><span class="s1">&#39;source_id&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;e_RA_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;ra_error&#39;</span><span class="p">,</span> <span class="s1">&#39;e_DE_ICRS&#39;</span><span class="p">:</span><span class="s1">&#39;dec_error&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;FG&#39;</span><span class="p">:</span><span class="s1">&#39;phot_g_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FG&#39;</span><span class="p">:</span><span class="s1">&#39;phot_g_mean_flux_error&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;FBP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_bp_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FBP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_bp_mean_flux_error&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;FRP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_rp_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FRP&#39;</span><span class="p">:</span><span class="s1">&#39;phot_rp_mean_flux_error&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;PM&#39;</span><span class="p">:</span><span class="s1">&#39;pm&#39;</span><span class="p">,</span> <span class="s1">&#39;pmRA&#39;</span><span class="p">:</span><span class="s1">&#39;pm_ra&#39;</span><span class="p">,</span> <span class="s1">&#39;e_pmRA&#39;</span><span class="p">:</span><span class="s1">&#39;pm_ra_error&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;pmDE&#39;</span><span class="p">:</span><span class="s1">&#39;pm_dec&#39;</span><span class="p">,</span> <span class="s1">&#39;e_pmDE&#39;</span><span class="p">:</span><span class="s1">&#39;pm_dec_error&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;Plx&#39;</span><span class="p">:</span><span class="s1">&#39;parallax&#39;</span><span class="p">,</span> <span class="s1">&#39;e_Plx&#39;</span><span class="p">:</span> <span class="s1">&#39;parallax_error&#39;</span><span class="p">},</span>
+                                    <span class="c1">#&#39;parallax&#39;:&#39;parallax&#39;, &#39;parallax_error&#39;: &#39;parallax_error&#39;},</span>
+                                    <span class="p">{}],</span>
+                           <span class="s1">&#39;Gaia-DR3&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;I/355/gaiadr3&#39;</span><span class="p">,</span>
+                                         <span class="p">{</span><span class="s1">&#39;RA_ICRS&#39;</span><span class="p">:</span> <span class="s1">&#39;ra&#39;</span><span class="p">,</span> <span class="s1">&#39;DE_ICRS&#39;</span><span class="p">:</span> <span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="s1">&#39;Source&#39;</span><span class="p">:</span> <span class="s1">&#39;source_id&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;e_RA_ICRS&#39;</span><span class="p">:</span> <span class="s1">&#39;ra_error&#39;</span><span class="p">,</span> <span class="s1">&#39;e_DE_ICRS&#39;</span><span class="p">:</span> <span class="s1">&#39;dec_error&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;FG&#39;</span><span class="p">:</span> <span class="s1">&#39;phot_g_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FG&#39;</span><span class="p">:</span> <span class="s1">&#39;phot_g_mean_flux_error&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;FBP&#39;</span><span class="p">:</span> <span class="s1">&#39;phot_bp_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FBP&#39;</span><span class="p">:</span> <span class="s1">&#39;phot_bp_mean_flux_error&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;FRP&#39;</span><span class="p">:</span> <span class="s1">&#39;phot_rp_mean_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;e_FRP&#39;</span><span class="p">:</span> <span class="s1">&#39;phot_rp_mean_flux_error&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;PM&#39;</span><span class="p">:</span> <span class="s1">&#39;pm&#39;</span><span class="p">,</span> <span class="s1">&#39;pmRA&#39;</span><span class="p">:</span> <span class="s1">&#39;pm_ra&#39;</span><span class="p">,</span> <span class="s1">&#39;e_pmRA&#39;</span><span class="p">:</span> <span class="s1">&#39;pm_ra_error&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;pmDE&#39;</span><span class="p">:</span> <span class="s1">&#39;pm_dec&#39;</span><span class="p">,</span> <span class="s1">&#39;e_pmDE&#39;</span><span class="p">:</span> <span class="s1">&#39;pm_dec_error&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;Plx&#39;</span><span class="p">:</span> <span class="s1">&#39;parallax&#39;</span><span class="p">,</span> <span class="s1">&#39;e_Plx&#39;</span><span class="p">:</span> <span class="s1">&#39;parallax_error&#39;</span><span class="p">},</span>
+                                         <span class="p">{}],</span>
+                           <span class="p">}</span>
+
+    <span class="p">(</span><span class="n">cat_id</span><span class="p">,</span><span class="n">cat_col_dict</span><span class="p">,</span><span class="n">cat_filters</span><span class="p">)</span> <span class="o">=</span> <span class="n">supported_catalogs</span><span class="p">[</span><span class="n">catalog</span><span class="p">]</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">Vizier</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">cat_col_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">+</span><span class="p">[</span><span class="s2">&quot;+_r&quot;</span><span class="p">],</span> \
+               <span class="n">column_filters</span><span class="o">=</span><span class="n">cat_filters</span><span class="p">)</span>
+
+    <span class="n">v</span><span class="o">.</span><span class="n">ROW_LIMIT</span> <span class="o">=</span> <span class="n">row_limit</span>
+
+    <span class="k">if</span> <span class="s1">&#39;sexigesimal&#39;</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">+</span><span class="s1">&#39; &#39;</span><span class="o">+</span><span class="n">dec</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">hourangle</span><span class="p">,</span> <span class="n">units</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">units</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">arcminute</span>
+
+    <span class="c1"># query_vizier_service function depreciated by latest astroquery changes</span>
+    <span class="n">catalog_list</span> <span class="o">=</span> <span class="n">Vizier</span><span class="o">.</span><span class="n">find_catalogs</span><span class="p">(</span><span class="n">cat_id</span><span class="p">)</span>
+    <span class="c1">#(status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug,timeout=timeout)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">query_region</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">catalog</span><span class="o">=</span><span class="n">cat_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+        <span class="n">col_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">col_id</span><span class="p">,</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">cat_col_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">col_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">col_id</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">col_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">Table</span><span class="p">(</span> <span class="n">col_list</span> <span class="p">)</span>
+
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="s1">&#39;Queried &#39;</span> <span class="o">+</span> <span class="n">cat_id</span> <span class="o">+</span> <span class="s1">&#39; and found &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39; stars within the field of view&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;info&#39;</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+        <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">Table</span><span class="p">([])</span>
+        <span class="n">lcologs</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">&#39;No results returned from catalog query of &#39;</span> <span class="o">+</span> <span class="n">cat_id</span><span class="p">,</span>
+            <span class="s1">&#39;info&#39;</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="query_vizier_servers">
+<a class="viewcode-back" href="../../../autoapi/src/logistics/vizier_tools/index.html#src.logistics.vizier_tools.query_vizier_servers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">query_vizier_servers</span><span class="p">(</span><span class="n">query_service</span><span class="p">,</span> <span class="n">coord</span><span class="p">,</span> <span class="n">search_radius</span><span class="p">,</span> <span class="n">catalog_id</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to query different ViZier servers in order of preference, as</span>
+<span class="sd">    a fail-safe against server outages.  Based on code from NEOExchange by</span>
+<span class="sd">    T. Lister</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    query_service : Astroquery Vizier service object</span>
+<span class="sd">    coord : astrop.Skycoord, a coordinate in sky units</span>
+<span class="sd">    search_radius : float, the search radius in degree</span>
+<span class="sd">    catalog_id : str, the name of the catalog in Vizier&#39;s notation</span>
+<span class="sd">    coords : str, the type of coordinates given, i.e. sexagesimal or degree</span>
+<span class="sd">    log : logger, a logger object to write in (not in use it seems)</span>
+<span class="sd">    debug: bool, debug mode or not</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    status : bool, success or not of the query</span>
+<span class="sd">    result : astropy.Table, an astropy.Table containing the catalog</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">vizier_servers_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;vizier.cds.unistra.fr&#39;</span><span class="p">,</span> <span class="s1">&#39;vizier.cfa.harvard.edu&#39;</span><span class="p">]</span>
+
+    <span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span> <span class="o">=</span> <span class="n">vizier_servers_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">query_service</span><span class="o">.</span><span class="n">TIMEOUT</span> <span class="o">=</span> <span class="n">timeout</span>
+
+    <span class="n">continue_query</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">iserver</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">while</span> <span class="n">continue_query</span><span class="p">:</span>
+        <span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span> <span class="o">=</span> <span class="n">vizier_servers_list</span><span class="p">[</span><span class="n">iserver</span><span class="p">]</span>
+        <span class="n">query_service</span><span class="o">.</span><span class="n">TIMEOUT</span> <span class="o">=</span> <span class="n">timeout</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Searching catalog server &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">log</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Searching catalog server &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Query_region now returns a TableList object, so we need to extract the result</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">query_service</span><span class="o">.</span><span class="n">query_region</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">search_radius</span><span class="p">,</span> <span class="n">catalog</span><span class="o">=</span><span class="n">catalog_id</span><span class="p">)</span>
+
+        <span class="c1"># Handle long timeout requests:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ReadTimeout</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Catalog server &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; timed out, trying longer timeout&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">log</span><span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Catalog server &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; timed out, trying longer timeout&#39;</span><span class="p">)</span>
+
+            <span class="n">query_service</span><span class="o">.</span><span class="n">TIMEOUT</span> <span class="o">=</span> <span class="n">timeout</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">query_service</span><span class="o">.</span><span class="n">query_region</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">search_radius</span><span class="p">,</span> <span class="n">catalog</span><span class="o">=</span><span class="n">catalog_id</span><span class="p">)</span>
+
+        <span class="c1"># Handle preferred-server timeout by trying the alternative server:</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectTimeout</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Catalog server &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; timed out again&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">log</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Catalog server &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">query_service</span><span class="o">.</span><span class="n">VIZIER_SERVER</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; timed out again&#39;</span><span class="p">)</span>
+
+            <span class="n">iserver</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">iserver</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vizier_servers_list</span><span class="p">):</span>
+                <span class="n">continue_query</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="kc">False</span>
+
+                <span class="k">return</span> <span class="n">status</span><span class="p">,</span> <span class="n">result</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">iserver</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">iserver</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vizier_servers_list</span><span class="p">):</span>
+                <span class="n">continue_query</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">continue_query</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">status</span><span class="p">,</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="search_vizier_for_gaia_sources">
+<a class="viewcode-back" href="../../../autoapi/src/logistics/vizier_tools/index.html#src.logistics.vizier_tools.search_vizier_for_gaia_sources">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search_vizier_for_gaia_sources</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to perform online query of the Gaia catalog and return</span>
+<span class="sd">    a catalogue of known objects within the field of view</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ra : float, RA J2000 in degree</span>
+<span class="sd">    dec : float, DEC J2000 in degree</span>
+<span class="sd">    radius : float, the search radius in arcmin</span>
+<span class="sd">    log : logger, a logger object to write in (not in use it seems)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    catalog : astropy.Table, an astropy.Table containing the catalog</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">+</span><span class="s1">&#39; &#39;</span><span class="o">+</span><span class="n">dec</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="s1">&#39;icrs&#39;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">units</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">radius</span><span class="o">/</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">units</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+
+    <span class="n">query_service</span> <span class="o">=</span> <span class="n">Vizier</span><span class="p">(</span><span class="n">row_limit</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">column_filters</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;RAJ2000&#39;</span><span class="p">,</span> <span class="s1">&#39;DEJ2000&#39;</span><span class="p">,</span> <span class="s1">&#39;e_RAJ2000&#39;</span><span class="p">,</span> <span class="s1">&#39;e_DEJ2000&#39;</span><span class="p">,</span> <span class="s1">&#39;Gmag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_Gmag&#39;</span><span class="p">,</span> <span class="s1">&#39;Dup&#39;</span><span class="p">])</span>
+
+
+    <span class="k">if</span> <span class="n">log</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Searching for gaia sources within &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; of &#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="n">Gaia</span><span class="o">.</span><span class="n">cone_search_async</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">log</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;No search results received from Vizier service&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;No search results received from Vizier service&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">HTTPError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">log</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;HTTP error while contacting ViZier&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">HTTPError</span><span class="p">()</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">qs</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+
+    <span class="n">catalog</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span><span class="s1">&#39;source_id&#39;</span><span class="p">,</span><span class="s1">&#39;ra_error&#39;</span><span class="p">,</span><span class="s1">&#39;dec_error&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;phot_g_mean_flux&#39;</span><span class="p">,</span><span class="s1">&#39;phot_g_mean_flux_error&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;phot_rp_mean_flux&#39;</span><span class="p">,</span><span class="s1">&#39;phot_rp_mean_flux_error&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;phot_bp_mean_flux&#39;</span><span class="p">,</span><span class="s1">&#39;phot_bp_mean_flux_error&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">catalog</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

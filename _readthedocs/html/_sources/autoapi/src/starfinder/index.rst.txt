@@ -1,0 +1,15 @@
+src.starfinder
+==============
+
+.. py:module:: src.starfinder
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/starfinder/starfinder/index
+
+

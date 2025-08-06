@@ -14,6 +14,7 @@ import microlensing_photometry.infrastructure.logs as lcologs
 import microlensing_photometry.photometry.aperture_photometry as lcoapphot
 import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
 import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
+import microlensing_photometry.photometry.calibrate_photometry as lcocalphot
 from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
 
 def run(args):
@@ -120,6 +121,18 @@ def run(args):
 
     if len(obs_set.table) > 0:
         pscales, epscales, flux, err_flux = lcopscale.calculate_pscale(obs_set, cats, log=log)
+
+        # Calibrate the photometry
+        calphot = lcocalphot.CalibratePhotometryAnalyst(
+            config,
+            obs_set,
+            gaia_catalog,
+            pscales,
+            epscales,
+            flux,
+            err_flux,
+            log=log
+        )
 
         # Output timeseries photometry for the whole frame
         phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')

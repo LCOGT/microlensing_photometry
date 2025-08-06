@@ -1,0 +1,38 @@
+src.photometry.photometric_scale_factor
+=======================================
+
+.. py:module:: src.photometry.photometric_scale_factor
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.photometry.photometric_scale_factor.photometric_scale_factor_from_lightcurves
+   src.photometry.photometric_scale_factor.calculate_pscale
+
+
+Module Contents
+---------------
+
+.. py:function:: photometric_scale_factor_from_lightcurves(lcs)
+
+   Estimate the 16,50,84 percentiles of the photometric scale factor, define as the median(flux)/flux for each
+   epoch and stars.
+
+   :param lcs:
+   :type lcs: array, an array containing all the lightcurves
+
+   :returns: **pscales**
+   :rtype: array, the photometric scale factors
+
+
+.. py:function:: calculate_pscale(obs_set, image_catalogs, log=None)
+
+   Function to compute the pscale factor for a set of aperture photometry catalogs
+   :return:
+       pscsales, epscales array    Photometric scale factors and errors for all images
+       flux, err_flux      array   Fluxes for all stars in all images
+
+

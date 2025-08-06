@@ -1,0 +1,69 @@
+src.IO.tom_utils
+================
+
+.. py:module:: src.IO.tom_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.IO.tom_utils.params
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.IO.tom_utils.upload_lightcurve
+   src.IO.tom_utils.decide_whether_to_upload
+   src.IO.tom_utils.concat_urls
+   src.IO.tom_utils.get_target_id
+   src.IO.tom_utils.upload_datafile
+   src.IO.tom_utils.list_dataproducts
+   src.IO.tom_utils.delete_old_datafile_version
+   src.IO.tom_utils.get_args
+
+
+Module Contents
+---------------
+
+.. py:function:: upload_lightcurve(params, log=None)
+
+.. py:function:: decide_whether_to_upload(params, log=None)
+
+.. py:function:: concat_urls(base_url, extn_url)
+
+   Function to concatenate URL components without unnecessary duplication
+   of /
+
+
+.. py:function:: get_target_id(params, tom_config, log=None)
+
+   Function queries the TOM to find the unique primary key identifier for the
+   target name given.  This parameter is required for data upload.
+
+
+.. py:function:: upload_datafile(params, tom_config, target_pk, target_groups, log=None)
+
+   Function uploads photometry data to the TOM
+
+
+.. py:function:: list_dataproducts(params, tom_config, target_pk, log=None)
+
+   Function to return a list of dataproducts for the given target that
+   have already been uploaded to the TOM
+
+
+.. py:function:: delete_old_datafile_version(params, tom_config, existing_datafiles, log=None)
+
+   Function to find and delete any existing entry in the TOM for the
+   datafile to be uploaded
+
+
+.. py:function:: get_args()
+
+.. py:data:: params
+

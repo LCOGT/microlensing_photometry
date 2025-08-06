@@ -1,0 +1,19 @@
+src.photometry
+==============
+
+.. py:module:: src.photometry
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/photometry/aperture_photometry/index
+   /autoapi/src/photometry/conversions/index
+   /autoapi/src/photometry/dia_photometry/index
+   /autoapi/src/photometry/photometric_scale_factor/index
+   /autoapi/src/photometry/psf/index
+
+

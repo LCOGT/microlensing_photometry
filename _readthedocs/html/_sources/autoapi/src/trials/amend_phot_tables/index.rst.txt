@@ -1,0 +1,32 @@
+src.trials.amend_phot_tables
+============================
+
+.. py:module:: src.trials.amend_phot_tables
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.trials.amend_phot_tables.parser
+   src.trials.amend_phot_tables.args
+   src.trials.amend_phot_tables.frame_list
+   src.trials.amend_phot_tables.table_index
+
+
+Module Contents
+---------------
+
+.. py:data:: parser
+
+.. py:data:: args
+   :value: None
+
+
+.. py:data:: frame_list
+
+.. py:data:: table_index
+   :value: -1
+
+

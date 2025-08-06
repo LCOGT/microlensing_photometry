@@ -1,0 +1,16 @@
+src.trials
+==========
+
+.. py:module:: src.trials
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/trials/amend_phot_tables/index
+   /autoapi/src/trials/dia_phot_script/index
+
+

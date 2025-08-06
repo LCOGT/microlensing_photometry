@@ -1,0 +1,86 @@
+src.logistics.vizier_tools
+==========================
+
+.. py:module:: src.logistics.vizier_tools
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.logistics.vizier_tools.search_vizier_for_sources
+   src.logistics.vizier_tools.query_vizier_servers
+   src.logistics.vizier_tools.search_vizier_for_gaia_sources
+
+
+Module Contents
+---------------
+
+.. py:function:: search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1, coords='sexigesimal', timeout=60, log=None, debug=False)
+
+   Function to perform online query of the catalog and return
+   a catalogue of known objects within the field of view
+
+   :param ra:
+   :type ra: str or float, RA J2000 in sexigesimal or degree
+   :param dec:
+   :type dec: str or float, DEC J2000 in sexigesimal or degree
+   :param catalog:
+   :type catalog: str, the catalog to query
+   :param row_limit:
+   :type row_limit: int, the maximum number of row desired
+   :param coords:
+   :type coords: str, the type of coordinates given, i.e. sexagesimal or degree
+   :param log:
+   :type log: logger, a logger object to write in (not in use it seems)
+   :param debug:
+   :type debug: bool, debug mode or not
+
+   :returns: **result**
+   :rtype: astropy.Table, an astropy.Table containing the catalog
+
+
+.. py:function:: query_vizier_servers(query_service, coord, search_radius, catalog_id, log=None, debug=False, timeout=60)
+
+   Function to query different ViZier servers in order of preference, as
+   a fail-safe against server outages.  Based on code from NEOExchange by
+   T. Lister
+
+   :param query_service:
+   :type query_service: Astroquery Vizier service object
+   :param coord:
+   :type coord: astrop.Skycoord, a coordinate in sky units
+   :param search_radius:
+   :type search_radius: float, the search radius in degree
+   :param catalog_id:
+   :type catalog_id: str, the name of the catalog in Vizier's notation
+   :param coords:
+   :type coords: str, the type of coordinates given, i.e. sexagesimal or degree
+   :param log:
+   :type log: logger, a logger object to write in (not in use it seems)
+   :param debug:
+   :type debug: bool, debug mode or not
+
+   :returns: * **status** (*bool, success or not of the query*)
+             * **result** (*astropy.Table, an astropy.Table containing the catalog*)
+
+
+.. py:function:: search_vizier_for_gaia_sources(ra, dec, radius, log=None)
+
+   Function to perform online query of the Gaia catalog and return
+   a catalogue of known objects within the field of view
+
+   :param ra:
+   :type ra: float, RA J2000 in degree
+   :param dec:
+   :type dec: float, DEC J2000 in degree
+   :param radius:
+   :type radius: float, the search radius in arcmin
+   :param log:
+   :type log: logger, a logger object to write in (not in use it seems)
+
+   :returns: **catalog**
+   :rtype: astropy.Table, an astropy.Table containing the catalog
+
+

@@ -1,0 +1,40 @@
+remove_photometry
+=================
+
+.. py:module:: remove_photometry
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   remove_photometry.args
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   remove_photometry.del_phot_extn
+   remove_photometry.get_args
+
+
+Module Contents
+---------------
+
+.. py:function:: del_phot_extn(args)
+
+   Function to remove the WCS and photometry table extensions from a set of FITS images,
+   deleting the products of an older reduction.
+
+   :return: None
+
+
+.. py:function:: get_args()
+
+.. py:data:: args
+   :value: None
+
+

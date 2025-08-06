@@ -1,0 +1,18 @@
+src.IO
+======
+
+.. py:module:: src.IO
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/src/IO/fits_table_parser/index
+   /autoapi/src/IO/hdf5/index
+   /autoapi/src/IO/lightcurve/index
+   /autoapi/src/IO/tom_utils/index
+
+

@@ -1,0 +1,6 @@
+src.plots
+=========
+
+.. py:module:: src.plots
+
+

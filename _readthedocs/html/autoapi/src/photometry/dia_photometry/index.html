@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.photometry.dia_photometry &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="src.photometry.photometric_scale_factor" href="../photometric_scale_factor/index.html" />
+    <link rel="prev" title="src.photometry.conversions" href="../conversions/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Home page</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">src</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../IO/index.html">src.IO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../astrometry/index.html">src.astrometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../data_quality/index.html">src.data_quality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../infrastructure/index.html">src.infrastructure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../logistics/index.html">src.logistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../microlensing_photometry/index.html">src.microlensing_photometry</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">src.photometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../plots/index.html">src.plots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../prototypes/index.html">src.prototypes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../starfinder/index.html">src.starfinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../trials/index.html">src.trials</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../remove_photometry/index.html">remove_photometry</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">src</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">src.photometry</a></li>
+      <li class="breadcrumb-item active">src.photometry.dia_photometry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.photometry.dia_photometry">
+<span id="src-photometry-dia-photometry"></span><h1>src.photometry.dia_photometry<a class="headerlink" href="#module-src.photometry.dia_photometry" title="Link to this heading"></a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst" title="src.photometry.dia_photometry.DIAPhotometryAnalyst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DIAPhotometryAnalyst</span></code></a></p></td>
+<td><p>Class of worker to perform DIA photometry for one image</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.photometry.dia_photometry.run_difference_image" title="src.photometry.dia_photometry.run_difference_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_difference_image</span></code></a>(reference_image, aligned_image, ...)</p></td>
+<td><p>Difference image, given an aligned image to a reference.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.photometry.dia_photometry.run_dia_photometry" title="src.photometry.dia_photometry.run_dia_photometry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_dia_photometry</span></code></a>(image, error, positions, radius)</p></td>
+<td><p>DIA photometry on a image, using an error image, and fixed stars positions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.photometry.dia_photometry.build_the_U_matrix" title="src.photometry.dia_photometry.build_the_U_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_the_U_matrix</span></code></a>(X, K)</p></td>
+<td><p>To save to make X,Y dependent kernel, might be of use later</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.photometry.dia_photometry.build_the_U_indexes" title="src.photometry.dia_photometry.build_the_U_indexes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_the_U_indexes</span></code></a>(reference_image, kernel)</p></td>
+<td><p>Construct the indi,inj indexes to build quickly the umatrix for kernel solution</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DIAPhotometryAnalyst</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_catalog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_catalog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutout_region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./logs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class of worker to perform DIA photometry for one image</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_name">
+<span class="sig-name descname"><span class="pre">reference_name</span></span><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_name" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str, a name to the reference</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_path">
+<span class="sig-name descname"><span class="pre">reference_path</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.reference_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_path" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str, a path to the reference</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.image_name">
+<span class="sig-name descname"><span class="pre">image_name</span></span><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_name" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str, a name to the data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.image_path">
+<span class="sig-name descname"><span class="pre">image_path</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.image_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_path" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str, a path+name to the data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_catalog">
+<span class="sig-name descname"><span class="pre">reference_catalog</span></span><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_catalog" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>astropy.Table, the star catalog of the reference</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.image_catalog">
+<span class="sig-name descname"><span class="pre">image_catalog</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.image_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_catalog" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>astropy.Table, the star catalog of the image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.cutout_region">
+<span class="sig-name descname"><span class="pre">cutout_region</span></span><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.cutout_region" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list, [RA,DEC,pixel_size] the size in pixels of the cutout image around RA,DEC</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.kernel_size">
+<span class="sig-name descname"><span class="pre">kernel_size</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.kernel_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.kernel_size" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int, the size of the numerical kernel use</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.log">
+<span class="sig-name descname"><span class="pre">log</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.log" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">reference_path</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.reference_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_layers">
+<span class="sig-name descname"><span class="pre">reference_layers</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.reference_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_image">
+<span class="sig-name descname"><span class="pre">reference_image</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.reference_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_image" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_wcs">
+<span class="sig-name descname"><span class="pre">reference_wcs</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.reference_wcs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.reference_wcs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">image_path</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.image_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.image_layers">
+<span class="sig-name descname"><span class="pre">image_layers</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.image_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.image">
+<span class="sig-name descname"><span class="pre">image</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.image" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.image_wcs">
+<span class="sig-name descname"><span class="pre">image_wcs</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.image_wcs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.image_wcs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.ref_catalog">
+<span class="sig-name descname"><span class="pre">ref_catalog</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.ref_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.ref_catalog" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">image_catalog</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.image_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.ra">
+<span class="sig-name descname"><span class="pre">ra</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.ra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.ra" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.dec">
+<span class="sig-name descname"><span class="pre">dec</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.dec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.dec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.size">
+<span class="sig-name descname"><span class="pre">size</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">kernel_size</span></span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.kernel_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.process_image">
+<span class="sig-name descname"><span class="pre">process_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.process_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.process_image" title="Link to this definition"></a></dt>
+<dd><p>Process the image following the various steps</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.cut_image_and_ref">
+<span class="sig-name descname"><span class="pre">cut_image_and_ref</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.cut_image_and_ref"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.cut_image_and_ref" title="Link to this definition"></a></dt>
+<dd><p>Cut the image and ref around the ra,dec center</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.align_image_to_ref">
+<span class="sig-name descname"><span class="pre">align_image_to_ref</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.align_image_to_ref"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.align_image_to_ref" title="Link to this definition"></a></dt>
+<dd><p>Perform image alignement to the reference</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.run_dia_photometry">
+<span class="sig-name descname"><span class="pre">run_dia_photometry</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.run_dia_photometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.run_dia_photometry" title="Link to this definition"></a></dt>
+<dd><p>Run DIA photometry on the image using the star catalog of Gaia for time been.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.DIAPhotometryAnalyst.update_image_with_new_layers">
+<span class="sig-name descname"><span class="pre">update_image_with_new_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#DIAPhotometryAnalyst.update_image_with_new_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.DIAPhotometryAnalyst.update_image_with_new_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.run_difference_image">
+<span class="sig-name descname"><span class="pre">run_difference_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aligned_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#run_difference_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.run_difference_image" title="Link to this definition"></a></dt>
+<dd><p>Difference image, given an aligned image to a reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference_image</strong> (<em>array</em><em>, </em><em>the reference data</em>)</p></li>
+<li><p><strong>aligned_image</strong> (<em>array</em><em>, </em><em>the image aligned to the data</em>)</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em><em>, </em><em>the size</em><em> of </em><em>the kernel in pixels</em>)</p></li>
+<li><p><strong>mask</strong> (<em>array</em><em>, </em><em>a boolean</em><em> of </em><em>data to ignore</em><em> (</em><em>i.e. 1 = ignored</em><em>)</em>)</p></li>
+<li><p><strong>error</strong> (<em>array</em><em>, </em><em>the error data</em><em> (</em><em>2D</em><em>)</em>)</p></li>
+<li><p><strong>indi</strong> (<em>array</em><em>, </em><em>the indexes in i for the U matrix construction</em>)</p></li>
+<li><p><strong>indj</strong> (<em>array</em><em>, </em><em>the indexes in j for the U matric construction</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>dia_image</strong> (<em>array, the difference image</em>)</p></li>
+<li><p><strong>image_model</strong> (<em>array, the model of the image</em>)</p></li>
+<li><p><strong>kernel</strong> (<em>array, the estimated kernel</em>)</p></li>
+<li><p><strong>bkg_coeffs</strong> (<em>array, the estimated bkg coefficients (polynomial)</em>)</p></li>
+<li><p><strong>kernel_errors</strong> (<em>array, the errors on the kernel estimate</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.run_dia_photometry">
+<span class="sig-name descname"><span class="pre">run_dia_photometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#run_dia_photometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.run_dia_photometry" title="Link to this definition"></a></dt>
+<dd><p>DIA photometry on a image, using an error image, and fixed stars positions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>array</em><em>, </em><em>the image data</em>)</p></li>
+<li><p><strong>error</strong> (<em>array</em><em>, </em><em>the error data</em><em> (</em><em>2D</em><em>)</em>)</p></li>
+<li><p><strong>positions</strong> (<em>array</em><em>, </em><em>[</em><em>X</em><em>,</em><em>Y</em><em>] </em><em>positions</em><em> of </em><em>the stars to place aperture</em>)</p></li>
+<li><p><strong>radius</strong> (<em>float</em><em>, </em><em>the aperture radius use to extract flux</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>phot_table</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>astropy.Table, the photometric table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.build_the_U_matrix">
+<span class="sig-name descname"><span class="pre">build_the_U_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#build_the_U_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.build_the_U_matrix" title="Link to this definition"></a></dt>
+<dd><p>To save to make X,Y dependent kernel, might be of use later</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.photometry.dia_photometry.build_the_U_indexes">
+<span class="sig-name descname"><span class="pre">build_the_U_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/src/photometry/dia_photometry.html#build_the_U_indexes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.photometry.dia_photometry.build_the_U_indexes" title="Link to this definition"></a></dt>
+<dd><p>Construct the indi,inj indexes to build quickly the umatrix for kernel solution
+:param image:
+:type image: array, the image data
+:param error:
+:type error: array, the error data (2D)
+:param positions:
+:type positions: array, [X,Y] positions of the stars to place aperture
+:param radius:
+:type radius: float, the aperture radius use to extract flux</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>phot_table</strong></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>astropy.Table, the photometric table</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../conversions/index.html" class="btn btn-neutral float-left" title="src.photometry.conversions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../photometric_scale_factor/index.html" class="btn btn-neutral float-right" title="src.photometry.photometric_scale_factor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

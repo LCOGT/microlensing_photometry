@@ -77,6 +77,11 @@ def flux_to_mag(flux, flux_err, exp_time=None):
         mag[mask] = flux2mag(ZP, flux[mask])
         mag_err[mask] = fluxerr2magerr(flux[mask], flux_err[mask])
 
+        # Mask out values fainter than the zeropoint
+        mask2 = mag > ZP
+        mag[mask2] = 0.0
+        mag_err[mask2] = 0.0
+
     return mag, mag_err, flux, flux_err
 
 def mag_to_flux(mag, mag_err):

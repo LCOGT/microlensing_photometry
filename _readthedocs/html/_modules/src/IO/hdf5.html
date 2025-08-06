@@ -1,0 +1,210 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.IO.hdf5 &mdash; microlensing_photometry 0.1.dev82+g4c2c21d.d20250727 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=10d9de63"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=d07363f3"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            microlensing_photometry
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks.html">Notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">microlensing_photometry</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.IO.hdf5</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.IO.hdf5</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.astrometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">wcs</span> <span class="k">as</span> <span class="n">lcowcs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">src.infrastructure</span><span class="w"> </span><span class="kn">import</span> <span class="n">logs</span> <span class="k">as</span> <span class="n">lcologs</span>
+
+<div class="viewcode-block" id="output_photometry">
+<a class="viewcode-back" href="../../../autoapi/src/IO/hdf5/index.html#src.IO.hdf5.output_photometry">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">output_photometry</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="n">obs_set</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">err_flux</span><span class="p">,</span> <span class="n">pscales</span><span class="p">,</span> <span class="n">epscales</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to output a dataset photometry table to an HD5 file</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        catalog  Gaia catalog object containing all known objects in the field of view</span>
+<span class="sd">        obs_set ObservationSet object for the current dataset</span>
+<span class="sd">        flux    array  Normalized fluxes</span>
+<span class="sd">        err_flux array Normalized flux uncertainties</span>
+<span class="sd">        pscales array Photometric scale factor for each image and star</span>
+<span class="sd">        epscales array Uncertainty on the scale factor per image and star</span>
+<span class="sd">        file_path str Path to output file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Output HDF5 file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lcologs</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+        <span class="s1">&#39;Outputting timeseries photometry to &#39;</span> <span class="o">+</span> <span class="n">file_path</span><span class="p">,</span>
+        <span class="s1">&#39;info&#39;</span><span class="p">,</span>
+        <span class="n">log</span><span class="o">=</span><span class="n">log</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Build the source catalog</span>
+    <span class="n">source_id</span> <span class="o">=</span> <span class="n">catalog</span><span class="p">[</span><span class="s1">&#39;source_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">source_radec</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">catalog</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">],</span> <span class="n">dec</span><span class="o">=</span><span class="n">catalog</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">],</span> <span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">))</span>
+    <span class="n">wcs_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">catalog</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">],</span> <span class="n">catalog</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">]]</span>
+    <span class="n">im_wcs</span> <span class="o">=</span> <span class="n">lcowcs</span><span class="o">.</span><span class="n">build_wcs_from_obs_set</span><span class="p">(</span><span class="n">obs_set</span><span class="p">)</span>
+    <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">catalog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">),</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">im_wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">world_to_pixel</span><span class="p">(</span><span class="n">source_radec</span><span class="p">)</span>
+        <span class="n">positions</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">xx</span>
+        <span class="n">positions</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">yy</span>
+    <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;source_id&#39;</span><span class="p">,</span>
+            <span class="n">source_id</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">source_id</span>
+        <span class="p">)</span>
+
+        <span class="n">d2</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;source_wcs&#39;</span><span class="p">,</span>
+            <span class="n">wcs_positions</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">wcs_positions</span>
+        <span class="p">)</span>
+
+        <span class="n">d3</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;positions&#39;</span><span class="p">,</span>
+            <span class="n">positions</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">positions</span>
+        <span class="p">)</span>
+
+        <span class="n">d4</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;HJD&#39;</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">&#39;HJD&#39;</span><span class="p">]),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">obs_set</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">&#39;HJD&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="p">)</span>
+
+        <span class="n">d5</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;flux&#39;</span><span class="p">,</span>
+            <span class="n">flux</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">flux</span>
+        <span class="p">)</span>
+
+        <span class="n">d6</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;err_flux&#39;</span><span class="p">,</span>
+            <span class="n">err_flux</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">err_flux</span>
+        <span class="p">)</span>
+
+        <span class="n">d7</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;pscale&#39;</span><span class="p">,</span>
+            <span class="n">pscales</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">pscales</span>
+        <span class="p">)</span>
+
+        <span class="n">d8</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s1">&#39;epscale&#39;</span><span class="p">,</span>
+            <span class="n">epscales</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">epscales</span>
+        <span class="p">)</span>
+
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rachel Street, Etienne Bachelet.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

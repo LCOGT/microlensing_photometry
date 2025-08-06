@@ -1,0 +1,64 @@
+src.photometry.conversions
+==========================
+
+.. py:module:: src.photometry.conversions
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   src.photometry.conversions.get_zeropoint
+   src.photometry.conversions.flux_to_mag
+   src.photometry.conversions.mag_to_flux
+
+
+Module Contents
+---------------
+
+.. py:function:: get_zeropoint()
+
+   Function to define the zeropoint of the magnitude scale
+
+   :rtype: ZP  float
+
+
+.. py:function:: flux_to_mag(flux, flux_err, exp_time=None)
+
+   Function to convert the flux of a star from its fitted PSF model
+   and its uncertainty onto the magnitude scale.
+
+   :param float flux: Total star flux
+   :param float flux_err: Uncertainty in star flux
+   :param float exp_time: [optional] Exposure time in s
+
+   Input flux, flux_err can be scalar values or arrays.  If an exposure time is given,
+   the fluxes and uncertainties will be scaled by the exposure time.
+
+   Returns:
+
+   :param float mag: Measured star magnitude
+   :param float flux_mag: Uncertainty in measured magnitude
+   :param float flux: Total flux, scaled by the exposure time if given
+   :param float flux_err: Uncertainty on total flux, scaled by the exposure
+                           time, if given
+
+
+.. py:function:: mag_to_flux(mag, mag_err)
+
+   Function to convert the flux of a star from its fitted PSF model
+   and its uncertainty onto the magnitude scale.
+
+   :param float flux: Total star flux
+   :param float flux_err: Uncertainty in star flux
+
+   Returns:
+
+   :param float mag: Measured star magnitude
+   :param float flux_mag: Uncertainty in measured magnitude
+   :param float flux: Total flux, scaled by the exposure time if given
+   :param float flux_err: Uncertainty on total flux, scaled by the exposure
+                           time, if given
+
+
