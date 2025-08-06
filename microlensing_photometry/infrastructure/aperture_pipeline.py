@@ -133,6 +133,8 @@ def run(args):
             err_flux,
             log=log
         )
+        calphot.calibrate()
+        cal_mag, err_cal_mag = calphot.calibrate_timeseries()
 
         # Output timeseries photometry for the whole frame
         phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
