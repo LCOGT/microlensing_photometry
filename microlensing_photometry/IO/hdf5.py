@@ -5,7 +5,17 @@ from astropy import units as u
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.infrastructure import logs as lcologs
 
-def output_photometry(catalog, obs_set, flux, err_flux, pscales, epscales, file_path, log=None):
+def output_photometry(
+        catalog,
+        obs_set,
+        flux,
+        err_flux,
+        raw_flux,
+        raw_err_flux,
+        pscales,
+        epscales,
+        file_path,
+        log=None):
     """
     Function to output a dataset photometry table to an HD5 file
 
@@ -14,6 +24,8 @@ def output_photometry(catalog, obs_set, flux, err_flux, pscales, epscales, file_
         obs_set ObservationSet object for the current dataset
         flux    array  Normalized fluxes
         err_flux array Normalized flux uncertainties
+        raw_flux array Raw flux measurements
+        raw_err_flux array Raw flux uncertainties
         pscales array Photometric scale factor for each image and star
         epscales array Uncertainty on the scale factor per image and star
         file_path str Path to output file
@@ -83,14 +95,28 @@ def output_photometry(catalog, obs_set, flux, err_flux, pscales, epscales, file_
             data=err_flux
         )
 
+        d6 = f.create_dataset(
+            'raw_flux',
+            raw_flux.shape,
+            dtype='float64',
+            data=raw_flux
+        )
+
         d7 = f.create_dataset(
+            'raw_err_flux',
+            raw_err_flux.shape,
+            dtype='float64',
+            data=raw_err_flux
+        )
+
+        d8 = f.create_dataset(
             'pscale',
             pscales.shape,
             dtype='float64',
             data=pscales
         )
 
-        d8 = f.create_dataset(
+        d9 = f.create_dataset(
             'epscale',
             epscales.shape,
             dtype='float64',

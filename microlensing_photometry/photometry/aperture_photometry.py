@@ -268,6 +268,8 @@ class AperturePhotometryDataset(object):
         self.exptimes = Table([Column(name='exptime', unit=u.second, data=np.array([]))])
         self.flux = np.array([])
         self.err_flux = np.array([])
+        self.raw_flux = np.array([])
+        self.raw_err_flux = np.array([])
         self.pscale = np.array([])
         self.epscale = np.array([])
 
@@ -301,6 +303,8 @@ class AperturePhotometryDataset(object):
             self.timestamps = Table([Column(name='HJD', data=np.array(f['HJD'][:]), unit=u.day)])
             self.flux = np.array(f['flux'])
             self.err_flux = np.array(f['err_flux'])
+            self.raw_flux = np.array(f['raw_flux'])
+            self.raw_err_flux = np.array(f['raw_err_flux'])
             self.pscale = np.array(f['pscale'])
             self.epscale = np.array(f['epscale'])
 
@@ -327,7 +331,7 @@ class AperturePhotometryDataset(object):
                 self.flux[star_idx, valid],
                 self.err_flux[star_idx, valid]
             )
-            print('LC: ', len(mag), len(err_mag), len(self.flux[star_idx, valid]), len(self.err_flux[star_idx, valid]))
+
             # Dat format lightcurve for interactive inspection
             lc = Table([
                 Column(name='HJD', data=self.timestamps['HJD'][valid]),
