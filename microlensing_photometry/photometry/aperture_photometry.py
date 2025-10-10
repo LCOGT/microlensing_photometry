@@ -317,10 +317,15 @@ class AperturePhotometryDataset(object):
         """
 
         # Check for valid flux and err_flux measurements for this star's lightcurve
-        flux = self.flux[star_idx, :]
         valid_flux = ~np.isnan(self.flux[star_idx, :])
         valid_err_flux = ~np.isnan(self.err_flux[star_idx, :])
         valid = np.logical_and(valid_flux, valid_err_flux)
+        print('LC FLUX')
+        print(self.flux[star_idx, :])
+        print(self.err_flux[star_idx, :])
+        print(valid_flux)
+        print(valid_err_flux)
+        print(valid)
         if valid.all():
 
             # Convert to magnitudes for convenience
