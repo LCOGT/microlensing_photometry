@@ -326,7 +326,7 @@ class AperturePhotometryDataset(object):
         print(valid_flux)
         print(valid_err_flux)
         print(valid)
-        if valid.all():
+        if valid.any():
 
             # Convert to magnitudes for convenience
             mag, err_mag, _, _ = conversions.flux_to_mag(

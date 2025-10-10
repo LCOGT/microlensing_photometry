@@ -61,15 +61,19 @@ def calculate_pscale(obs_set, image_catalogs, log=None):
 
     # Create a mask for those lightcurves with at least this number of valid datapoints
     mask = nvalid >= min_nvalid
-    print(mask)
-    breakpoint()
-    print(lcs[mask])
+    lcologs.log(
+        'Selected ' + str(mask.sum()) + ' lightcurves with at least '
+        + str(min_nvalid) + ' valid datapoints'
+    )
+
     # Compute the phot scale based on <950 stars
     pscales = photometric_scale_factor_from_lightcurves(lcs[mask])
     epscales = (pscales[2] - pscales[0]) / 2
-    lcologs.log('PSCALE: ' + repr(pscales), 'info', log=log)
-    lcologs.log('PSCALE error: ' + repr(epscales), 'info', log=log)
+    lcologs.log('PSCALE values: ' + repr(pscales), 'info', log=log)
+    lcologs.log('PSCALE uncertainties: ' + repr(epscales), 'info', log=log)
+
     flux = lcs / pscales[1]
     err_flux = (elcs ** 2 / pscales[1] ** 2 + lcs ** 2 * epscales ** 2 / pscales[1] ** 4) ** 0.5
+    breakpoint()
 
     return pscales, epscales, flux, err_flux, lcs, elcs
