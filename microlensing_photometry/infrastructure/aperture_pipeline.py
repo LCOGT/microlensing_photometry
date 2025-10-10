@@ -119,8 +119,9 @@ def run(args):
     lcologs.log('Photometered all images', 'info', log=log)
 
     if len(obs_set.table) > 0:
-        pscales, epscales, flux, err_flux = lcopscale.calculate_pscale(obs_set, cats, log=log)
-
+        pscales, epscales, flux, err_flux, raw_flux, raw_err_flux = lcopscale.calculate_pscale(obs_set, cats, log=log)
+        print(raw_flux[488,:])
+        
         # Output timeseries photometry for the whole frame
         phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
         hdf5.output_photometry(
