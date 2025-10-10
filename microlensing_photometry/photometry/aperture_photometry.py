@@ -320,12 +320,6 @@ class AperturePhotometryDataset(object):
         valid_flux = ~np.isnan(self.flux[star_idx, :])
         valid_err_flux = ~np.isnan(self.err_flux[star_idx, :])
         valid = np.logical_and(valid_flux, valid_err_flux)
-        print('LC FLUX')
-        print(self.flux[star_idx, :])
-        print(self.err_flux[star_idx, :])
-        print(valid_flux)
-        print(valid_err_flux)
-        print(valid)
         if valid.any():
 
             # Convert to magnitudes for convenience
@@ -333,7 +327,7 @@ class AperturePhotometryDataset(object):
                 self.flux[star_idx, valid],
                 self.err_flux[star_idx, valid]
             )
-
+            print('LC: ', len(mag), len(err_mag), len(self.flux[star_idx, valid]), len(self.err_flux[star_idx, valid]))
             # Dat format lightcurve for interactive inspection
             lc = Table([
                 Column(name='HJD', data=self.timestamps['HJD'][valid]),
@@ -344,6 +338,7 @@ class AperturePhotometryDataset(object):
             ])
 
             # TOM-compatible format lightcurve
+            print(len(np.array([filter] * len(valid))))
             tom_lc = Table([
                 Column(name='time', data=self.timestamps['HJD'][valid]),
                 Column(name='filter', data=np.array([filter] * len(valid))),

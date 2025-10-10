@@ -75,6 +75,5 @@ def calculate_pscale(obs_set, image_catalogs, log=None):
 
     flux = lcs / pscales[1]
     err_flux = (elcs ** 2 / pscales[1] ** 2 + lcs ** 2 * epscales ** 2 / pscales[1] ** 4) ** 0.5
-    breakpoint()
 
     return pscales, epscales, flux, err_flux, lcs, elcs
