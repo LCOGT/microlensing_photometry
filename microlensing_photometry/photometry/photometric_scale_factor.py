@@ -49,7 +49,8 @@ def calculate_pscale(obs_set, image_catalogs, log=None):
     # Select stars that have a reasonable SNR to avoid high uncertainty on the pscale factor
     SNR = 10
     mask = np.all((np.abs(elcs / lcs) < 1 / SNR) & (lcs > 0), axis=1)
-
+    print(lcs[mask])
+    breakpoint()
     # Compute the phot scale based on <950 stars
     pscales = photometric_scale_factor_from_lightcurves(lcs[mask])
     epscales = (pscales[2] - pscales[0]) / 2
