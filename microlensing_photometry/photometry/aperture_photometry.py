@@ -338,10 +338,10 @@ class AperturePhotometryDataset(object):
             ])
 
             # TOM-compatible format lightcurve
-            print(len(np.array([filter] * len(valid))))
+            nvalid = valid.sum()
             tom_lc = Table([
                 Column(name='time', data=self.timestamps['HJD'][valid]),
-                Column(name='filter', data=np.array([filter] * len(valid))),
+                Column(name='filter', data=np.array([filter] * nvalid)),
                 Column(name='magnitude', data=mag),
                 Column(name='error', data=err_mag),
             ])
