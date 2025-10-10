@@ -46,11 +46,24 @@ def calculate_pscale(obs_set, image_catalogs, log=None):
     lcs = apsum.T
     elcs = eapsum.T
 
-    # Select stars that have a reasonable SNR to avoid high uncertainty on the pscale factor
+    # Select datapoints that have a reasonable SNR to avoid high uncertainty on the pscale factor
     SNR = 10
-    mask = np.all((np.abs(elcs / lcs) < 1 / SNR) & (lcs > 0), axis=1)
-    print(lcs[mask])
+    #mask = np.all((np.abs(elcs / lcs) < 1 / SNR) & (lcs > 0), axis=1)
+    valid = (np.abs(elcs / lcs) < 1 / SNR) & (lcs > 0)
+
+    # Select the stars with the highest number of valid datapoints.
+    # (This works because Python interprets Booleans and 1, 0)
+    nvalid = valid.sum(axis=1)
+
+    # Set the threshold number of valid points to require from a 75% percentile of the
+    # maximum
+    min_nvalid = np.nanpercentile(nvalid,[75])[0]
+
+    # Create a mask for those lightcurves with at least this number of valid datapoints
+    mask = nvalid >= min_nvalid
+    print(mask)
     breakpoint()
+    print(lcs[mask])
     # Compute the phot scale based on <950 stars
     pscales = photometric_scale_factor_from_lightcurves(lcs[mask])
     epscales = (pscales[2] - pscales[0]) / 2
