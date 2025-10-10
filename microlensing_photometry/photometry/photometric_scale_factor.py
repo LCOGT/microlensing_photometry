@@ -63,7 +63,8 @@ def calculate_pscale(obs_set, image_catalogs, log=None):
     mask = nvalid >= min_nvalid
     lcologs.log(
         'Selected ' + str(mask.sum()) + ' lightcurves with at least '
-        + str(min_nvalid) + ' valid datapoints'
+        + str(min_nvalid) + ' valid datapoints',
+        'info', log=log
     )
 
     # Compute the phot scale based on <950 stars
