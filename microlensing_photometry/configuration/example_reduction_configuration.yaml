@@ -1,0 +1,10 @@
+target:
+  name: 'TEST'
+  RA: '17:30:25.5'
+  Dec: '-25:30:30.5'
+photometry:
+  aperture_arcsec: 2.0
+tom:
+  upload: True
+  config_file: /path/to/config
+  data_label: 'TEST'

@@ -64,6 +64,15 @@ def start_log(log_dir, log_name):
 
     return log
 
+# Convenience functions to add logging if a log is given, to allow the pipeline
+# to be more easily tested with and without logs
+def log(report, report_type, log=None):
+    if log and report_type == 'info':
+        log.info(report)
+    if log and report_type == 'warning':
+        log.warning(report)
+    if log and report_type == 'error':
+        log.error(report)
 
 def ifverbose(log, setup, string):
     """Function to write to a logfile only if the verbose parameter in the

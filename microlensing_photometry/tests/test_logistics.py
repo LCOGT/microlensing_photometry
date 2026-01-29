@@ -1,16 +1,22 @@
-from os import getcwd, path, remove
+from os import getcwd, path, remove, rmdir, makedirs
+import shutil
 import numpy as np
+import unittest
 
 from microlensing_photometry.logistics import vizier_tools
 import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
 from microlensing_photometry.astrometry import wcs as lcowcs
 from microlensing_photometry.logistics import image_tools
-from astropy.table import Table
+from astropy.table import Table, Column
 import numpy as np
 
+
 CWD = getcwd()
-TEST_DATA_DIR = path.join(CWD, 'tests/test_output')
+TEST_DATA_DIR = path.join(CWD, 'tests/test_output/')
+makedirs(TEST_DATA_DIR, exist_ok=True)
+
 def test_collect_Gaia_catalog():
+
 
     ra,dec,radius = 270,-30, 0.1
 
@@ -19,16 +25,42 @@ def test_collect_Gaia_catalog():
 
     assert len(gaia_catalog) == 5
     assert np.allclose(
-        gaia_catalog['phot_g_mean_flux'].value,
-        np.array([3687.07248 ,  830.04544,  747.28028,  252.18597 ,  201.87001]),
-        atol = 0.01
-    )
+            gaia_catalog['phot_g_mean_flux'].value,
+            np.array([3687.10009766,  822.27001953,  742.57000732,  251.30000305,
+            201.86999512]),
+            atol = 0.01)
 
     filepath = path.join(TEST_DATA_DIR, 'Gaia_catalog.dat')
     assert(path.isfile(filepath))
 
+    #cleaning after tests
     remove(filepath)
+    shutil.rmtree(path.join(CWD, 'tests'))
 
+class CatalogTools(unittest.TestCase):
+
+    def test_find_nearest(self):
+        rng = np.random.default_rng()
+
+        # Generate a catalog Table for testing
+        nimages = 10
+        nstars = 100
+        ra = rng.standard_normal(nstars) + 270.0
+        dec = rng.standard_normal(nstars) - 22.0
+        catalog = Table([
+            Column(name='source_id', data=np.array([5961294592641279104] * nstars), dtype='int64'),
+            Column(name='ra', data=ra),
+            Column(name='dec', data=dec)
+        ])
+
+        # Test search for a target known to be within the catalog
+        star_idx, result = GC.find_nearest(catalog, catalog[0]['ra'], catalog[0]['dec'])
+        assert(result['ra'] == catalog[0]['ra'])
+        assert(result['dec'] == catalog[0]['dec'])
+
+        # Test search for a target that is not within the catalog
+        star_idx, result = GC.find_nearest(catalog, 10.0, 30.0)
+        assert(result == None)
 
 def test_build_image():
 

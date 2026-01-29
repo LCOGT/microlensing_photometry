@@ -16,8 +16,17 @@ scikit-image = "0.24.0"
 pytest = "8.3.4"
 matplotlib = "v3.10.1"
 tqdm = "4.67.1"
+ipython = "9.2.0"
+h5py = "3.13.0"
+jplephem = "2.22"
+
+[tool.poetry.scripts]
+dia_phot_script = "trials.dia_phot_script:main"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+packages = [
+    { include = "microlensing_photometry/*/*py" },
+]
