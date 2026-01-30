@@ -19,6 +19,8 @@ tqdm = "4.67.1"
 ipython = "9.2.0"
 h5py = "3.13.0"
 jplephem = "2.22"
+requests = "2.32.4"
+PyYAML = "6.0.2"
 
 [tool.poetry.scripts]
 dia_phot_script = "trials.dia_phot_script:main"

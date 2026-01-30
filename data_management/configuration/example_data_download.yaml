@@ -1,0 +1,28 @@
+archives:
+    lco:
+        name: 'LCO'
+        active: True
+        url: 'https://archive-api.lco.global/'
+        token_envvar: 'LCO_TOKEN'
+        proposals:
+            - 'PROPOSAL_ID'
+        reduction_level:
+            image: 91
+            spectrum: 91
+
+    soar:
+        name: 'SOAR'
+        active: True
+        url: 'https://archive-api.lco.global/'
+        token_envvar: 'SOAR_TOKEN'
+        proposals:
+            - 'PROPOSAL_ID'
+        reduction_level:
+            image: 0
+            spectrum: 0
+log_dir: '/path/to/directory/'
+frame_list: '/path/to/directory/omega_frame_list.txt'
+data_download_dir: '/path/to/directory/'
+data_reduction_dir: '/path/to/directory/'
+start_datetime: 'None'
+end_datetime: 'None'

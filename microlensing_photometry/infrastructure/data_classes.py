@@ -2,22 +2,24 @@ import os
 from astropy.table import Table, Column
 from astropy import units as u
 from astropy.io import ascii
+from astropy.io.fits import getheader
 from astropy.coordinates import SkyCoord
+from astropy.time import Time
 import numpy as np
 from microlensing_photometry.infrastructure import time_utils as lcotime
 from microlensing_photometry.infrastructure import logs as lcologs
 
 class ObservationSet(object):
     """
-    Metadata describing a sequence of observations
+    Metadata describing a sequence of observations and storing a table of their metadata
     """
 
     def __init__(self, file_path=None, log=None):
         self.table = Table([
-            Column(name='file', data=np.array([]), dtype='str'),
-            Column(name='facility_code', data=np.array([]), dtype='str'),
-            Column(name='filter', data=np.array([]), dtype='str'),
-            Column(name='dateobs', data=np.array([]), dtype='str'),
+            Column(name='file', data=np.array([]), dtype=str),
+            Column(name='facility_code', data=np.array([]), dtype=str),
+            Column(name='filter', data=np.array([]), dtype=str),
+            Column(name='dateobs', data=np.array([]), dtype=str),
             Column(name='exptime', data=np.array([]), dtype='float64', unit=u.second),
             Column(name='RA', data=np.array([]), dtype='float64', unit=u.degree),
             Column(name='Dec', data=np.array([]), dtype='float64', unit=u.degree),
@@ -27,14 +29,14 @@ class ObservationSet(object):
             Column(name='moon_separation', data=np.array([]), dtype='float64', unit=u.degree),
             Column(name='sky_bkgd', data=np.array([]), dtype='float64', unit=u.adu),
             Column(name='HJD', data=np.array([]), dtype='float64', unit=u.day),
-            Column(name='CTYPE1', data=np.array([]), dtype='str'),
-            Column(name='CTYPE2', data=np.array([]), dtype='str'),
+            Column(name='CTYPE1', data=np.array([]), dtype=str),
+            Column(name='CTYPE2', data=np.array([]), dtype=str),
             Column(name='CRPIX1', data=np.array([]), dtype='float64'),
             Column(name='CRPIX2', data=np.array([]), dtype='float64'),
             Column(name='CRVAL1', data=np.array([]), dtype='float64'),
             Column(name='CRVAL2', data=np.array([]), dtype='float64'),
-            Column(name='CUNIT1', data=np.array([]), dtype='str'),
-            Column(name='CUNIT2', data=np.array([]), dtype='str'),
+            Column(name='CUNIT1', data=np.array([]), dtype=str),
+            Column(name='CUNIT2', data=np.array([]), dtype=str),
             Column(name='CD1_1', data=np.array([]), dtype='float64'),
             Column(name='CD1_2', data=np.array([]), dtype='float64'),
             Column(name='CD2_1', data=np.array([]), dtype='float64'),
@@ -58,13 +60,20 @@ class ObservationSet(object):
 
     def load(self, file_path, log=None):
         if os.path.isfile(file_path):
-            self.table = ascii.read(file_path)
-            lcologs.log(
-                'Loaded data summary of ' + str(len(self.table)) + ' from ' + file_path,
-                'info',
-                log=log
-            )
-
+            data = ascii.read(file_path)
+            if len(data) > 0:
+                self.table = data
+                lcologs.log(
+                    'Loaded data summary of ' + str(len(self.table)) + ' from ' + file_path,
+                    'info',
+                    log=log
+                )
+            else:
+                lcologs.log(
+                    'Data summary ' + file_path + ' empty, returning empty table',
+                    'info',
+                    log=log
+                )
         else:
             lcologs.log(
                 'No data summary found at ' + file_path + '; empty table returned',
@@ -88,13 +97,17 @@ class ObservationSet(object):
 
         return facility_code
 
-    def add_observation(self, file_path, header):
+    def add_observation(self, file_path, header=None):
         """
         Method to extract observation from the FITS header of a single file
 
         :param header: Astropy FITS header object
         :return: Information added to self.table
         """
+
+        # Read header info if not parsed to method
+        if not header:
+            header = getheader(file_path)
 
         # Ensure coordinates stored in decimal degrees
         if ':' in header['RA']:
@@ -126,14 +139,14 @@ class ObservationSet(object):
             header['FILTER'],
             header['DATE-OBS'],
             header['EXPTIME'],
-            s.ra.deg,
-            s.dec.deg,
+            float(s.ra.deg),
+            float(s.dec.deg),
             header['AIRMASS'],
             header['L1FWHM'],
             header['MOONFRAC'],
             header['MOONDIST'],
             header['L1MEAN'],
-            hjd,
+            float(hjd),
             header['CTYPE1'],
             header['CTYPE2'],
             header['CRPIX1'],
@@ -154,3 +167,121 @@ class ObservationSet(object):
 
         self.table.add_row(row)
 
+    def check_file_in_set(self, filename):
+
+        if filename in self.table['file']:
+            return True
+        else:
+            return False
+
+
+class LCOArchiveEntry(object):
+    """
+    Class describing the parameters held by the LCO archive for a single astronomical datafile in FITS format.
+    """
+
+    def __init__(self, params={}):
+        self.id = None               # Archive Integer ID
+        self.basename = None         # Raw file basename
+        self.observation_date = None    # Observation date (NOT DATE-OBS) in %Y-%m-%dT%H:%M:%S.fZ format
+        self.observation_day =  None    # Day of observation in %Y-%m-%d format
+        self.proposal_id = None         # string, proposal ID
+        self.instrument_id = None       # string, intrument identifier
+        self.target_name = None         # string, target name
+        self.reduction_level = None     # Integer, LCO pipeline reduction level
+        self.site_id = None             # string, site code
+        self.telescope_id = None        # string, telescope id code
+        self.exposure_time = None       # float, exposure time in seconds
+        self.primary_optical_element = None     # string, first filter or grating identifier
+        self.public_date = None         # datetime of end of priprietry period in %Y-%m-%dT%H:%M:%S.fZ format
+        self.configuration_type = None    # Type of observation, e.g. EXPOSE, GUIDE, etc
+        self.observation_id = None      # Integer, observation ID
+        self.request_id = None          # Integer, request ID
+        self.version_set = []           # List of dictionaries containing information about the version of this file in the archive
+        self.url = None                 # AWS URL for the file
+        self.filename = None            # Filename of the data file
+        # The following are values extrated from the file header
+        self.DATE_OBS = None            # DATE-OBS in %Y-%m-%dT%H:%M:%S.fZ format
+        self.DAY_OBS = None             # Day of observation in %Y-%m-%d format
+        self.PROPID = None              # string, proposal ID
+        self.INSTRUME = None            # string, instrument identifier
+        self.OBJECT = None              # string, target name
+        self.RLEVEL = None              # Integer, LCO pipeline reduction level
+        self.SITEID = None              # string, site code
+        self.TELID = None               # string, telescope id code
+        self.EXPTIME = None             # float, exposure time in seconds
+        self.FILTER = None              # string, first filter
+        self.L1PUBDAT = None            # datetime of end of pripriatry period in %Y-%m-%dT%H:%M:%S.fZ format
+        self.OBSTYPE = None             # Type of observation, e.g. EXPOSE, GUIDE, etc
+        self.BLKUID = None              # Integer, observation ID
+        self.REQNUM = None              # Integer, request ID
+        self.area = None                # Dictionary of verticies coordinates of the sky region
+        self.red_dir = None             # Reduction directory path
+
+        if params:
+            for key, value in params.items():
+                setattr(self, key, value)
+
+    def summary(self):
+        return 'LCO archive entry: ' + self.filename + ' ' + self.DATE_OBS \
+                  + ' ' + self.SITEID + ' ' + self.INSTRUME + ' ' + self.FILTER
+
+    def set_reduction_directory(self, config):
+        """
+        Method to define the default directory structure for reduced data.
+
+        Since a given target may be observed with multiple instruments, including both
+        imaging and spectroscopy, the data structure needs to accommodate the different expectations
+        of the various reduction pipelines.
+
+        The structure used is as follows:
+
+        /data_reduction_dir/
+                    |- target_name/
+                            |- imager_class
+                                    |- filter
+                            |- spectrograph_class
+                                    |- date
+        E.g.
+          /data_reduction_dir/
+                    |- OGLE-2026-BLG-0001/
+                            |- sinistro
+                                    |- SDSSi/
+                                    |- SDSSg/
+                            |- floyds
+                                    |- 20260101/
+                            |- goodman
+                                    |- 20260101/
+
+        Parameters:
+            config : Argparse object    Configuration parameters
+
+        Returns:
+            Sets self.red_dir : string            Path to reduction directory
+
+        """
+
+        red_dir = os.path.join(config['data_reduction_dir'], self.target_name)
+
+        # Sinistro imager class
+        if 'fs' in self.INSTRUME or 'fa' in self.INSTRUME:
+            self.red_dir = os.path.join(red_dir, 'sinistro', self.FILTER)
+
+        # QHY imager class
+        elif 'sq' in self.INSTRUME:
+            self.red_dir = os.path.join(red_dir, 'qhy', self.FILTER)
+
+        # Floyds spectrographs
+        elif 'en' in self.INSTRUME:
+            self.red_dir = os.path.join(red_dir, 'sinistro', str(self.DAY_OBS).replace('-',''))
+
+        # SOAR/Goodman spectrograph
+        elif 'GHTS_RED' in self.INSTRUME:
+            self.red_dir = os.path.join(red_dir, 'goodman', str(self.DAY_OBS).replace('-', ''))
+
+        # Unrecognized instrument
+        else:
+            raise IOError('Unrecognized instrument ' + self.INSTRUME + '; cannot created reduction directory')
+
+    def set_uncompressed_filename(self, uncompressed_path):
+        self.filename = os.path.basename(uncompressed_path)
