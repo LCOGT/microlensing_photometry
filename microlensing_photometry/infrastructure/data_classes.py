@@ -4,8 +4,8 @@ from astropy import units as u
 from astropy.io import ascii
 from astropy.io.fits import getheader
 from astropy.coordinates import SkyCoord
-from astropy.time import Time
 import numpy as np
+import subprocess
 from microlensing_photometry.infrastructure import time_utils as lcotime
 from microlensing_photometry.infrastructure import logs as lcologs
 
@@ -16,10 +16,13 @@ class ObservationSet(object):
 
     def __init__(self, file_path=None, log=None):
         self.table = Table([
-            Column(name='file', data=np.array([]), dtype=str),
-            Column(name='facility_code', data=np.array([]), dtype=str),
-            Column(name='filter', data=np.array([]), dtype=str),
-            Column(name='dateobs', data=np.array([]), dtype=str),
+            Column(name='file', data=np.array([]), dtype='str'),
+            Column(name='facility_code', data=np.array([]), dtype='str'),
+            Column(name='proposal_id', data=np.array([]), dtype='str'),
+            Column(name='object', data=np.array([]), dtype='str'),
+            Column(name='reqnum', data=np.array([]), dtype='int'),
+            Column(name='filter', data=np.array([]), dtype='str'),
+            Column(name='dateobs', data=np.array([]), dtype='str'),
             Column(name='exptime', data=np.array([]), dtype='float64', unit=u.second),
             Column(name='RA', data=np.array([]), dtype='float64', unit=u.degree),
             Column(name='Dec', data=np.array([]), dtype='float64', unit=u.degree),
@@ -116,7 +119,7 @@ class ObservationSet(object):
             s = SkyCoord(header['RA'], header['DEC'], frame='icrs', unit=(u.degree, u.degree))
 
         # Identify the facility from its header information
-        facility_code = self.get_facility_code(header)
+        facility_code = get_facility_code(header)
 
         # Catch malformed header entries that won't parse into a table
         if 'UNKNOWN' in str(header['WMSCLOUD']):
@@ -136,6 +139,9 @@ class ObservationSet(object):
         row = [
             os.path.basename(file_path),
             facility_code,
+            header['PROPID'],
+            header['OBJECT'],
+            header['REQNUM'],
             header['FILTER'],
             header['DATE-OBS'],
             header['EXPTIME'],
@@ -168,12 +174,139 @@ class ObservationSet(object):
         self.table.add_row(row)
 
     def check_file_in_set(self, filename):
+        """
+        Method to verify whether or not the given file is present in the ObservationSet
+
+        :param obs:  Observation object
+        :return: boolean
+        """
 
         if filename in self.table['file']:
             return True
         else:
             return False
 
+def get_facility_code(header):
+    """Function to return the reference code used within the phot_db to
+    refer to a specific facility as site-enclosure-tel-instrument"""
+
+    try:
+        if 'fl' in header['INSTRUME']:
+            header['INSTRUME'] = header['INSTRUME'].replace('fl', 'fa')
+        facility_code = header['SITEID'] + '-' + \
+                        header['ENCID'] + '-' + \
+                        header['TELID'] + '-' + \
+                        header['INSTRUME']
+    except:
+        facility_code = 'None'
+
+    return facility_code
+
+class Observation:
+
+    def __init__(self, params = None, header = None):
+        self.filename = None
+        self.url = None
+        self.dateobs = None
+        self.proposalid = None
+        self.site = None
+        self.telescope = None
+        self.instrument = None
+        self.filter = None
+        self.exptime = None
+        self.object = None
+        self.reqnum = None
+        self.facility_code = None
+        self.red_dir = None
+
+        self.param_mapping = {'url': 'url',
+                            'filename': 'filename',
+                            'DATE_OBS': 'dateobs',
+                            'PROPID': 'proposalid', #
+                            'INSTRUME': 'instrument',
+                            'OBJECT': 'object', #
+                            'SITEID': 'site',
+                            'TELID': 'telescope',
+                            'EXPTIME': 'exptime',
+                            'FILTER': 'filter',
+                            'REQNUM': 'reqnum'} #
+
+        self.header_mapping = {'url': 'url',
+                            'ORIGNAME': 'filename',
+                            'DATE-OBS': 'dateobs',
+                            'PROPID': 'proposalid',
+                            'INSTRUME': 'instrument',
+                            'OBJECT': 'object',
+                            'SITEID': 'site',
+                            'TELID': 'telescope',
+                            'EXPTIME': 'exptime',
+                            'FILTER': 'filter',
+                            'REQNUM': 'reqnum'}
+        if params != None:
+            self.set_params(params)
+            self.facility_code = get_facility_code(params)
+
+        if header != None:
+            self.set_header_params(header)
+            self.facility_code = get_facility_code(header)
+
+        self.set_instrument_class()
+
+    def set_params(self, params):
+
+        for key, attribute in self.param_mapping.items():
+            if key in params.keys():
+                if attribute == 'filename':
+                    value = str(params[key]).replace('.fz','')
+                else:
+                    value = params[key]
+                setattr(self,attribute,value)
+
+    def set_header_params(self, header):
+
+        for key, attribute in self.header_mapping.items():
+            if key not in ['url']:
+                try:
+                    if attribute == 'filename':
+                        value = str(header[key]).replace('.fz','')
+                    else:
+                        value = header[key]
+                    setattr(self,attribute,value)
+                except KeyError:
+                    pass
+
+    def set_instrument_class(self):
+        if 'fl' in self.instrument or 'fa' in self.instrument:
+            self.instrument_class = 'sinistro'
+        elif 'ep' in self.instrument:
+            self.instrument_class = 'muscat'
+        elif 'en' in self.instrument:
+            self.instrument_class = 'FLOYDS'
+        elif 'GHTS_RED_IMAGER' in self.instrument:
+            self.instrument_class = 'goodman'
+
+    def uncompress(self):
+        if self.filename.split('.')[-1] == 'fz':
+            args = ['funpack', frame]
+            p = subprocess.Popen(args, stdout=subprocess.PIPE)
+            p.wait()
+
+            self.filename = self.filename.replace('.fz', '')
+
+    def set_red_dir(self, red_dir_root):
+        sub_dir = os.path.join(
+            self.object, self.telescope[0:3] + '_' + self.instrument_class + '_' + self.filter
+        )
+        self.red_dir = os.path.join(red_dir_root, sub_dir)
+
+    def update_path(self, new_file_path):
+        self.red_dir = os.path.dirname(new_file_path)
+
+    def summary(self):
+        # Filename  date-obs   proposal  site  telescope  instrument filter exptime[s] object  reqnum
+        return str(self.filename).replace('.fz','')+' '+self.dateobs+' '+self.proposalid+' '+\
+                    self.site+' '+self.telescope+' '+self.instrument+' '+\
+                    self.filter+' '+str(self.exptime)+' '+self.object+' '+str(self.reqnum)
 
 class LCOArchiveEntry(object):
     """
