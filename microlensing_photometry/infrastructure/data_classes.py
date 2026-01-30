@@ -202,112 +202,6 @@ def get_facility_code(header):
 
     return facility_code
 
-class Observation:
-
-    def __init__(self, params = None, header = None):
-        self.filename = None
-        self.url = None
-        self.dateobs = None
-        self.proposalid = None
-        self.site = None
-        self.telescope = None
-        self.instrument = None
-        self.filter = None
-        self.exptime = None
-        self.object = None
-        self.reqnum = None
-        self.facility_code = None
-        self.red_dir = None
-
-        self.param_mapping = {'url': 'url',
-                            'filename': 'filename',
-                            'DATE_OBS': 'dateobs',
-                            'PROPID': 'proposalid', #
-                            'INSTRUME': 'instrument',
-                            'OBJECT': 'object', #
-                            'SITEID': 'site',
-                            'TELID': 'telescope',
-                            'EXPTIME': 'exptime',
-                            'FILTER': 'filter',
-                            'REQNUM': 'reqnum'} #
-
-        self.header_mapping = {'url': 'url',
-                            'ORIGNAME': 'filename',
-                            'DATE-OBS': 'dateobs',
-                            'PROPID': 'proposalid',
-                            'INSTRUME': 'instrument',
-                            'OBJECT': 'object',
-                            'SITEID': 'site',
-                            'TELID': 'telescope',
-                            'EXPTIME': 'exptime',
-                            'FILTER': 'filter',
-                            'REQNUM': 'reqnum'}
-        if params != None:
-            self.set_params(params)
-            self.facility_code = get_facility_code(params)
-
-        if header != None:
-            self.set_header_params(header)
-            self.facility_code = get_facility_code(header)
-
-        self.set_instrument_class()
-
-    def set_params(self, params):
-
-        for key, attribute in self.param_mapping.items():
-            if key in params.keys():
-                if attribute == 'filename':
-                    value = str(params[key]).replace('.fz','')
-                else:
-                    value = params[key]
-                setattr(self,attribute,value)
-
-    def set_header_params(self, header):
-
-        for key, attribute in self.header_mapping.items():
-            if key not in ['url']:
-                try:
-                    if attribute == 'filename':
-                        value = str(header[key]).replace('.fz','')
-                    else:
-                        value = header[key]
-                    setattr(self,attribute,value)
-                except KeyError:
-                    pass
-
-    def set_instrument_class(self):
-        if 'fl' in self.instrument or 'fa' in self.instrument:
-            self.instrument_class = 'sinistro'
-        elif 'ep' in self.instrument:
-            self.instrument_class = 'muscat'
-        elif 'en' in self.instrument:
-            self.instrument_class = 'FLOYDS'
-        elif 'GHTS_RED_IMAGER' in self.instrument:
-            self.instrument_class = 'goodman'
-
-    def uncompress(self):
-        if self.filename.split('.')[-1] == 'fz':
-            args = ['funpack', frame]
-            p = subprocess.Popen(args, stdout=subprocess.PIPE)
-            p.wait()
-
-            self.filename = self.filename.replace('.fz', '')
-
-    def set_red_dir(self, red_dir_root):
-        sub_dir = os.path.join(
-            self.object, self.telescope[0:3] + '_' + self.instrument_class + '_' + self.filter
-        )
-        self.red_dir = os.path.join(red_dir_root, sub_dir)
-
-    def update_path(self, new_file_path):
-        self.red_dir = os.path.dirname(new_file_path)
-
-    def summary(self):
-        # Filename  date-obs   proposal  site  telescope  instrument filter exptime[s] object  reqnum
-        return str(self.filename).replace('.fz','')+' '+self.dateobs+' '+self.proposalid+' '+\
-                    self.site+' '+self.telescope+' '+self.instrument+' '+\
-                    self.filter+' '+str(self.exptime)+' '+self.object+' '+str(self.reqnum)
-
 class LCOArchiveEntry(object):
     """
     Class describing the parameters held by the LCO archive for a single astronomical datafile in FITS format.
@@ -350,14 +244,29 @@ class LCOArchiveEntry(object):
         self.REQNUM = None              # Integer, request ID
         self.area = None                # Dictionary of verticies coordinates of the sky region
         self.red_dir = None             # Reduction directory path
+        self.instrument_class = None    # Class of instrument
 
         if params:
             for key, value in params.items():
                 setattr(self, key, value)
 
+            self.set_instrument_class()
+
     def summary(self):
         return 'LCO archive entry: ' + self.filename + ' ' + self.DATE_OBS \
                   + ' ' + self.SITEID + ' ' + self.INSTRUME + ' ' + self.FILTER
+
+    def set_instrument_class(self):
+        if 'fl' in self.INSTRUME or 'fa' in self.INSTRUME:
+            self.instrument_class = 'sinistro'
+        elif 'ep' in self.INSTRUME:
+            self.instrument_class = 'muscat'
+        elif 'sq' in self.INSTRUME:
+            self.instrument_class = 'qhy'
+        elif 'en' in self.INSTRUME:
+            self.instrument_class = 'FLOYDS'
+        elif 'GHTS_RED' in self.INSTRUME or 'GHTS_BLUE' in self.INSTRUME:
+            self.instrument_class = 'goodman'
 
     def set_reduction_directory(self, config):
         """
@@ -396,21 +305,17 @@ class LCOArchiveEntry(object):
 
         red_dir = os.path.join(config['data_reduction_dir'], self.target_name)
 
-        # Sinistro imager class
-        if 'fs' in self.INSTRUME or 'fa' in self.INSTRUME:
-            self.red_dir = os.path.join(red_dir, 'sinistro', self.FILTER)
+        # Imager classes
+        if self.instrument_class in ['sinistro', 'qhy', 'muscat']:
+            self.red_dir = os.path.join(red_dir, self.instrument_class, self.FILTER)
 
-        # QHY imager class
-        elif 'sq' in self.INSTRUME:
-            self.red_dir = os.path.join(red_dir, 'qhy', self.FILTER)
-
-        # Floyds spectrographs
-        elif 'en' in self.INSTRUME:
-            self.red_dir = os.path.join(red_dir, 'sinistro', str(self.DAY_OBS).replace('-',''))
-
-        # SOAR/Goodman spectrograph
-        elif 'GHTS_RED' in self.INSTRUME:
-            self.red_dir = os.path.join(red_dir, 'goodman', str(self.DAY_OBS).replace('-', ''))
+        # Spectrograph classes
+        elif self.instrument_class in ['floyds', 'goodman']:
+            self.red_dir = os.path.join(
+                red_dir,
+                self.instrument_class,
+                str(self.DAY_OBS).replace('-','')
+            )
 
         # Unrecognized instrument
         else:
