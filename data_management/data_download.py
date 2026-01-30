@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from microlensing_photometry.infrastructure import logs as lcologs
 from microlensing_photometry.infrastructure import data_classes
 from microlensing_photometry.IO import compression_utils
+from microlensing_photometry.configuration import configure_aperture_pipeline
 
 def run(args):
     """
@@ -47,7 +48,7 @@ def run(args):
             download_new_frame(config, entry, log)
 
             # Uncompress the observation if necessary
-            stat, uncompressed_path = compression_utils.funpack_frame(config, entry.filename, log)
+            stat, uncompressed_path = compression_utils.funpack_frame(config, entry.filename, log=log)
 
             # Transfer the frame to the appropriate data reduction directory if
             # that directory is unlocked; otherwise hold the data in situ for the next run
@@ -55,6 +56,20 @@ def run(args):
                 entry.set_uncompressed_filename(uncompressed_path)
 
                 entry.set_reduction_directory(config)
+
+                # If this is a new reduction, create the directory and
+                # set up the reduction configuration if needed
+                if not os.path.isdir(entry.red_dir):
+                    os.makedirs(entry.red_dir)
+                    lcologs.log('Created new reduction directory ' + entry.red_dir, 'info', log=log)
+
+                    if entry.instrument_type == 'imager':
+                        red_params = data_classes.get_reduction_parameters(
+                            os.path.join(config['data_download_dir'], entry.filename)
+                        )
+                        configure_aperture_pipeline.create_red_config(
+                            config, red_params, entry.red_dir, log=log
+                        )
 
                 dir_stat = check_red_dir_unlocked(entry.red_dir, log=log)
 
@@ -275,15 +290,12 @@ def download_new_frame(config, entry, log):
 
 def move_to_red_dir(config, entry, log=None):
 
-    if not os.path.isdir(entry.red_dir):
-        os.makedirs(entry.red_dir)
-
     src = os.path.join(config['data_download_dir'], entry.filename)
     dest = os.path.join(entry.red_dir, os.path.basename(entry.filename))
 
     move(src, dest)
 
-    lcologs.log(os.path.basename(entry.filename) + ' --> ' + os.path.basename(dest), 'info', log=log)
+    lcologs.log(os.path.basename(entry.filename) + ' --> ' + os.path.dirname(dest), 'info', log=log)
 
 def start_day_log(config):
     """Function to set up a logger object"""

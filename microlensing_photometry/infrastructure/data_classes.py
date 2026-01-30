@@ -202,6 +202,16 @@ def get_facility_code(header):
 
     return facility_code
 
+def get_reduction_parameters(file_path):
+    header = getheader(file_path)
+    red_params = {
+        'name': header['OBJECT'],
+        'RA': header['RA'],
+        'Dec': header['DEC']
+    }
+    return red_params
+
+
 class LCOArchiveEntry(object):
     """
     Class describing the parameters held by the LCO archive for a single astronomical datafile in FITS format.
@@ -245,6 +255,7 @@ class LCOArchiveEntry(object):
         self.area = None                # Dictionary of verticies coordinates of the sky region
         self.red_dir = None             # Reduction directory path
         self.instrument_class = None    # Class of instrument
+        self.instrument_type = None      # Type of instrument, either imager or spectrograph
 
         if params:
             for key, value in params.items():
@@ -259,14 +270,19 @@ class LCOArchiveEntry(object):
     def set_instrument_class(self):
         if 'fl' in self.INSTRUME or 'fa' in self.INSTRUME:
             self.instrument_class = 'sinistro'
+            self.instrument_type = 'imager'
         elif 'ep' in self.INSTRUME:
             self.instrument_class = 'muscat'
+            self.instrument_type = 'imager'
         elif 'sq' in self.INSTRUME:
             self.instrument_class = 'qhy'
+            self.instrument_type = 'imager'
         elif 'en' in self.INSTRUME:
             self.instrument_class = 'FLOYDS'
+            self.instrument_type = 'spectrograph'
         elif 'GHTS_RED' in self.INSTRUME or 'GHTS_BLUE' in self.INSTRUME:
             self.instrument_class = 'goodman'
+            self.instrument_type = 'spectrograph'
 
     def set_reduction_directory(self, config):
         """
@@ -323,3 +339,14 @@ class LCOArchiveEntry(object):
 
     def set_uncompressed_filename(self, uncompressed_path):
         self.filename = os.path.basename(uncompressed_path)
+
+    def get_reduction_params(self):
+        """
+        Method to return a dictionary of all parameters necessary for reduction of imaging data
+        """
+        red_params = {
+            'name': self.OBJECT,
+            'RA': self.RA,
+            'Dec': self.Dec
+        }
+        return red_params

@@ -19,6 +19,15 @@ def create_red_config(dmconfig, red_params, red_dir, log=None):
     log  log instance   [optional] Logger object
     """
 
+    # Check for pre-existing reduction config; don't overwrite it if available
+    file_path = os.path.join(red_dir, 'reduction_configuration.yaml')
+    if os.path.isfile(file_path):
+        lcologs.log(
+            'Found existing reduction configuration for ' + red_dir,
+            'info', log=log
+        )
+        return None
+
     # Load default pipeline config
     if 'default_red_config' not in dmconfig.keys():
         err = 'No default reduction configuration parameter set in data management configuration'
@@ -35,7 +44,6 @@ def create_red_config(dmconfig, red_params, red_dir, log=None):
         red_config['target'][key] = value
 
     # Output the customized configuration to the appropriate reduction directory
-    file_path = os.path.join(red_dir, 'reduction_configuration.yaml')
     with open(file_path, 'w') as f:
         yaml.dump(red_config, f, sort_keys=False, default_flow_style=False)
 

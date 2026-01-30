@@ -46,7 +46,8 @@ def funpack_frame(config, compressed_filename, log=None):
         else:
             lcologs.log('ERROR decompressing '+os.path.basename(compressed_frame_path), 'info', log=log)
 
-            move(compressed_frame_path, os.path.join(unused_dir, os.path.basename(compressed_frame_path)))
+            if os.path.isfile(compressed_frame_path):
+                move(compressed_frame_path, os.path.join(unused_dir, os.path.basename(compressed_frame_path)))
 
             status = False
 
