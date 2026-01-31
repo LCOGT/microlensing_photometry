@@ -1,3 +1,4 @@
+from prefect import flow, task
 import os
 import argparse
 import requests
@@ -10,15 +11,14 @@ from microlensing_photometry.infrastructure import data_classes
 from microlensing_photometry.IO import compression_utils
 from microlensing_photometry.configuration import configure_aperture_pipeline
 
-def run(args):
+@flow
+def check_for_new_data():
     """
-    Script to manage automated downlaods of observations from AWS-hosted data archives.
-
-    Parameters
-    ----------
-
-    args : Argparser object
+    Script to manage automated downloads of observations from AWS-hosted data archives.
     """
+
+    # Get arguments
+    args = get_args()
 
     # Load reduction configuration
     config = yaml.safe_load(open(args.config_file))
@@ -82,6 +82,7 @@ def run(args):
 
     lcologs.close_log(log)
 
+@task
 def set_date_range(config, log):
     """Function to set the search date range from the configuration or to
     the last 24hrs
@@ -107,6 +108,7 @@ def set_date_range(config, log):
 
     return start_time, end_time
 
+@task
 def fetch_new_datalist(archive_config, obs_set, start_time, end_time, log):
     """Function to query the archive and retrieve a list of frames,
     described as dictionaries of frame parameters."""
@@ -133,6 +135,7 @@ def fetch_new_datalist(archive_config, obs_set, start_time, end_time, log):
 
     return new_data
 
+@task
 def build_data_list(archive_config, obs_set, query_results, proposal, log):
     """
     Function to add new frames to a list of frames to be downloaded,
@@ -187,6 +190,7 @@ def build_data_list(archive_config, obs_set, query_results, proposal, log):
 
     return new_data
 
+@task
 def check_red_dir_unlocked(dataset_path, log=None):
     """Function to check for a lockfile in a given dataset before starting
     a reduction.  Returns True if unlocked."""
@@ -203,6 +207,7 @@ def check_red_dir_unlocked(dataset_path, log=None):
 
     return status
 
+@task
 def _search_key_in_filename(filename, search_keys):
 
     status = False
@@ -213,6 +218,7 @@ def _search_key_in_filename(filename, search_keys):
 
     return status
 
+@task
 def is_frame_calibration_data(filename):
     """Function to determine whether or not a given frame is a calibration or
     science frame, based on its filename"""
@@ -223,6 +229,7 @@ def is_frame_calibration_data(filename):
 
     return status
 
+@task
 def talk_to_lco_archive(config, ur, end_point, method):
     """Function to communicate with various APIs of the LCO network.
     ur should be a user request while end_point is the URL string which
@@ -255,6 +262,7 @@ def talk_to_lco_archive(config, ur, end_point, method):
 
     return response
 
+@task
 def download_new_frame(config, entry, log):
     """Function to download list of frames"""
 
@@ -288,6 +296,7 @@ def download_new_frame(config, entry, log):
         except requests.exceptions.ConnectionError:
             lcologs.log('->>>> ConnectionError downloading ' + entry.filename, 'warning', log=log)
 
+@task
 def move_to_red_dir(config, entry, log=None):
 
     src = os.path.join(config['data_download_dir'], entry.filename)
@@ -297,35 +306,7 @@ def move_to_red_dir(config, entry, log=None):
 
     lcologs.log(os.path.basename(entry.filename) + ' --> ' + os.path.dirname(dest), 'info', log=log)
 
-def start_day_log(config):
-    """Function to set up a logger object"""
-
-    if path.isdir(config['log_dir']) == False:
-        makedirs(config['log_dir'])
-
-    log_date = datetime.utcnow().strftime("%Y-%m-%d")
-    log_file = path.join(config['log_dir'], 'data_download_'+log_date+'.log')
-
-    log = logging.getLogger( 'data_download' )
-
-    if len(log.handlers) == 0:
-        log.setLevel( logging.INFO )
-        file_handler = logging.FileHandler( log_file )
-        file_handler.setLevel( logging.INFO )
-        formatter = logging.Formatter( fmt='%(asctime)s %(message)s', \
-                                    datefmt='%Y-%m-%dT%H:%M:%S' )
-        file_handler.setFormatter( formatter )
-        log.addHandler( file_handler )
-
-    log.info('------------------------------------------------------------\n')
-    log.info('Started data download process\n')
-
-    return log
-
-def close_log(log):
-    log.info( 'Processing complete\n' )
-    logging.shutdown()
-
+@task
 def get_args():
 
     parser = argparse.ArgumentParser()
@@ -335,6 +316,4 @@ def get_args():
     return args
 
 if __name__ == '__main__':
-
-    args = get_args()
-    run(args)
+    check_for_new_data().serve(name="DM1")

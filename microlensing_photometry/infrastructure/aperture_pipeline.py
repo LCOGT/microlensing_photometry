@@ -16,7 +16,7 @@ import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
 import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
 from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
 
-def run(args):
+def reduce_dataset(args):
     """
     Pipeline to run an aperture photometry reduction for a single dataset.
     :param args:
@@ -194,4 +194,4 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    run(args)
+    reduce_dataset(args)
