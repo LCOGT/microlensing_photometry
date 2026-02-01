@@ -3,7 +3,7 @@ import unittest
 class TestObservationSet(unittest.TestCase):
 
     def test_create(self):
-        from microlensing_photometry.infrastructure import data_classes
+        from microlensing_photometry.microlensing_photometry.infrastructure import data_classes
 
         obs_set = data_classes.ObservationSet()
 
@@ -13,6 +13,9 @@ class TestObservationSet(unittest.TestCase):
             'ENCID': 'domb',
             'TELID': '1m0a',
             'INSTRUME': 'fa04',
+            'PROPID': 'KEY2024-004',
+            'OBJECT': 'OGLE-2026-BLG-0001',
+            'REQNUM': 1234567,
             'FILTER': 'ip',
             'DATE-OBS': '2025-06-11T09:21:20.374',
             'EXPTIME': 20.0,
@@ -45,19 +48,20 @@ class TestObservationSet(unittest.TestCase):
 
         assert(len(obs_set.table) == 1)
 
-        test_output_path = 'test_input/data_summary.txt'
+        test_output_path = os.path.join(os.getcwd(), 'tests', 'test_input', 'data_summary.txt')
+
         obs_set.save(test_output_path)
 
         assert(os.path.isfile(test_output_path))
 
-        #os.remove(test_output_path)
+        os.remove(test_output_path)
 
     def test_load(self):
-        from microlensing_photometry.infrastructure import data_classes
+        from microlensing_photometry.microlensing_photometry.infrastructure import data_classes
 
-        test_path = 'test_input/data_summary.txt'
+        test_path = os.path.join(os.getcwd(), 'tests', 'test_input', 'test_data_summary.txt')
 
         obs_set = data_classes.ObservationSet(file_path=test_path)
 
         assert(len(obs_set.table) == 1)
-        assert(len(obs_set.table.colnames) == 29)
+        assert(len(obs_set.table.colnames) == 32)

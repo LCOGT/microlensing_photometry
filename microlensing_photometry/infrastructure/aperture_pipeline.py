@@ -1,6 +1,4 @@
-import copy
 import astropy.units as u
-import numpy as np
 import os
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -9,12 +7,12 @@ from tqdm import tqdm
 import copy
 import yaml
 
-import microlensing_photometry.infrastructure.observations as lcoobs
-import microlensing_photometry.infrastructure.logs as lcologs
-import microlensing_photometry.photometry.aperture_photometry as lcoapphot
-import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
-import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
-from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
+import microlensing_photometry.microlensing_photometry.infrastructure.observations as lcoobs
+import microlensing_photometry.microlensing_photometry.infrastructure.logs as lcologs
+import microlensing_photometry.microlensing_photometry.photometry.aperture_photometry as lcoapphot
+import microlensing_photometry.microlensing_photometry.photometry.photometric_scale_factor as lcopscale
+from microlensing_photometry.microlensing_photometry.logistics import GaiaCatalog as GC
+from microlensing_photometry.microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
 
 def reduce_dataset(args):
     """

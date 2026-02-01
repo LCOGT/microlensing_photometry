@@ -1,24 +1,17 @@
-import copy
-
 import astropy.units as u
 import numpy as np
-import matplotlib.pyplot as plt
 import os
-from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 import argparse
 from tqdm import tqdm
-import gc
 import copy
 
 import microlensing_photometry.photometry.aperture_photometry as lcoapphot
 import microlensing_photometry.photometry.dia_photometry as lcodiaphot
 import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
-import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
-import microlensing_photometry.astrometry.wcs as lcowcs
-import microlensing_photometry.photometry as lcophot
+from microlensing_photometry.logistics import GaiaCatalog as GC
 from microlensing_photometry.IO import fits_table_parser, hdf5
 
 parser = argparse.ArgumentParser()

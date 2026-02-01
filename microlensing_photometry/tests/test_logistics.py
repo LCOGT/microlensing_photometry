@@ -1,11 +1,9 @@
-from os import getcwd, path, remove, rmdir, makedirs
+from os import getcwd, path, remove, makedirs
 import shutil
-import numpy as np
 import unittest
 
 from microlensing_photometry.logistics import vizier_tools
-import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
-from microlensing_photometry.astrometry import wcs as lcowcs
+from microlensing_photometry.logistics import GaiaCatalog as GC
 from microlensing_photometry.logistics import image_tools
 from astropy.table import Table, Column
 import numpy as np

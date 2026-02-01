@@ -1,10 +1,7 @@
 import astropy.units as u
 import numpy as np
-import matplotlib.pyplot as plt
 import os
-from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.coordinates import SkyCoord
 from astropy.io import fits
 
 from tqdm import tqdm
@@ -12,11 +9,7 @@ from tqdm import tqdm
 import microlensing_photometry.photometry.aperture_photometry as lcoapphot
 import microlensing_photometry.photometry.dia_photometry as lcodiaphot
 import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
-import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
-import microlensing_photometry.astrometry.wcs as lcowcs
-import microlensing_photometry.photometry as lcophot
-
-
+from microlensing_photometry.logistics import GaiaCatalog as GC
 
 directory = '/media/bachelet/Data/Work/Microlensing/OMEGA/Photometry/OB20240034/ip/data/'
 

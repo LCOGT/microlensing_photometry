@@ -2,8 +2,8 @@ import os
 import copy
 import argparse
 from astropy.io import fits
-from microlensing_photometry.infrastructure import data_classes
-from microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.microlensing_photometry.infrastructure import data_classes
+from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
 
 def get_observation_metadata(args, log=None):
     """

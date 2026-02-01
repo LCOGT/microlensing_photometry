@@ -2,9 +2,10 @@ from prefect import flow, task
 import os
 import argparse
 import yaml
+from pathlib import Path
 from datetime import datetime, UTC
 from astropy.io.fits import getheader
-from microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
 
 @flow
 def archon():
@@ -58,14 +59,11 @@ def find_imaging_data_for_aperture_photometry(config, log):
     group = str(config['dataset_selection']['group']).lower()
     lcologs.log('Data group selection: ' + group, 'info', log=log)
 
-    datasets = []
-
     match group:
 
         # 1) group = 'all': Reduce all available unlocked image datasets
         case 'all':
-            data_dirs = [f.path for f in os.scandir('.') if f.is_dir()]
-            datasets = [d for d in data_dirs if check_dataset_lock(d, log)]
+            datasets = find_unlocked_red_dirs.fn(config, log)
 
         # 2) group = 'date': Reduce all available unlocked image datasets with data taken between
         #                     start_date and end_date
@@ -75,30 +73,71 @@ def find_imaging_data_for_aperture_photometry(config, log):
             end_date = datetime.strptime(config['dataset_selection']['end_date'], '%Y-%m-%d')
 
             # Make a list of all unlocked directories to be reviewed
-            data_dirs = [f.path for f in os.scandir('.') if f.is_dir()]
-            unlocked_dirs = [d for d in data_dirs if check_dataset_lock(d, log)]
+            unlocked_dirs = find_unlocked_red_dirs.fn(config, log)
+            print('UNLOCKED: ', unlocked_dirs)
 
             # Review the data in all unlocked directories
-            datasets = find_data_within_daterange(unlocked_dirs, start_date, end_date)
+            datasets = find_data_within_daterange(config, unlocked_dirs, start_date, end_date)
 
         # 3) group = 'recent': Reduce all available unlocked image datasets with data taken since
         #                     ndays
         case 'recent':
-            pass
+            end_date = datetime.now(UTC)
+            start_date = end_date - datetime.timedelta(days = config['dataset_selection']['ndays'])
+
+            # Make a list of all unlocked directories to be reviewed
+            data_dirs = [f.path for f in os.scandir('.') if f.is_dir()]
+            unlocked_dirs = [d for d in data_dirs if not check_dataset_lock(d, log)]
+
+            # Review the data in all unlocked directories
+            datasets = find_data_within_daterange(config, unlocked_dirs, start_date, end_date)
 
         # 4) group = 'file': Reduction all unlocked image datasets from the reduction directories
         #                     listed in the file given by 'file'
         case 'file':
-            pass
-
+            if os.path.isfile(config['dataset_selection']['file']):
+                with open(config['dataset_selection']['file'], 'r') as f:
+                    datasets = f.readlines()
+                    f.close()
+            else:
+                lcologs.log(
+                    'Cannot find input file for dataset selection at ' + config['dataset_selection']['file'],
+                'info', log=log
+                )
+                raise IOError('Cannot find input file for dataset selection at ' + config['dataset_selection']['file'])
         case _:
-            lcologs.log('Invalid data selection group in reduction manager configuration')
+            lcologs.log('Invalid data selection group in reduction manager configuration', info, log=log)
+            raise IOError('Invalid data selection group in reduction manager configuration')
 
-        lcologs.log('Found ' + str(len(datasets)) + ' unlocked datasets to process')
+    lcologs.log('Found ' + str(len(datasets)) + ' unlocked datasets to process', 'info', log=log)
 
     return datasets
 
-def find_data_within_daterange(dir_list, start_date, end_date):
+@task
+def find_unlocked_red_dirs(config, log):
+    """
+    Function to create a list of all reduction directories
+
+    Parameters
+    ----------
+    config  dict   Script configuration
+
+    Returns
+    datasets list  List of reduction directory paths
+    """
+    datasets = []
+    target_dirs = [f.path for f in os.scandir(config['data_reduction_dir']) if f.is_dir()]
+    for dpath in target_dirs:
+        for instrument in config['instrument_list']:
+            if os.path.isdir(os.path.join(dpath, instrument)):
+                datasets += [
+                    f.path for f in os.scandir(os.path.join(dpath, instrument))
+                    if f.is_dir() and not check_dataset_lock.fn(f, log)
+                ]
+
+    return datasets
+
+def find_data_within_daterange(config, dir_list, start_date, end_date):
     """
     Function to review the FITS data within a set of directories and return a list of
     those directories that contain any data obtained within the given date range
@@ -113,20 +152,21 @@ def find_data_within_daterange(dir_list, start_date, end_date):
     -------
     selected_dir_list  list   List of the full paths of directories passing the selection
     """
-
     selected_dir_list = []
 
     # Review the data in all unlocked directories
     for red_dir in dir_list:
-        images = [f.name for f in os.scandir('.') if f.is_file() and ('.fits' in f or '.fts' in f)]
+        images = [os.path.join(red_dir, f.name) for f in os.scandir(red_dir)
+                  if f.is_file() and ('.fits' in f.name or '.fts' in f.name)]
 
         use_dir = False
         i = 0
         while i < len(images) and not use_dir:
             header = getheader(images[i])
-            dateobs = datetime.strptime(header['DATE-OBS'], '%Y-%m-%dT%H:%M%:S.f')
+            dateobs = datetime.strptime(header['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
             if dateobs >= start_date and dateobs <= end_date:
                 use_dir = True
+            i += 1
 
         if use_dir:
             selected_dir_list.append(red_dir)

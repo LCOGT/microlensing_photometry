@@ -1,7 +1,6 @@
-from os import path
 from microlensing_photometry.photometry import aperture_photometry
 from microlensing_photometry.infrastructure import logs as lcologs
-import microlensing_photometry.logistics.GaiaTools.GaiaCatalog as GC
+from microlensing_photometry.logistics import GaiaCatalog as GC
 import argparse
 from astropy.coordinates import SkyCoord
 from astropy import units as u
