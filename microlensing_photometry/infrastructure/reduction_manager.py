@@ -3,7 +3,7 @@ import os
 import argparse
 import yaml
 from pathlib import Path
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from astropy.io.fits import getheader
 from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
 
@@ -69,12 +69,17 @@ def find_imaging_data_for_aperture_photometry(config, log):
         #                     start_date and end_date
         case 'date':
             # Fetch selected date range
-            start_date = datetime.strptime(config['dataset_selection']['start_date'], '%Y-%m-%d')
-            end_date = datetime.strptime(config['dataset_selection']['end_date'], '%Y-%m-%d')
+            start_date = datetime.strptime(
+                config['dataset_selection']['start_date'],
+                '%Y-%m-%d'
+            ).replace(tzinfo=UTC)
+            end_date = datetime.strptime(
+                config['dataset_selection']['end_date'],
+                '%Y-%m-%d'
+            ).replace(tzinfo=UTC)
 
             # Make a list of all unlocked directories to be reviewed
             unlocked_dirs = find_unlocked_red_dirs.fn(config, log)
-            print('UNLOCKED: ', unlocked_dirs)
 
             # Review the data in all unlocked directories
             datasets = find_data_within_daterange(config, unlocked_dirs, start_date, end_date)
@@ -83,11 +88,10 @@ def find_imaging_data_for_aperture_photometry(config, log):
         #                     ndays
         case 'recent':
             end_date = datetime.now(UTC)
-            start_date = end_date - datetime.timedelta(days = config['dataset_selection']['ndays'])
+            start_date = end_date - timedelta(days = float(config['dataset_selection']['ndays']))
 
             # Make a list of all unlocked directories to be reviewed
-            data_dirs = [f.path for f in os.scandir('.') if f.is_dir()]
-            unlocked_dirs = [d for d in data_dirs if not check_dataset_lock(d, log)]
+            unlocked_dirs = find_unlocked_red_dirs.fn(config, log)
 
             # Review the data in all unlocked directories
             datasets = find_data_within_daterange(config, unlocked_dirs, start_date, end_date)
@@ -97,14 +101,20 @@ def find_imaging_data_for_aperture_photometry(config, log):
         case 'file':
             if os.path.isfile(config['dataset_selection']['file']):
                 with open(config['dataset_selection']['file'], 'r') as f:
-                    datasets = f.readlines()
+                    dir_list = f.readlines()
                     f.close()
+                    dir_list = [dpath.replace('\n','') for dpath in dir_list]
+
+                    # Check datasets unlocked
+                    datasets = [ dpath for dpath in dir_list if not check_dataset_lock.fn(dpath, log) ]
+
             else:
                 lcologs.log(
                     'Cannot find input file for dataset selection at ' + config['dataset_selection']['file'],
                 'info', log=log
                 )
                 raise IOError('Cannot find input file for dataset selection at ' + config['dataset_selection']['file'])
+
         case _:
             lcologs.log('Invalid data selection group in reduction manager configuration', info, log=log)
             raise IOError('Invalid data selection group in reduction manager configuration')
@@ -163,7 +173,10 @@ def find_data_within_daterange(config, dir_list, start_date, end_date):
         i = 0
         while i < len(images) and not use_dir:
             header = getheader(images[i])
-            dateobs = datetime.strptime(header['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
+            dateobs = datetime.strptime(
+                header['DATE-OBS'],
+                '%Y-%m-%dT%H:%M:%S.%f'
+            ).replace(tzinfo=UTC)
             if dateobs >= start_date and dateobs <= end_date:
                 use_dir = True
             i += 1

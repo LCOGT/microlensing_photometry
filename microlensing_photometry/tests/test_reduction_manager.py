@@ -88,6 +88,24 @@ class TestReductionManager:
                'end_date': datetime.strftime(datetime.now(UTC), "%Y-%m-%d"),
                'ndays': 2}
           }),
+        ({'data_reduction_dir': os.path.join(os.getcwd(), 'tests', 'test_input'),
+          'instrument_list': ['sinistro', 'qhy'],
+          'dataset_selection':
+              {'group': 'recent',
+               'file': 'None',
+               'start_date': 'None',
+               'end_date': 'None',
+               'ndays': 5}
+          }),
+        ({'data_reduction_dir': os.path.join(os.getcwd(), 'tests', 'test_input'),
+          'instrument_list': ['sinistro', 'qhy'],
+          'dataset_selection':
+              {'group': 'file',
+               'file': os.path.join(os.getcwd(), 'tests', 'test_input', 'test_reduce_datasets.txt'),
+               'start_date': 'None',
+               'end_date': 'None',
+               'ndays': 0}
+          }),
     ])
     def test_find_imaging_data_for_aperture_photometry(self, test_config):
         """
@@ -104,18 +122,25 @@ class TestReductionManager:
             datasets.sort()
             assert datasets == test_datasets
 
-        # Test option 'date':
-        elif test_config['dataset_selection']['group'] == 'date':
+        # Test option 'date' or 'recent':
+        elif test_config['dataset_selection']['group'] == 'date' or \
+            test_config['dataset_selection']['group'] == 'recent':
             test_datasets2 = [dpath for dpath in test_datasets if 'OGLE-2026-BLG-0003' not in dpath]
 
             datasets = reduction_manager.find_imaging_data_for_aperture_photometry.fn(test_config, None)
             datasets.sort()
-
+            print('TEST: ', test_datasets2)
+            print('GOT: ', datasets)
             assert datasets == test_datasets2
 
-        # Test option 'recent':
-
         # Test option 'file':
+        elif test_config['dataset_selection']['group'] == 'file':
+            test_datasets3 = [dpath for dpath in test_datasets if 'OGLE-2026-BLG-0003' in dpath]
+
+            datasets = reduction_manager.find_imaging_data_for_aperture_photometry.fn(test_config, None)
+            datasets.sort()
+
+            assert datasets == test_datasets3
 
         # Remove test data
         remove_test_data(test_datasets)
