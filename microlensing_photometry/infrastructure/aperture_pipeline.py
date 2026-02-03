@@ -17,8 +17,14 @@ from microlensing_photometry.microlensing_photometry.IO import fits_table_parser
 def reduce_dataset(args):
     """
     Pipeline to run an aperture photometry reduction for a single dataset.
-    :param args:
-    :return:
+
+    Parameters
+    ----------
+    args    Object      Parameters of the dataset to be reduced
+
+    Returns
+    -------
+    None
     """
 
     # Start logging

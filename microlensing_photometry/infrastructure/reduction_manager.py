@@ -1,8 +1,10 @@
 from prefect import flow, task
+from prefect.deployments import run_deployment
 import os
+import sys
 import argparse
 import yaml
-from pathlib import Path
+import subprocess
 from datetime import datetime, UTC, timedelta
 from astropy.io.fits import getheader
 from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
@@ -23,10 +25,55 @@ def archon():
     log = lcologs.start_log(config['log_dir'], 'archon')
 
     # Identify datasets to be reduced, avoiding any that are locked due to ongoing reductions.
+    datasets = find_imaging_data_for_aperture_photometry(config, log)
 
     # Trigger parallelized reduction processes
+    process_datasets(config, datasets, log)
 
     lcologs.close_log(log)
+
+@task
+def process_datasets(config, datasets, log):
+    """
+    Function to initiate parallelized reductions of multiple separate datasets.
+
+    Parameters
+    ----------
+    config    dict  Script configuration
+    datasets  list  Set of directory paths to unlocked datasets to be reduced
+    log        object   Logger instance
+    """
+
+    command = os.path.join(config['software_dir'], 'infrastructure', 'aperture_pipeline.py')
+    for red_dir in datasets:
+        arguments = [red_dir]
+        lcologs.log('Started reduction for ' + red_dir, 'info', log=log)
+        pid = trigger_process(command, arguments, log)
+
+
+@task
+def trigger_process(command, arguments, log):
+    """
+    Function to initiate a subprocess to reduce an individual dataset
+
+    Parameters
+    ----------
+    command     string  Full path to Python software to be run
+    arguments   list    Arguments needed for the command to run
+    log         object  Logger instance
+
+    Returns
+    ----------
+    pid         int     Process ID code
+    """
+
+    args = [sys.executable, command] + arguments
+
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+
+    lcologs.log('Started process PID=' + str(proc.pid), 'info', log=log)
+
+    return proc.pid
 
 @task
 def find_imaging_data_for_aperture_photometry(config, log):

@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta, UTC
 import pytest
 import os
+import sys
 import shutil
+import psutil
 from pathlib import Path
 from astropy.io import fits
 import numpy as np
@@ -144,3 +146,17 @@ class TestReductionManager:
 
         # Remove test data
         remove_test_data(test_datasets)
+
+    def test_trigger_process(self):
+        command = os.path.join(os.getcwd(), 'tests', 'task_process.py')
+        arguments = []
+        log = None
+
+        test_pid = reduction_manager.trigger_process.fn(command, arguments, log)
+
+        got_pid = False
+        for proc in psutil.process_iter(['pid', 'name', 'username']):
+            if (proc.pid == test_pid):
+                got_pid = True
+
+        assert got_pid
