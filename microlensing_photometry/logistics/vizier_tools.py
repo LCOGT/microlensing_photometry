@@ -3,7 +3,7 @@ from astroquery.vizier import Vizier
 from astroquery.gaia import Gaia
 from astropy import wcs, coordinates, units, visualization, table
 import requests
-from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.infrastructure import logs as lcologs
 
 def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
                               coords='sexigesimal', timeout=60, log=None, debug=False):

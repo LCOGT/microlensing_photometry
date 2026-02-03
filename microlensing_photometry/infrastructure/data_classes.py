@@ -5,9 +5,8 @@ from astropy.io import ascii
 from astropy.io.fits import getheader
 from astropy.coordinates import SkyCoord
 import numpy as np
-import subprocess
-from microlensing_photometry.microlensing_photometry.infrastructure import time_utils as lcotime
-from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.infrastructure import time_utils as lcotime
+from microlensing_photometry.infrastructure import logs as lcologs
 
 class ObservationSet(object):
     """

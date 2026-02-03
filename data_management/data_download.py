@@ -316,4 +316,4 @@ def get_args():
     return args
 
 if __name__ == '__main__':
-    check_for_new_data().serve(name="DM1")
+    check_for_new_data()

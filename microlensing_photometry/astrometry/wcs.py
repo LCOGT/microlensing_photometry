@@ -8,9 +8,9 @@ from astropy.wcs import WCS, utils
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
-from microlensing_photometry.microlensing_photometry.logistics import image_tools
-from microlensing_photometry.microlensing_photometry.data_quality import astrometry_qc
-from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.logistics import image_tools
+from microlensing_photometry.data_quality import astrometry_qc
+from microlensing_photometry.infrastructure import logs as lcologs
 from matplotlib import pyplot as plt
 
 def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):

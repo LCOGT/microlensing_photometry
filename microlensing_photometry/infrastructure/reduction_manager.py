@@ -7,7 +7,7 @@ import yaml
 import subprocess
 from datetime import datetime, UTC, timedelta
 from astropy.io.fits import getheader
-from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.infrastructure import logs as lcologs
 
 @flow
 def archon():
@@ -69,9 +69,12 @@ def trigger_process(command, arguments, log):
 
     args = [sys.executable, command] + arguments
 
-    proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
 
     lcologs.log('Started process PID=' + str(proc.pid), 'info', log=log)
+
+    lcologs.log(stderr.decode(), 'error', log=log)
 
     return proc.pid
 
@@ -150,7 +153,10 @@ def find_imaging_data_for_aperture_photometry(config, log):
                 with open(config['dataset_selection']['file'], 'r') as f:
                     dir_list = f.readlines()
                     f.close()
-                    dir_list = [dpath.replace('\n','') for dpath in dir_list]
+                    dir_list = [
+                        dpath.replace('\n','') for dpath in dir_list
+                        if len(dpath.replace('\n','')) > 0
+                    ]
 
                     # Check datasets unlocked
                     datasets = [ dpath for dpath in dir_list if not check_dataset_lock.fn(dpath, log) ]

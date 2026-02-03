@@ -1,19 +1,20 @@
+from prefect import flow, task
 import astropy.units as u
 import os
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 import argparse
-from tqdm import tqdm
 import copy
 import yaml
 
-import microlensing_photometry.microlensing_photometry.infrastructure.observations as lcoobs
-import microlensing_photometry.microlensing_photometry.infrastructure.logs as lcologs
-import microlensing_photometry.microlensing_photometry.photometry.aperture_photometry as lcoapphot
-import microlensing_photometry.microlensing_photometry.photometry.photometric_scale_factor as lcopscale
-from microlensing_photometry.microlensing_photometry.logistics import GaiaCatalog as GC
-from microlensing_photometry.microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
+import microlensing_photometry.infrastructure.observations as lcoobs
+import microlensing_photometry.infrastructure.logs as lcologs
+import microlensing_photometry.photometry.aperture_photometry as lcoapphot
+import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
+from microlensing_photometry.logistics import GaiaCatalog as GC
+from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
 
+@flow
 def reduce_dataset(args):
     """
     Pipeline to run an aperture photometry reduction for a single dataset.
@@ -35,7 +36,7 @@ def reduce_dataset(args):
     config = yaml.safe_load(open(config_file))
 
     # Get observation set; this provides the list of images and associated information
-    obs_set = lcoobs.get_observation_metadata(args, log=log)
+    obs_set = lcoobs.get_observation_metadata.fn(args, log=log)
 
     # Establish label for the dataset
     config['tom']['data_label'] = config['tom']['data_label'] + '_' + obs_set.table['filter'][0]
@@ -57,7 +58,7 @@ def reduce_dataset(args):
     )
 
     # Load or query for known Gaia objects within this field
-    gaia_catalog = GC.collect_Gaia_catalog(
+    gaia_catalog = GC.collect_Gaia_catalog.fn(
         target.ra.deg,
         target.dec.deg,
         20,
@@ -89,7 +90,7 @@ def reduce_dataset(args):
     bad_agent = []
     nstars = {}
 
-    for im in tqdm(obs_set.table['file']):#[::1]:
+    for im in obs_set.table['file']:
         image_path = os.path.join(args.directory,im)
         lcologs.log('Aperture photometry for ' + im, 'info', log=log)
 
@@ -149,7 +150,7 @@ def reduce_dataset(args):
             'filter': config['tom']['data_label'],
             'lc_path': os.path.join(args.directory, lc_root_file_name)
         }
-        lc_status = lightcurve.aperture_timeseries(params, log=log)
+        lc_status = lightcurve.aperture_timeseries.fn(params, log=log)
 
         # TOM lightcurve upload
         if config['tom']['upload'] and lc_status:
@@ -159,7 +160,7 @@ def reduce_dataset(args):
                 'target_name': config['target']['name'],
                 'tom_config_file': config['tom']['config_file']
             }
-            tom_utils. upload_lightcurve(params, log=log)
+            tom_utils.upload_lightcurve.fn(params, log=log)
 
         elif not lc_status:
             lcologs.log(

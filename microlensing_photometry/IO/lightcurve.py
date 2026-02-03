@@ -1,3 +1,4 @@
+from prefect import task
 from microlensing_photometry.photometry import aperture_photometry
 from microlensing_photometry.infrastructure import logs as lcologs
 from microlensing_photometry.logistics import GaiaCatalog as GC
@@ -5,6 +6,7 @@ import argparse
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
+@task
 def aperture_timeseries(params, log=None):
     """
     Function to plot an aperture photometry timeseries from an HDF5 output file

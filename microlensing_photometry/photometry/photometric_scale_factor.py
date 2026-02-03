@@ -1,6 +1,6 @@
 import numpy as np
-import microlensing_photometry.microlensing_photometry.infrastructure.observations as lcoobs
-import microlensing_photometry.microlensing_photometry.infrastructure.logs as lcologs
+import microlensing_photometry.infrastructure.observations as lcoobs
+import microlensing_photometry.infrastructure.logs as lcologs
 
 
 def photometric_scale_factor_from_lightcurves(lcs):

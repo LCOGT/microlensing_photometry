@@ -20,7 +20,7 @@ def create_red_config(dmconfig, red_params, red_dir, log=None):
     """
 
     # Check for pre-existing reduction config; don't overwrite it if available
-    file_path = os.path.join(red_dir, 'reduction_configuration.yaml')
+    file_path = os.path.join(red_dir, 'reduction_config.yaml')
     if os.path.isfile(file_path):
         lcologs.log(
             'Found existing reduction configuration for ' + red_dir,

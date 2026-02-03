@@ -1,3 +1,4 @@
+from prefect import task
 from astroquery.gaia import Gaia
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -5,9 +6,10 @@ from astropy.table import Table
 import numpy as np
 from os import path
 
-from microlensing_photometry.microlensing_photometry.logistics import vizier_tools
-from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.logistics import vizier_tools
+from microlensing_photometry.infrastructure import logs as lcologs
 
+@task
 def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000, catalog_name='Gaia_catalog.dat',
                          catalog_path='./',timeout=60, log=None):
     """

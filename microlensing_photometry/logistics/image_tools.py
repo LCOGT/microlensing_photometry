@@ -1,6 +1,6 @@
 import numpy as np
 
-from microlensing_photometry.microlensing_photometry.photometry import psf
+from microlensing_photometry.photometry import psf
 
 def build_image(star_positions, fluxes, image_shape, image_fraction = 0.25, star_limit = 1000):
     """

@@ -1,10 +1,12 @@
+from prefect import task
 import os
 import copy
 import argparse
 from astropy.io import fits
-from microlensing_photometry.microlensing_photometry.infrastructure import data_classes
-from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
+from microlensing_photometry.infrastructure import data_classes
+from microlensing_photometry.infrastructure import logs as lcologs
 
+@task
 def get_observation_metadata(args, log=None):
     """
     Function to review all available observations in a single dataset and extract

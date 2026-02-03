@@ -1,9 +1,5 @@
 import logging
 from os import path, remove, makedirs
-from sys import exit
-from astropy.time import Time
-from datetime import datetime
-import glob
 
 
 def start_log(log_dir, log_name):

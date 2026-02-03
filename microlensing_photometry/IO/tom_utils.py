@@ -1,9 +1,11 @@
+from prefect import task
 import os
 import argparse
 import yaml
 import requests
 import microlensing_photometry.infrastructure.logs as lcologs
 
+@task
 def upload_lightcurve(params, log=None):
 
     decision_to_upload = decide_whether_to_upload(params, log=log)
