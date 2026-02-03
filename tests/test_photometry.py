@@ -1,7 +1,7 @@
 import numpy as np
 
-import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
-from microlensing_photometry.photometry import psf as lcopsf
+import image_reduction.photometry.photometric_scale_factor as lcopscale
+from image_reduction.photometry import psf as lcopsf
 
 def test_aperture_photometry():
 

@@ -2,9 +2,9 @@ from os import getcwd, path, remove, makedirs
 import shutil
 import unittest
 
-from microlensing_photometry.logistics import vizier_tools
-from microlensing_photometry.logistics import GaiaCatalog as GC
-from microlensing_photometry.logistics import image_tools
+from image_reduction.logistics import (vizier_tools)
+from image_reduction.logistics import GaiaCatalog as GC
+from image_reduction.logistics import image_tools
 from astropy.table import Table, Column
 import numpy as np
 

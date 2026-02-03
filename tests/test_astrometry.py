@@ -1,7 +1,7 @@
 import numpy as np
 
-from microlensing_photometry.astrometry import wcs as lcowcs
-from microlensing_photometry.logistics import image_tools
+from image_reduction.astrometry import wcs as lcowcs
+from image_reduction.logistics import image_tools
 
 
 def test_find_images_shifts():

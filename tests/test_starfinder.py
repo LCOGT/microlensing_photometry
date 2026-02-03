@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import multivariate_normal
 
-from microlensing_photometry.starfinder import starfinder as lcostarfinder
+from image_reduction.starfinder import starfinder as lcostarfinder
 
 
 def test_find_star_catalog():

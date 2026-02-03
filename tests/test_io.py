@@ -4,11 +4,12 @@ from astropy.io import fits
 from astropy.wcs import WCS
 import numpy as np
 from os import path, remove
+from image_reduction.IO import fits_table_parser
+from image_reduction.IO import hdf5
 
 class FITSParser(unittest.TestCase):
 
     def test_fits_rec_to_table(self):
-        from microlensing_photometry.IO import fits_table_parser
 
         # Create an Astropy table and convert it into a FITS
         # table for use as a test
@@ -32,7 +33,6 @@ class FITSParser(unittest.TestCase):
 class HDF5(unittest.TestCase):
 
     def test_output_photometry(self):
-        from microlensing_photometry.IO import hdf5
 
         # Create test arrays for output
         nimages = 10

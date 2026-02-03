@@ -1,10 +1,10 @@
 import os
 import unittest
+from image_reduction.infrastructure import data_classes
+
 class TestObservationSet(unittest.TestCase):
 
     def test_create(self):
-        from microlensing_photometry.infrastructure import data_classes
-
         obs_set = data_classes.ObservationSet()
 
         file_path = './test_data/lsc1m009-fa04-20250610-0414-e91.fits'
@@ -57,7 +57,6 @@ class TestObservationSet(unittest.TestCase):
         os.remove(test_output_path)
 
     def test_load(self):
-        from microlensing_photometry.infrastructure import data_classes
 
         test_path = os.path.join(os.getcwd(), 'tests', 'test_input', 'test_data_summary.txt')
 

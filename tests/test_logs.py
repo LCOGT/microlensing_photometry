@@ -11,7 +11,7 @@ import logging
 cwd = getcwd()
 systempath.append(path.join(cwd, '../'))
 
-from microlensing_photometry.infrastructure import logs as lcologs
+from image_reduction.infrastructure import logs as lcologs
 
 
 def test_logs():
