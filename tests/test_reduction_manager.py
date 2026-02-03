@@ -148,15 +148,12 @@ class TestReductionManager:
 
     def test_trigger_process(self):
         command = os.path.join(os.getcwd(), 'tests', 'task_process.py')
-        arguments = []
+        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')]
+
         log = None
 
         test_pid = reduction_manager.trigger_process.fn(command, arguments, log)
 
-        got_pid = False
-        for proc in psutil.process_iter(['pid', 'name', 'username']):
+        assert os.path.isfile(arguments[0])
 
-            if (proc.pid == test_pid):
-                got_pid = True
-
-        assert got_pid
+        os.remove(arguments[0])
