@@ -1,7 +1,7 @@
 import os
 import subprocess
 from shutil import move
-from microlensing_photometry.infrastructure import logs as lcologs
+from image_reduction.infrastructure import logs as lcologs
 
 def funpack_frame(config, compressed_filename, log=None):
     """

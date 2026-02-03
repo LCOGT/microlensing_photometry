@@ -1,2 +1,0 @@
-/Users/rstreet/software/microlensing_photometry/microlensing_photometry/tests/test_input/OGLE-2026-BLG-0003/sinistro/ip
-/Users/rstreet/software/microlensing_photometry/microlensing_photometry/tests/test_input/OGLE-2026-BLG-0003/sinistro/gp

@@ -2,8 +2,8 @@ import h5py
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy import units as u
-from microlensing_photometry.astrometry import wcs as lcowcs
-from microlensing_photometry.infrastructure import logs as lcologs
+from image_reduction.astrometry import wcs as lcowcs
+from image_reduction.infrastructure import logs as lcologs
 
 def output_photometry(
         catalog,

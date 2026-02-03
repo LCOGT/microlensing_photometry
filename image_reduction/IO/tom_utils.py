@@ -3,7 +3,7 @@ import os
 import argparse
 import yaml
 import requests
-import microlensing_photometry.infrastructure.logs as lcologs
+import image_reduction.infrastructure.logs as lcologs
 
 @task
 def upload_lightcurve(params, log=None):

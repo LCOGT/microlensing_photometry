@@ -7,12 +7,12 @@ import argparse
 import copy
 import yaml
 
-import microlensing_photometry.infrastructure.observations as lcoobs
-import microlensing_photometry.infrastructure.logs as lcologs
-import microlensing_photometry.photometry.aperture_photometry as lcoapphot
-import microlensing_photometry.photometry.photometric_scale_factor as lcopscale
-from microlensing_photometry.logistics import GaiaCatalog as GC
-from microlensing_photometry.IO import fits_table_parser, hdf5, lightcurve, tom_utils
+import image_reduction.infrastructure.observations as lcoobs
+import image_reduction.infrastructure.logs as lcologs
+import image_reduction.photometry.aperture_photometry as lcoapphot
+import image_reduction.photometry.photometric_scale_factor as lcopscale
+from image_reduction.logistics import GaiaCatalog as GC
+from image_reduction.IO import fits_table_parser, hdf5, lightcurve, tom_utils
 
 @flow
 def reduce_dataset(args):

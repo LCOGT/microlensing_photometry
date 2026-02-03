@@ -1,7 +1,7 @@
 import os
 import argparse
 import yaml
-from microlensing_photometry.infrastructure import logs as lcologs
+from image_reduction.infrastructure import logs as lcologs
 
 def create_red_config(dmconfig, red_params, red_dir, log=None):
     """

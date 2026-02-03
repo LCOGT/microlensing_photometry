@@ -26,6 +26,10 @@ pytest = "9.0.2"
 [tool.poetry.scripts]
 dia_phot_script = "trials.dia_phot_script:main"
 
+[tool.pytest.ini_options]
+pythonpath = ["image_reduction"]
+testpaths = ["tests"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

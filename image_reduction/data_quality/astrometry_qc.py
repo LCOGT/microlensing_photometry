@@ -1,5 +1,5 @@
 import numpy as np
-from microlensing_photometry.infrastructure import logs as lcologs
+from image_reduction.infrastructure import logs as lcologs
 
 def check_stars_within_frame(image_shape, star_positions, log=None):
     """

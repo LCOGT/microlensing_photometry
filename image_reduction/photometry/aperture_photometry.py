@@ -11,9 +11,9 @@ import sys
 import os
 import h5py
 import time
-from microlensing_photometry.astrometry import wcs as lcowcs
-from microlensing_photometry.infrastructure import logs as lcologs
-from microlensing_photometry.photometry import conversions
+from image_reduction.astrometry import wcs as lcowcs
+from image_reduction.infrastructure import logs as lcologs
+from image_reduction.photometry import conversions
 
 class AperturePhotometryAnalyst(object):
     """

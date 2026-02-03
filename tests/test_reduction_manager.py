@@ -7,7 +7,7 @@ import psutil
 from pathlib import Path
 from astropy.io import fits
 import numpy as np
-from microlensing_photometry.microlensing_photometry.infrastructure import reduction_manager
+from image_reduction.infrastructure import reduction_manager
 
 def generate_test_red_dirs():
     """
@@ -131,8 +131,7 @@ class TestReductionManager:
 
             datasets = reduction_manager.find_imaging_data_for_aperture_photometry.fn(test_config, None)
             datasets.sort()
-            print('TEST: ', test_datasets2)
-            print('GOT: ', datasets)
+
             assert datasets == test_datasets2
 
         # Test option 'file':
@@ -156,6 +155,7 @@ class TestReductionManager:
 
         got_pid = False
         for proc in psutil.process_iter(['pid', 'name', 'username']):
+
             if (proc.pid == test_pid):
                 got_pid = True
 

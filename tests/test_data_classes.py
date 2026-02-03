@@ -3,7 +3,7 @@ import unittest
 class TestObservationSet(unittest.TestCase):
 
     def test_create(self):
-        from microlensing_photometry.microlensing_photometry.infrastructure import data_classes
+        from microlensing_photometry.infrastructure import data_classes
 
         obs_set = data_classes.ObservationSet()
 
@@ -57,7 +57,7 @@ class TestObservationSet(unittest.TestCase):
         os.remove(test_output_path)
 
     def test_load(self):
-        from microlensing_photometry.microlensing_photometry.infrastructure import data_classes
+        from microlensing_photometry.infrastructure import data_classes
 
         test_path = os.path.join(os.getcwd(), 'tests', 'test_input', 'test_data_summary.txt')
 

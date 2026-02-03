@@ -9,8 +9,8 @@ from skimage.measure import ransac
 from skimage import transform as tf
 from scipy import ndimage
 
-from microlensing_photometry.microlensing_photometry.infrastructure import logs as lcologs
-from microlensing_photometry.microlensing_photometry.photometry import aperture_photometry as lcoaphot
+from image_reduction.infrastructure import logs as lcologs
+from image_reduction.photometry import aperture_photometry as lcoaphot
 
 class DIAPhotometryAnalyst(object):
     """
