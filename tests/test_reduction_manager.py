@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta, UTC
 import pytest
 import os
-import sys
 import shutil
-import psutil
 from pathlib import Path
 from astropy.io import fits
 import numpy as np
