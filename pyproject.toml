@@ -35,5 +35,5 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 packages = [
-    { include = "microlensing_photometry/*/*py" },
+    { include = "image_reduction/*/*py" },
 ]
