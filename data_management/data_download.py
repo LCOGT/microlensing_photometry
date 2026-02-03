@@ -179,7 +179,11 @@ def build_data_list(archive_config, obs_set, query_results, proposal, log):
             new_data.append(archive_entry)
             lcologs.log(archive_entry.summary(),'info',
         log=log)
-
+        else:
+            lcologs.log('Not downloading file ' + entry['filename'] + ' because '
+                        + repr(use_file) + ' '
+                        + repr(obs_set.check_file_in_set(entry['filename'])),
+                               'info',log=log)
 
     lcologs.log(
         'Found '+str(len(new_data)) \
