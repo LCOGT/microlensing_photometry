@@ -11,8 +11,7 @@ def count_high(nmax=int(1e8)):
     i = 0
     for j in range(0, nmax, 1):
         i += 1
-
-
+        
 
 if __name__ == '__main__':
     count_high()

@@ -70,11 +70,11 @@ def trigger_process(command, arguments, log):
     args = [sys.executable, command] + arguments
 
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #stdout, stderr = proc.communicate()
+    stdout, stderr = proc.communicate()
 
     lcologs.log('Started process PID=' + str(proc.pid), 'info', log=log)
 
-    #lcologs.log(stderr.decode(), 'error', log=log)
+    lcologs.log(stderr.decode(), 'error', log=log)
 
     return proc.pid
 
