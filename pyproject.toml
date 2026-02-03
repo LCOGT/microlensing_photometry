@@ -8,7 +8,7 @@ packages = []
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.15"
-astropy = "7.0.0"
+astropy = "7.2.0"
 astroquery = "0.4.7"
 fsspec = "2024.10.0"
 photutils = "2.0.2"
