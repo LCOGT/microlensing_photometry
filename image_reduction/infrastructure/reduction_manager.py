@@ -154,7 +154,8 @@ def find_imaging_data_for_aperture_photometry(config, log):
                     dir_list = f.readlines()
                     f.close()
                     dir_list = [
-                        dpath.replace('\n','') for dpath in dir_list
+                        os.path.join(config['data_reduction_dir'], dpath.replace('\n',''))
+                        for dpath in dir_list
                         if len(dpath.replace('\n','')) > 0
                     ]
 
