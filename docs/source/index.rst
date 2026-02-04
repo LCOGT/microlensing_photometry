@@ -10,6 +10,7 @@ LCO Microlensing Photometry Documentation
   :maxdepth: 3
   :hidden:
 
+  index
   installation/index
 
 Introduction
