@@ -1,0 +1,2 @@
+OGLE-2026-BLG-0003/sinistro/ip
+OGLE-2026-BLG-0003/sinistro/gp

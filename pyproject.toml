@@ -1,32 +1,49 @@
-[tool.poetry]
+[project]
 name = "microlensing_photometry"
 version = "0.1.0"
-description = ""
-authors = ["Rachel Street <rstreet@lco.global>", "Etienne Bachelet <etibachelet@gmail.com>"]
+description = "Data reduction pipeline for Las Cumbres Observatory Microlensing Group"
+authors = [
+    {name = "LCO Microlensing Group", email = "rstreet@lco.global"},
+]
+maintainers = [
+    {name = "Etienne Bachelet", email = "<etibachelet@gmail.com>"},
+    {name = "Rachel Street", email = "<rstreet@lco.global>"}
+]
+license = "GPL-3.0-only"
+repository = "https://github.com/LCOGT/microlensing_photometry"
 readme = "README.md"
-packages = []
+
+[tool.poetry]
+packages = [
+    { include = "data_management" },
+    { include = "image_reduction" },
+    { include = "*", format="sdist" },
+]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-astropy = "7.0.0"
+python = ">=3.11,<3.15"
+astropy = "7.2.0"
 astroquery = "0.4.7"
 fsspec = "2024.10.0"
 photutils = "2.0.2"
 scikit-image = "0.24.0"
-pytest = "8.3.4"
 matplotlib = "v3.10.1"
 tqdm = "4.67.1"
 ipython = "9.2.0"
 h5py = "3.13.0"
 jplephem = "2.22"
+requests = "2.32.4"
+PyYAML = "6.0.2"
+prefect = "3.6.15"
+pytest = "9.0.2"
 
 [tool.poetry.scripts]
 dia_phot_script = "trials.dia_phot_script:main"
 
+[tool.pytest.ini_options]
+pythonpath = ["image_reduction"]
+testpaths = ["tests"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-packages = [
-    { include = "microlensing_photometry/*/*py" },
-]
