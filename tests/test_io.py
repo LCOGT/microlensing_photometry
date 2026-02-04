@@ -6,6 +6,7 @@ import numpy as np
 from os import path, remove
 from image_reduction.IO import fits_table_parser
 from image_reduction.IO import hdf5
+from image_reduction.infrastructure import data_classes
 
 class FITSParser(unittest.TestCase):
 
@@ -45,6 +46,25 @@ class HDF5(unittest.TestCase):
         hdu = fits.PrimaryHDU()
         hdr = hdu.header
         hdr.set('NAXIS', 2)
+        hdr.set('NAXIS1', 1000)
+        hdr.set('NAXIS2', 1000)
+        hdr.set('PROPID', 'TEST2026-001')
+        hdr.set('OBJECT', 'TEST_TARGET')
+        hdr.set('INSTRUME', 'fa01')
+        hdr.set('SITEID', 'ogg')
+        hdr.set('ENCID', 'clma')
+        hdr.set('TELID', '2m0a')
+        hdr.set('REQNUM', 123456)
+        hdr.set('FILTER', 'ip')
+        hdr.set('DATE-OBS', '2026-02-03T04:45:00.0')
+        hdr.set('EXPTIME', 30.0)
+        hdr.set('RA', '12:23:34.5')
+        hdr.set('DEC', '-12:23:34.5')
+        hdr.set('AIRMASS', 1.0)
+        hdr.set('L1FWHM', 0.01)
+        hdr.set('MOONFRAC', 0.5)
+        hdr.set('MOONDIST', 50.0)
+        hdr.set('L1MEAN', 12354.5)
         hdr.set('CTYPE1', 'RA---TAN', 'Type of WCS Projection')
         hdr.set('CTYPE2', 'DEC--TAN', 'Type of WCS Projection')
         hdr.set('CRPIX1', 2048.0000000, '[pixel] Coordinate of reference point (axis 1')
@@ -57,16 +77,32 @@ class HDF5(unittest.TestCase):
         hdr.set('CD1_2', -0.0000000, 'WCS CD transformation matrix')
         hdr.set('CD2_1', -0.0000000,  'WCS CD transformation matrix')
         hdr.set('CD2_2', -0.0001081, 'WCS CD transformation matrix')
+        hdr.set('WCSERR', 0)
+        hdr.set('WMSCLOUD', -42)
+
         wcs_data = [WCS(hdr)]*nimages
         timestamps = np.linspace(52000, 53000, nimages)
         exptime = np.array([30.0]*nimages)
         flux = np.random.rand(nstars, nimages) * 10000.0
         err_flux = np.sqrt(flux)
+        raw_flux = np.random.rand(nstars, nimages) * 10000.0
+        raw_err_flux = np.sqrt(raw_flux)
         pscales = np.random.rand(nstars, nimages)
         epscales = np.random.rand(nstars, nimages)
         file_path = './aperture_phot_test.hd5'
 
-        hdf5.output_photometry(catalog, timestamps, wcs_data, flux, err_flux, exptime, pscales, epscales, file_path)
+        obs_set = data_classes.ObservationSet()
+        for i in range(0, nimages, 1):
+            obs_set.add_observation('test_file.fits', header=hdr)
+
+        hdf5.output_photometry(
+            catalog,
+            obs_set,
+            flux, err_flux,
+            raw_flux, raw_err_flux,
+            pscales, epscales,
+            file_path,
+            log=None)
 
         assert(path.isfile(file_path))
         remove(file_path)
