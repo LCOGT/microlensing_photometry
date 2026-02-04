@@ -1,7 +1,9 @@
+from prefect import task
 import numpy as np
 
 from image_reduction.photometry import psf
 
+@task
 def build_image(star_positions, fluxes, image_shape, image_fraction = 0.25, star_limit = 1000):
     """
     Construct an image with fake stars on top of a null background. Only the star inside the image fraction are computed

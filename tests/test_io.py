@@ -57,6 +57,7 @@ class HDF5(unittest.TestCase):
         hdr.set('REQNUM', 123456)
         hdr.set('FILTER', 'ip')
         hdr.set('DATE-OBS', '2026-02-03T04:45:00.0')
+        hdr.set('MJD-OBS', 61074.197917)
         hdr.set('EXPTIME', 30.0)
         hdr.set('RA', '12:23:34.5')
         hdr.set('DEC', '-12:23:34.5')

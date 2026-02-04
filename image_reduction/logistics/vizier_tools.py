@@ -1,3 +1,4 @@
+from prefect import task
 from sys import argv
 from astroquery.vizier import Vizier
 from astroquery.gaia import Gaia
@@ -5,6 +6,7 @@ from astropy import wcs, coordinates, units, visualization, table
 import requests
 from image_reduction.infrastructure import logs as lcologs
 
+@task
 def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
                               coords='sexigesimal', timeout=60, log=None, debug=False):
     """Function to perform online query of the catalog and return
@@ -79,7 +81,7 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
     r = radius * units.arcminute
 
     # query_vizier_service function depreciated by latest astroquery changes
-    catalog_list = Vizier.find_catalogs(cat_id)
+    #catalog_list = Vizier.find_catalogs(cat_id)
     #(status, result) = query_vizier_servers(v, c, r, [cat_id], debug=debug,timeout=timeout)
 
     result = v.query_region(c, radius=r, catalog=cat_id)

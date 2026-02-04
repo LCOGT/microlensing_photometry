@@ -1,3 +1,4 @@
+from prefect import task
 from skimage.registration import phase_cross_correlation
 import numpy as np
 from astropy.coordinates import SkyCoord
@@ -13,6 +14,7 @@ from image_reduction.data_quality import astrometry_qc
 from image_reduction.infrastructure import logs as lcologs
 from matplotlib import pyplot as plt
 
+@task
 def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     """
     Estimate the shifts (X,Y) between two images. Generally a good idea to do only a fraction of the field of view
@@ -45,7 +47,7 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
 
     return shiftx,shifty
 
-
+@task
 def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1000, log = None):
     """
     Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and

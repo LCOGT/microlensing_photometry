@@ -17,7 +17,7 @@ def test_collect_Gaia_catalog():
 
     ra,dec,radius = 270,-30, 0.1
 
-    gaia_catalog = GC.collect_Gaia_catalog(ra,dec,radius=radius,row_limit = 10000,catalog_name='Gaia_catalog.dat',
+    gaia_catalog = GC.collect_Gaia_catalog.fn(ra,dec,radius=radius,row_limit = 10000,catalog_name='Gaia_catalog.dat',
                          catalog_path=TEST_DATA_DIR)
 
     assert len(gaia_catalog) == 5
@@ -50,12 +50,12 @@ class CatalogTools(unittest.TestCase):
         ])
 
         # Test search for a target known to be within the catalog
-        star_idx, result = GC.find_nearest(catalog, catalog[0]['ra'], catalog[0]['dec'])
+        star_idx, result = GC.find_nearest.fn(catalog, catalog[0]['ra'], catalog[0]['dec'])
         assert(result['ra'] == catalog[0]['ra'])
         assert(result['dec'] == catalog[0]['dec'])
 
         # Test search for a target that is not within the catalog
-        star_idx, result = GC.find_nearest(catalog, 10.0, 30.0)
+        star_idx, result = GC.find_nearest.fn(catalog, 10.0, 30.0)
         assert(result == None)
 
 def test_build_image():
@@ -66,7 +66,7 @@ def test_build_image():
     randomY = [28]
 
     star_positions = np.c_[randomX,randomY]
-    reference = image_tools.build_image(star_positions, [1]*len(randomX), (size,size), image_fraction = 1,
+    reference = image_tools.build_image.fn(star_positions, [1]*len(randomX), (size,size), image_fraction = 1,
                                         star_limit = 1000)
     assert reference.shape == (size,size)
     assert reference.max() == 1
@@ -79,7 +79,7 @@ def test_vizier_tools():
     test_dec = 35.201
     test_radius = 0.1
 
-    source_catalog = vizier_tools.search_vizier_for_sources(
+    source_catalog = vizier_tools.search_vizier_for_sources.fn(
         test_ra,
         test_dec,
         test_radius,

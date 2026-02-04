@@ -42,7 +42,7 @@ def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000, catalog_name='Gaia_
 
     except:
 
-        gaia_catalog = vizier_tools.search_vizier_for_sources(ra, dec, radius, 'Gaia-EDR3', row_limit=row_limit,
+        gaia_catalog = vizier_tools.search_vizier_for_sources.fn(ra, dec, radius, 'Gaia-EDR3', row_limit=row_limit,
                                   coords='degree', timeout=timeout,log=log, debug=True)
 
         if len(gaia_catalog):
@@ -57,6 +57,7 @@ def collect_Gaia_catalog(ra,dec,radius=15,row_limit = 10000, catalog_name='Gaia_
 
     return  gaia_catalog
 
+@task
 def find_nearest(catalog, ra, dec, radius=(2.0/3600.0)*u.deg, log=None):
     """
     Function to identify the nearest catalog entry to the given coordinates, within a cut-off radius
