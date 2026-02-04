@@ -1,5 +1,4 @@
 from os import getcwd, path, remove, makedirs
-import shutil
 import unittest
 
 from image_reduction.logistics import (vizier_tools)
@@ -33,7 +32,6 @@ def test_collect_Gaia_catalog():
 
     #cleaning after tests
     remove(filepath)
-    shutil.rmtree(path.join(CWD, 'tests'))
 
 class CatalogTools(unittest.TestCase):
 
