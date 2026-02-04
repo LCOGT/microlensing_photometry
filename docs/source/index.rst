@@ -3,15 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-lcogt_microlensing_photometry documentation
+LCO Microlensing Photometry Documentation
 ===========================================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
-
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+  :maxdepth: 3
+  :hidden:
 
+  installation/index
+
+Introduction
+------------
+
+Welcome to the documentation for the data processing framework of the
+Las Cumbres Observatory Microlensing Group.
+
+Authors: Rachel Street & Etienne Bachelet
+
+The package includes:
+* data_management: tools to automate the retrieval and sorting of observational data
+* image_reduction: reduction pipeline for imaging data
