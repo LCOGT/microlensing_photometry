@@ -1,6 +1,6 @@
 import argparse
 
-def count_high(nmax=int(1e8)):
+def count_high(nmax=int(5e8)):
     """
     Function to count to a large number (example process for testing the execution of
     child processes).

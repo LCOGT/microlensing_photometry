@@ -163,10 +163,11 @@ class TestReductionManager:
         # Establish the test process to check for
         command_name = 'task_process.py'
         command = os.path.join(os.getcwd(), 'tests', command_name)
+        output_file = os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')
         args = [
             sys.executable,
             command,
-            os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')
+            output_file
         ]
 
         # Set the processes running in parallel
@@ -179,3 +180,5 @@ class TestReductionManager:
         nproc = reduction_manager.count_running_processes.fn(command_name, log=None)
 
         assert nproc == len(proc_list)
+
+        os.remove(output_file)
