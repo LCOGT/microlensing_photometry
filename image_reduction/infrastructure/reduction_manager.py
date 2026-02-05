@@ -57,7 +57,6 @@ def count_running_processes(command, log=None):
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         if 'Python' in proc.info['name']:
             if command in proc.info['cmdline'][1]:
-                print(proc.info['pid'], proc.info['cmdline'])
                 instances.append(proc.info['pid'])
 
     lcologs.log('Found ' + str(len(instances)) + ' reductions currently running', 'info', log=log)
