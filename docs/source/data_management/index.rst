@@ -194,6 +194,9 @@ can be found in :doc:`Image Reduction Workflows <../image_reduction/index>`).
 Running the Data Download Workflow
 ==================================
 
+Note that the prefect server has to be running before starting the download
+workflow (see :doc:`Prefect Workflows <../prefect/index>` for details).
+
 The ```data_download.py`` pipeline can be run from the commandline
 by giving the full path to the configuration file as the first argument:
 

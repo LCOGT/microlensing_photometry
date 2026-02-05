@@ -6,10 +6,10 @@ import yaml
 import json
 from shutil import move
 from datetime import datetime, timedelta, timezone
-from microlensing_photometry.infrastructure import logs as lcologs
-from microlensing_photometry.infrastructure import data_classes
-from microlensing_photometry.IO import compression_utils
-from microlensing_photometry.configuration import configure_aperture_pipeline
+from image_reduction.infrastructure import logs as lcologs
+from image_reduction.infrastructure import data_classes
+from image_reduction.IO import compression_utils
+from image_reduction.configuration import configure_aperture_pipeline
 
 @flow
 def check_for_new_data():

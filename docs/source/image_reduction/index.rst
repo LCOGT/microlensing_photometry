@@ -59,6 +59,9 @@ With the configuration file in place, the dataset can be reduced by
 passing the full path to the configuration file to the ```aperture_pipeline.py```
 workflow.
 
+Note that the prefect server has to be running before starting the download
+workflow (see :doc:`Prefect Workflows <../prefect/index>` for details).
+
 .. code-block:: python
 
     venv> cd microlensing_photometry/
@@ -178,6 +181,9 @@ Running Multiple Reductions
 The workflow can then be used to trigger parallelized pipeline runs by
 passing the full path to the configuration file to
 ```reduction_manager.py```.
+As before, the prefect server has to be running before starting the download
+workflow (see :doc:`Prefect Workflows <../prefect/index>` for details).
+
 
 .. code-block:: python
 

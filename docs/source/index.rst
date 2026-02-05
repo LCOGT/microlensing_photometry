@@ -15,6 +15,7 @@ LCO Microlensing Photometry Documentation
   data_structure/index
   data_management/index
   image_reduction/index
+  troubleshooting/index
 
 Introduction
 ------------
