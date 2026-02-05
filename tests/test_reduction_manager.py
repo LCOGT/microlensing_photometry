@@ -196,7 +196,7 @@ class TestReductionManager:
         # Establish the test process to check for
         command_name = 'task_process.py'
         command = os.path.join(os.getcwd(), 'tests', command_name)
-        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output')]
+        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output'), '--nmax 1e9']
 
         log = None
 
