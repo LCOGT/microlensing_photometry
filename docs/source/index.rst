@@ -14,6 +14,7 @@ LCO Microlensing Photometry Documentation
   prefect/index
   data_structure/index
   data_management/index
+  image_reduction/index
 
 Introduction
 ------------

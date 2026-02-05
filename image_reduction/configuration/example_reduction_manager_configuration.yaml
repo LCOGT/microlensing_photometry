@@ -1,2 +1,10 @@
-log_dir: '/path/to/directory/'
-data_reduction_dir: '/path/to/directory/'
+log_dir: '/path/to/logging/directory/'
+data_reduction_dir: '/path/to/top-level/reduction/directory/'
+software_dir: '/path/to/software/installation/directory/'
+instrument_list: ['sinistro', 'qhy']
+dataset_selection:
+  group: 'file'
+  file: '/path/to/datasets/file/reduce_datasets.txt'
+  start_date: 'None'
+  end_date: 'None'
+  ndays: 0

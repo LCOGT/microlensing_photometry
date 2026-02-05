@@ -21,6 +21,26 @@ In order to run the pipeline scripts, it is easiest to clone this repository:
 
     git clone https://github.com/LCOGT/microlensing_photometry
 
+The package includes a ```pyproject.toml``` file which can be used to
+streamline the creation of a new Python virtual environment in which
+to run the software.
+
+.. code-block:: python
+
+    > python3 -m venv venv
+    > source venv/bin/activate
+    venv> pip install poetry
+    venv> cd microlensing_photometry/
+    venv> poetry install
+
+Once this is done, all pipeline scripts can be run from within the virtual environment
+using:
+
+.. code-block:: python
+
+    > source venv/bin/activate
+    venv> poetry run python <path/name_of_script> <args>
+
 Configuration
 =============
 

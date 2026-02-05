@@ -27,3 +27,7 @@ root_doc = 'index'
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+html_theme_options = {
+    'logo': 'package_logo.png',
+    'logo_name': 'false'
+}

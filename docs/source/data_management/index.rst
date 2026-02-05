@@ -5,7 +5,7 @@ Data Management
 The package's data management application is designed to handle:
 
 * the retrieval of observational data from online archives
-* data sorting
+* data sorting into reduction directories for each dataset
 * preparation of datasets for reduction.
 
 These functions are combined into the ```data_download.py``` workflow.
@@ -143,3 +143,61 @@ For example:
     frame_list: '/data/userid/data_reduction/logs/frame_list.txt'
     data_download_dir: '/data/userid/data_reduction/incoming/'
     data_reduction_dir: '/data/userid/data_reduction/'
+
+The parameters are:
+
+* ```log_dir``` (string): Path to directory for all pipeline logs
+* ```frame_list``` (string): Path to a file that records of all of the data downloaded to date;
+                used to avoid re-downloaded existing data
+* ```data_download_dir``` (string): Path to the directory where data will initially be downloaded before sorting
+* ```data_reduction_dir``` (string): Path to the top-level data reduction directory
+
+Date Range
+----------
+
+The pipeline can be configured to download data either within a specified
+date range, or to download any data obtained within the last 24hrs.
+The parameters:
+
+.. code-block:: yaml
+
+    start_datetime: '2024-07-01 00:00'
+    end_datetime: '2024-08-31 23:59'
+
+...can be datetime strings in the format '%Y-%m-%d %H:%M'.  If either
+datetime string contains 'none', then the date range is automatically
+set to the last 24hrs.
+
+Default Reduction Configuration
+-------------------------------
+
+Once the pipeline has completed the download and sorting of the data into
+datasets, it composes the YAML configuration file for each dataset,
+needed, preparing the dataset ready for reduction.
+
+Default reduction parameters can be provided through a
+```default_red_config.yaml``` file.  The ```data_download.py``` pipeline
+uses this file as a template, and fills in dataset-specific
+parameters as required.
+
+.. code-block:: yaml
+
+    default_red_config: '<configuration_directory_path>/default_red_config.yaml'
+
+The default reduction configuration file has exactly the same format as the
+```./microlensing_photometry/image_reduction/configuration/example_reduction_configuration.yaml```
+file.
+
+More information about setting the parameters in this configuration file
+can be found in :doc:`Image Reduction Workflows <../image_reduction/index>`).
+
+Running the Data Download Workflow
+==================================
+
+The ```data_download.py`` pipeline can be run from the commandline
+by giving the full path to the configuration file as the first argument:
+
+.. code-block:: bash
+
+    venv> cd microlensing_pipeline/
+    venv> poetry run python image_reduction/data_management/data_download.py <path_to_config_file.yaml>
