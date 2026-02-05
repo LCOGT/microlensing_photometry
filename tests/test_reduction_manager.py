@@ -178,7 +178,7 @@ class TestReductionManager:
 
     def test_trigger_process(self):
         command = os.path.join(os.getcwd(), 'tests', 'task_process.py')
-        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')]
+        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output')]
 
         log = None
 
@@ -196,7 +196,7 @@ class TestReductionManager:
         # Establish the test process to check for
         command_name = 'task_process.py'
         command = os.path.join(os.getcwd(), 'tests', command_name)
-        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')]
+        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output')]
 
         log = None
 
