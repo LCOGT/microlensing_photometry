@@ -91,7 +91,7 @@ def process_datasets(config, datasets, nreductions, log):
             )
 
 @task
-def trigger_process(command, arguments, log):
+def trigger_process(command, arguments, log, wait=True):
     """
     Function to initiate a subprocess to reduce an individual dataset
 
@@ -99,6 +99,7 @@ def trigger_process(command, arguments, log):
     ----------
     command     string  Full path to Python software to be run
     arguments   list    Arguments needed for the command to run
+    wait        Boolean Switch to wait for output from the process or not
     log         object  Logger instance
 
     Returns
@@ -109,11 +110,13 @@ def trigger_process(command, arguments, log):
     args = [sys.executable, command] + arguments
 
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate()
+    if wait:
+        stdout, stderr = proc.communicate()
 
     lcologs.log('Started process PID=' + str(proc.pid), 'info', log=log)
 
-    lcologs.log(stderr.decode(), 'error', log=log)
+    if wait:
+        lcologs.log(stderr.decode(), 'error', log=log)
 
     return proc.pid
 

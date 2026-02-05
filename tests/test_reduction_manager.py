@@ -3,6 +3,8 @@ import pytest
 import os
 import sys
 import shutil
+import psutil
+import time
 from pathlib import Path
 from astropy.io import fits
 import numpy as np
@@ -65,6 +67,18 @@ def remove_test_data(datasets):
         dir_path = Path(red_dir)
         if dir_path.exists() and dir_path.is_dir():
             shutil.rmtree(dir_path)
+
+def check_for_process(test_pid):
+    """
+    Function to check for a running process
+    """
+
+    got_proc = False
+    for proc in psutil.process_iter(['pid']):
+        if test_pid == proc.info['pid']:
+            got_proc = True
+
+    return got_proc
 
 class TestReductionManager:
 
@@ -152,11 +166,19 @@ class TestReductionManager:
 
         log = None
 
-        test_pid = reduction_manager.trigger_process.fn(command, arguments, log)
+        test_pid = reduction_manager.trigger_process.fn(command, arguments, log, wait=False)
 
-        assert os.path.isfile(arguments[0])
+        got_proc = check_for_process(test_pid)
+        assert got_proc
 
-        os.remove(arguments[0])
+        # Wait until all test processes are finished, to avoid residual processes
+        # causing false results for subsequent tests
+        max_iter = 5
+        i = 0
+        while got_proc and i <= max_iter:
+            time.sleep(0.5) # Seconds
+            got_proc = check_for_process(test_pid)
+            i += 1
 
     def test_count_running_processes(self):
 
@@ -180,5 +202,3 @@ class TestReductionManager:
         nproc = reduction_manager.count_running_processes.fn(command_name, log=None)
 
         assert nproc == len(proc_list)
-
-        os.remove(output_file)
