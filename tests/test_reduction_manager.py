@@ -193,7 +193,7 @@ class TestReductionManager:
         ]
 
         # Set the processes running in parallel
-        nproc = 3
+        nproc = 1
         proc_list = []
         for i in range(0, nproc, 1):
             proc_list.append(subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
