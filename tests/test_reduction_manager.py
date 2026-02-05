@@ -80,6 +80,22 @@ def check_for_process(test_pid):
 
     return got_proc
 
+def wait_for_process(test_pid):
+    """
+    Function to wait until a given process is complete
+    """
+
+    got_proc = check_for_process(test_pid)
+
+    # Wait until all test processes are finished, to avoid residual processes
+    # causing false results for subsequent tests
+    max_iter = 5
+    i = 0
+    while got_proc and i <= max_iter:
+        time.sleep(0.5)  # Seconds
+        got_proc = check_for_process(test_pid)
+        i += 1
+
 class TestReductionManager:
 
     @pytest.mark.parametrize("test_config,", [
@@ -173,32 +189,24 @@ class TestReductionManager:
 
         # Wait until all test processes are finished, to avoid residual processes
         # causing false results for subsequent tests
-        max_iter = 5
-        i = 0
-        while got_proc and i <= max_iter:
-            time.sleep(0.5) # Seconds
-            got_proc = check_for_process(test_pid)
-            i += 1
+        wait_for_process(test_pid)
 
     def test_count_running_processes(self):
 
         # Establish the test process to check for
         command_name = 'task_process.py'
         command = os.path.join(os.getcwd(), 'tests', command_name)
-        output_file = os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')
-        args = [
-            sys.executable,
-            command,
-            output_file
-        ]
+        arguments = [os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')]
 
-        # Set the processes running in parallel
-        nproc = 1
-        proc_list = []
-        for i in range(0, nproc, 1):
-            proc_list.append(subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+        log = None
+
+        test_pid = reduction_manager.trigger_process.fn(command, arguments, log, wait=False)
 
         # Count the running processes by name of instance
         nproc = reduction_manager.count_running_processes.fn(command_name, log=None)
 
-        assert nproc == len(proc_list)
+        assert nproc == 1
+
+        # Wait until all test processes are finished, to avoid residual processes
+        # causing false results for subsequent tests
+        wait_for_process(test_pid)

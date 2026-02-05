@@ -1,4 +1,3 @@
-import argparse
 
 def count_high(nmax=int(1e8)):
     """
@@ -9,10 +8,6 @@ def count_high(nmax=int(1e8)):
     ----------
     nmax  int   Maximum number to count to
     """
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('file_path', help='Output file path')
-    args = parser.parse_args()
 
     i = 0
     for j in range(0, nmax, 1):
