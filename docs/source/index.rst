@@ -10,8 +10,10 @@ LCO Microlensing Photometry Documentation
   :maxdepth: 3
   :hidden:
 
-  index
   installation/index
+  prefect/index
+  data_structure/index
+  data_management/index
 
 Introduction
 ------------
@@ -22,5 +24,6 @@ Las Cumbres Observatory Microlensing Group.
 Authors: Rachel Street & Etienne Bachelet
 
 The package includes:
+
 * data_management: tools to automate the retrieval and sorting of observational data
 * image_reduction: reduction pipeline for imaging data
