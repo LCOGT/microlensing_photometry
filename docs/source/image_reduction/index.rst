@@ -113,6 +113,7 @@ The parameters can then be configured as follows:
       start_date: 'None'
       end_date: 'None'
       ndays: 0
+    max_parallel: 5
 
 The directory path parameters should be the full path strings to
 the data directories as described in :doc:`Data Directory Structure <../data_structure/index>`).
@@ -124,6 +125,10 @@ identify the subdirectories of each target's directory that should
 be searched for data to process.  That is, if the list includes
 ```sinistro```, the pipeline will scan all target directories with
 ```target/sinistro/``` subdirectories for datasets to process.
+
+The pipeline allows the user to restrict the number of parallel
+reductions that can be triggered at any one time using the
+```max_parallel``` parameter.
 
 The reduction manager can be configured to process different groups
 of data using the ```data_selection``` dictionary, and the

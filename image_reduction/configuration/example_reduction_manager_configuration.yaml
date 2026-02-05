@@ -8,3 +8,4 @@ dataset_selection:
   start_date: 'None'
   end_date: 'None'
   ndays: 0
+max_parallel: 5

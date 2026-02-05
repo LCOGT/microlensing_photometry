@@ -2,6 +2,7 @@ from prefect import flow, task
 from prefect.deployments import run_deployment
 import os
 import sys
+import psutil
 import argparse
 import yaml
 import subprocess
@@ -24,16 +25,46 @@ def archon():
     # Start logging
     log = lcologs.start_log(config['log_dir'], 'archon')
 
+    # Count the number of currently running reductions and avoid triggering more
+    # than the allowed maximum
+    nreductions = count_running_processes('aperture_pipeline.py', log=log)
+    if nreductions >= config['max_parallel']:
+        lcologs.log('Maximum number of parallel reductions already reached', 'warning', log=log)
+
     # Identify datasets to be reduced, avoiding any that are locked due to ongoing reductions.
     datasets = find_imaging_data_for_aperture_photometry(config, log)
 
     # Trigger parallelized reduction processes
-    process_datasets(config, datasets, log)
+    process_datasets(config, datasets, nreductions, log)
 
     lcologs.close_log(log)
 
 @task
-def process_datasets(config, datasets, log):
+def count_running_processes(command, log=None):
+    """
+    Function to count the number of active instances of the image reduction pipeline
+
+    Parameters
+    ----------
+    command     string  Name of the process in the system logs to check for
+
+    Returned
+    --------
+    nprocess    int     Number of running reduction processes
+    """
+
+    instances = []
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        if 'Python' in proc.info['name']:
+            if command in proc.info['cmdline'][1]:
+                instances.append(proc.info['pid'])
+
+    lcologs.log('Found ' + str(len(instances)) + ' reductions currently running', 'info', log=log)
+
+    return len(instances)
+
+@task
+def process_datasets(config, datasets, nreductions, log):
     """
     Function to initiate parallelized reductions of multiple separate datasets.
 
@@ -41,15 +72,23 @@ def process_datasets(config, datasets, log):
     ----------
     config    dict  Script configuration
     datasets  list  Set of directory paths to unlocked datasets to be reduced
+    nreductions int Existing number of ongoing reductions
     log        object   Logger instance
     """
 
     command = os.path.join(config['software_dir'], 'infrastructure', 'aperture_pipeline.py')
-    for red_dir in datasets:
-        arguments = [red_dir]
-        lcologs.log('Started reduction for ' + red_dir, 'info', log=log)
+    i = 0
+    while nreductions < config['max_parallel'] and i < len(datasets):
+        arguments = [datasets[i]]
+        lcologs.log('Started reduction for ' + datasets[i], 'info', log=log)
         pid = trigger_process(command, arguments, log)
-
+        nreductions += 1
+        i += 1
+        if nreductions >= config['max_parallel']:
+            lcologs.log(
+                'Reached configured maximum number of parallel processes',
+                'warning', log=log
+            )
 
 @task
 def trigger_process(command, arguments, log):

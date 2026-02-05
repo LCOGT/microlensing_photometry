@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta, UTC
 import pytest
 import os
+import sys
 import shutil
 from pathlib import Path
 from astropy.io import fits
 import numpy as np
+import subprocess
 from image_reduction.infrastructure import reduction_manager
 
 def generate_test_red_dirs():
@@ -155,3 +157,25 @@ class TestReductionManager:
         assert os.path.isfile(arguments[0])
 
         os.remove(arguments[0])
+
+    def test_count_running_processes(self):
+
+        # Establish the test process to check for
+        command_name = 'task_process.py'
+        command = os.path.join(os.getcwd(), 'tests', command_name)
+        args = [
+            sys.executable,
+            command,
+            os.path.join(os.getcwd(), 'tests', 'test_output', 'count_file.txt')
+        ]
+
+        # Set the processes running in parallel
+        nproc = 5
+        proc_list = []
+        for i in range(0, nproc, 1):
+            proc_list.append(subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+
+        # Count the running processes by name of instance
+        nproc = reduction_manager.count_running_processes.fn(command_name, log=None)
+
+        assert nproc == len(proc_list)
