@@ -81,7 +81,7 @@ def process_datasets(config, datasets, nreductions, log):
     while nreductions < config['max_parallel'] and i < len(datasets):
         arguments = [datasets[i]]
         lcologs.log('Started reduction for ' + datasets[i], 'info', log=log)
-        pid = trigger_process(command, arguments, log)
+        pid = trigger_process(command, arguments, log, wait=False)
         nreductions += 1
         i += 1
         if nreductions >= config['max_parallel']:

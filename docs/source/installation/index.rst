@@ -41,6 +41,12 @@ using:
     > source venv/bin/activate
     venv> poetry run python <path/name_of_script> <args>
 
+External Package Dependencies
+=============================
+
+The data management software depends on ```fpack``` to handle compressed
+data.  This is available from `HEASARC <https://heasarc.gsfc.nasa.gov/docs/software/fitsio/fpack/fpack.html>`_.
+
 Configuration
 =============
 
