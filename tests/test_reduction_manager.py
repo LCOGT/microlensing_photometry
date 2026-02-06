@@ -182,14 +182,14 @@ class TestReductionManager:
 
         log = None
 
-        test_pid = reduction_manager.trigger_process.fn(command, arguments, log, wait=False)
+        test_proc = reduction_manager.trigger_process.fn(command, arguments, log, wait=False)
 
-        got_proc = check_for_process(test_pid)
+        got_proc = check_for_process(test_proc.pid)
         assert got_proc
 
         # Wait until all test processes are finished, to avoid residual processes
         # causing false results for subsequent tests
-        wait_for_process(test_pid)
+        wait_for_process(test_proc.pid)
 
     @pytest.mark.skip(reason="Valid only running locally, fails under CI")
     def test_count_running_processes(self):
@@ -201,7 +201,7 @@ class TestReductionManager:
 
         log = None
 
-        test_pid = reduction_manager.trigger_process.fn(command, arguments, log, wait=False)
+        test_proc = reduction_manager.trigger_process.fn(command, arguments, log, wait=False)
 
         # Count the running processes by name of instance
         nproc = reduction_manager.count_running_processes.fn(command_name, log=None)
@@ -210,4 +210,4 @@ class TestReductionManager:
 
         # Wait until all test processes are finished, to avoid residual processes
         # causing false results for subsequent tests
-        wait_for_process(test_pid)
+        wait_for_process(test_proc.pid)

@@ -78,10 +78,12 @@ def process_datasets(config, datasets, nreductions, log):
 
     command = os.path.join(config['software_dir'], 'infrastructure', 'aperture_pipeline.py')
     i = 0
+    proc_list = []
     while nreductions < config['max_parallel'] and i < len(datasets):
         arguments = [datasets[i]]
         lcologs.log('Started reduction for ' + datasets[i], 'info', log=log)
         pid = trigger_process(command, arguments, log, wait=False)
+        proc_list.append(pid)
         nreductions += 1
         i += 1
         if nreductions >= config['max_parallel']:
@@ -89,6 +91,10 @@ def process_datasets(config, datasets, nreductions, log):
                 'Reached configured maximum number of parallel processes',
                 'warning', log=log
             )
+
+    # Wait for completion of parallelized subprocesses
+    for proc in proc_list:
+        proc.wait()
 
 @task
 def trigger_process(command, arguments, log, wait=True):
@@ -118,7 +124,7 @@ def trigger_process(command, arguments, log, wait=True):
     if wait:
         lcologs.log(stderr.decode(), 'error', log=log)
 
-    return proc.pid
+    return proc
 
 @task
 def find_imaging_data_for_aperture_photometry(config, log):
