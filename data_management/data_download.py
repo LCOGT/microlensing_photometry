@@ -118,10 +118,14 @@ def fetch_new_datalist(archive_config, obs_set, start_time, end_time, log):
 
         for proposal in archive_config['proposals']:
 
-            ur = { 'PROPID': proposal, 'start': start_time.strftime("%Y-%m-%d %H:%M"),
-                                        'end': end_time.strftime("%Y-%m-%d %H:%M") }
+            ur = {
+                'PROPID': proposal,
+                'start': start_time.strftime("%Y-%m-%d %H:%M"),
+                'end': end_time.strftime("%Y-%m-%d %H:%M"),
+                'reduction_level': str(archive_config['reduction_level']['image'])
+            }
 
-            results = talk_to_lco_archive(archive_config, ur, 'frames', 'GET')
+            results = talk_to_lco_archive(archive_config, ur, 'frames', 'GET', log=log)
 
             # Build a list of new frames from query results, excluding calibration data
             new_data = build_data_list(archive_config, obs_set, results, proposal, log)
@@ -234,7 +238,7 @@ def is_frame_calibration_data(filename):
     return status
 
 @task
-def talk_to_lco_archive(config, ur, end_point, method):
+def talk_to_lco_archive(config, ur, end_point, method, log=None):
     """Function to communicate with various APIs of the LCO network.
     ur should be a user request while end_point is the URL string which
     should be concatenated to the observe portal path to complete the URL.
@@ -261,10 +265,19 @@ def talk_to_lco_archive(config, ur, end_point, method):
             response = requests.post(url, headers=headers, json=ur).json()
         else:
             response = requests.post(url, headers=headers).json()
-    elif method == 'GET':
-        response = requests.get(url, headers=headers, params=ur).json()
 
-    return response
+    # Iterate over paginated results
+    elif method == 'GET':
+        results = []
+        response = requests.get(url, headers=headers, params=ur).json()
+        results += response['results']
+        while response.get('next'):
+            response = requests.get(url, headers=headers, params=ur).json()
+            results += response['results']
+
+    lcologs.log('Queried data archive with ' + str(len(results)) + ' results', 'info', log=log)
+
+    return {'results': results}
 
 @task
 def download_new_frame(config, entry, log):
