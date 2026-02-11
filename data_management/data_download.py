@@ -119,16 +119,19 @@ def fetch_new_datalist(archive_config, obs_set, start_time, end_time, log):
         for proposal in archive_config['proposals']:
 
             ur = {
-                'PROPID': proposal,
-                'start': start_time.strftime("%Y-%m-%d %H:%M"),
-                'end': end_time.strftime("%Y-%m-%d %H:%M"),
-                'reduction_level': str(archive_config['reduction_level']['image'])
+                'start': start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                'end': end_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                'proposal_id': proposal,
+                'reduction_level': str(archive_config['reduction_level']['image']),
+                'public': 'false'
             }
 
-            results = talk_to_lco_archive(archive_config, ur, 'frames', 'GET', log=log)
+            results = retrieve_paginated_results(archive_config, ur, log=log)
 
-            # Build a list of new frames from query results, excluding calibration data
-            new_data = build_data_list(archive_config, obs_set, results, proposal, log)
+        lcologs.log('Queried data archive with ' + str(len(results)) + ' results', 'info', log=log)
+
+        # Build a list of new frames from query results, excluding calibration data
+        new_data = build_data_list(archive_config, obs_set, results, proposal, log)
 
     else:
         lcologs.log(
@@ -138,6 +141,46 @@ def fetch_new_datalist(archive_config, obs_set, start_time, end_time, log):
         )
 
     return new_data
+
+def retrieve_paginated_results(archive_config, ur, log=None):
+    """
+    Function to retrieve a single page of paginated results from an archive
+
+    Parameters
+    ----------
+
+    archive_config dict  Parameters describing the data archive
+    ur      dict    Query parameters
+    log     object  [optional] Logger instance
+
+    Returns
+    -------
+    results list    Results information extracted from the website
+    """
+
+    results = []
+    next_page = True
+    page = 0
+    max_page = 10
+
+    # Set the limit per page explicitly to ensure we offset properly per page
+    limit = 100
+    ur['limit'] = str(limit)
+
+    while next_page:
+        ur['offset'] = str(page*limit)
+        response = talk_to_lco_archive(archive_config, ur, 'frames', 'GET', log=log)
+        lcologs.log(' -> Retrieved page ' + str(page) + ' of archive ' + str(response['count']) + ' results',
+                    'info', log=log)
+        results += response['results']
+        page += 1
+
+        if not response['next'] or page >= max_page:
+            next_page = False
+
+    lcologs.log(' -> Retrieved a total of ' + str(len(results)) + ' of archive results', 'info', log=log)
+
+    return results
 
 @task
 def build_data_list(archive_config, obs_set, query_results, proposal, log):
@@ -156,7 +199,7 @@ def build_data_list(archive_config, obs_set, query_results, proposal, log):
     # Initialise a list of new data entries for this archive
     new_data = []
 
-    for entry in query_results['results']:
+    for entry in query_results:
         use_file = False
 
         # Archive queries return lots of data entries, so
@@ -250,8 +293,6 @@ def talk_to_lco_archive(config, ur, end_point, method, log=None):
         POST GET
     """
 
-    jur = json.dumps(ur)
-
     headers = {'Authorization': 'Token ' + os.environ[config['token_envvar']]}
 
     if end_point[0:1] == '/':
@@ -259,25 +300,23 @@ def talk_to_lco_archive(config, ur, end_point, method, log=None):
     if end_point[-1:] != '/':
         end_point = end_point+'/'
     url = os.path.join(config['url'], end_point)
+    lcologs.log('Querying data archive at URL ' + url,
+                'info', log=log)
 
     if method == 'POST':
         if ur != None:
-            response = requests.post(url, headers=headers, json=ur).json()
+            response = requests.post(url, headers=headers, json=ur)
         else:
-            response = requests.post(url, headers=headers).json()
+            response = requests.post(url, headers=headers)
 
     # Iterate over paginated results
     elif method == 'GET':
-        results = []
-        response = requests.get(url, headers=headers, params=ur).json()
-        results += response['results']
-        while response.get('next'):
-            response = requests.get(url, headers=headers, params=ur).json()
-            results += response['results']
+        response = requests.get(url, headers=headers, params=ur)
 
-    lcologs.log('Queried data archive with ' + str(len(results)) + ' results', 'info', log=log)
+    lcologs.log('Queried data archive with status=' + str(response.status_code),
+                'info', log=log)
 
-    return {'results': results}
+    return response.json()
 
 @task
 def download_new_frame(config, entry, log):
