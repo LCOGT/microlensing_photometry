@@ -91,11 +91,11 @@ def get_target_id(params, tom_config, log=None):
         )
 
     elif 'results' in response.keys() and len(response['results']) == 0:
-        lcologs.log('Targetname ' + params['name'] + ' unknown to TOM', 'warning', log=log)
+        lcologs.log('Targetname ' + params['target_name'] + ' unknown to TOM', 'warning', log=log)
 
     elif 'results' in response.keys() and len(response['results']) > 1:
         lcologs.log(
-            'Ambiguous targetname ' + params['name'] + ' multiple entries in TOM',
+            'Ambiguous targetname ' + params['target_name'] + ' multiple entries in TOM',
             'warning',
             log=log
         )
@@ -150,7 +150,7 @@ def list_dataproducts(params, tom_config, target_pk, log=None):
         )
     else:
         lcologs.log(
-            'No existing datafiles in TOM for target ' + params['name'],
+            'No existing datafiles in TOM for target ' + params['target_name'],
             'info',
             log=log
         )
