@@ -23,7 +23,8 @@ Configuring a Single Dataset for Reduction
 All images for a single dataset's reduction are collected into a
 single directory, referred to as ```red_dir```.  In addition to the
 FITS image files, the directory also needs to contain a copy of
-```microlensing_photometry/configuration/example_reduction_configuration.yaml```.
+```microlensing_photometry/configuration/example_reduction_configuration.yaml```,
+named ``reduction_config.yaml``.  Note that it is important that this file has this name.
 This file needs to be edited to provide the parameters specific to
 that dataset.
 
@@ -65,7 +66,7 @@ workflow (see :doc:`Prefect Workflows <../prefect/index>` for details).
 .. code-block:: python
 
     venv> cd microlensing_photometry/
-    venv> poetry run python image_reduction/infrastructure/aperture_pipeline.py <path_to_dataset_config.yaml>
+    venv> poetry run python image_reduction/infrastructure/aperture_pipeline.py <path_to_dataset_dir>
 
 The process of the pipeline as it runs can be monitored from the Prefect dashboard.
 

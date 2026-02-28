@@ -64,7 +64,7 @@ and
 
 .. code-block::
 
-    ./microlensing/image_reduction/configuration/
+    ./microlensing_photometry/image_reduction/configuration/
                 |- example_reduction_configuration.yaml
                 |- example_reduction_manager_configuration.yaml
 
