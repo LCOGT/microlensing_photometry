@@ -3,6 +3,8 @@ import os
 import argparse
 import yaml
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import image_reduction.infrastructure.logs as lcologs
 
 @task
@@ -123,6 +125,25 @@ def upload_datafile(params, tom_config, target_pk, target_groups, log=None):
         log=log
     )
 
+
+def get_session_with_retries():
+    session = requests.Session()
+
+    # Configure retry behavior
+    retries = Retry(
+        total=5,  # Total number of retries
+        backoff_factor=1,  # Wait 1s, 2s, 4s, 8s, 16s between attempts
+        status_forcelist=[500, 502, 503, 504],  # Retry on these HTTP status codes
+        allowed_methods=["GET"]  # Only retry on idempotent methods
+    )
+
+    # Mount the adapter to both HTTP and HTTPS
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    return session
+
 def list_dataproducts(params, tom_config, target_pk, log=None):
     """Function to return a list of dataproducts for the given target that
     have already been uploaded to the TOM"""
@@ -132,28 +153,47 @@ def list_dataproducts(params, tom_config, target_pk, log=None):
     ur = {'data_product_type': 'photometry', 'limit': 99999}
 
     # List endpoint does not currently support queries specific to target ID
-    #response = requests.get(dataupload_url, params=ur, auth=login).json()
-    response = requests.get(dataupload_url, params=ur, auth=tom_config['login']).json()
-
     existing_datafiles = {}
-    for entry in response['results']:
-        if entry['target'] == target_pk:
-            existing_datafiles[os.path.basename(entry['data'])] = entry['id']
+    session = get_session_with_retries()
+    try:
+        answer = session.get(dataupload_url, params=ur, auth=tom_config['login'], timeout=30)
+        answer.raise_for_status()
 
-    if len(existing_datafiles) > 0:
-        lcologs.log(
-            'Found existing datafiles for target ' + params['target_name'] +\
+        response = answer.json()
+
+        for entry in response['results']:
+            if entry['target'] == target_pk:
+                existing_datafiles[os.path.basename(entry['data'])] = entry['id']
+
+        if len(existing_datafiles) > 0:
+            lcologs.log(
+                'Found existing datafiles for target ' + params['target_name'] + \
                 ', ID=' + str(target_pk) + ' in the TOM:'
-            + '\n'.join(existing_datafiles.keys()),
-            'info',
-            log=log
-        )
-    else:
+                + '\n'.join(existing_datafiles.keys()),
+                'info',
+                log=log
+            )
+        else:
+            lcologs.log(
+                'No existing datafiles in TOM for target ' + params['target_name'],
+                'info',
+                log=log
+            )
+
+    except requests.exceptions.HTTPError as err:
         lcologs.log(
-            'No existing datafiles in TOM for target ' + params['target_name'],
-            'info',
+            'Server error after retries for ' + params['target_name'] + ':' + err,
+            'warning',
             log=log
         )
+
+    except requests.exceptions.ConnectionError:
+        lcologs.log(
+            'Server is completely unreachable for ' + params['target_name'],
+            'error',
+            log=log
+        )
+        raise IOError('Cannot reach MOP')
 
     return existing_datafiles
 
