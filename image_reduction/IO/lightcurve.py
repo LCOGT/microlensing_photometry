@@ -73,7 +73,7 @@ def get_args():
     parser.add_argument('target_ra', help='RA of target star in degrees')
     parser.add_argument('target_dec', help='Dec of target star in degrees')
     parser.add_argument('filter', help='Filter used for observations')
-    parser.add_argument('out_path', help='Path to output lightcurve file')
+    parser.add_argument('out_path', help='Path to output lightcurve file [no file suffix]')
     args = parser.parse_args()
 
     # Decant the information into a dictionary to allow for easier integration with the pipeline
