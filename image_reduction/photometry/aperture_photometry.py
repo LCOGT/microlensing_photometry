@@ -1,8 +1,10 @@
 from photutils.aperture import aperture_photometry
 from photutils.aperture import CircularAnnulus, CircularAperture
 from photutils.aperture import ApertureStats
+from photutils.detection import DAOStarFinder
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.stats import sigma_clipped_stats
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table, Column
@@ -71,10 +73,14 @@ class AperturePhotometryAnalyst(object):
         start = time.time()
         lcologs.log('Start Image Processing', 'info', log=self.log)
 
+        # Use the Gaia catalog to refine the image WCS
         self.find_star_catalog()
         lcologs.log(repr(time.time()-start), 'info', log=self.log)
         self.refine_wcs()
         lcologs.log(repr(time.time()-start), 'info', log=self.log)
+
+        # Perform object detection in this frame
+        self.starfind()
 
         if self.status == 'OK':
             self.run_aperture_photometry()
@@ -93,6 +99,7 @@ class AperturePhotometryAnalyst(object):
             self.star_catalog = np.c_[self.image_layers[1].data['x'],
                                       self.image_layers[1].data['y'],
                                       self.image_layers[1].data['flux']]
+
         else:
             ### run starfinder
             pass
@@ -125,6 +132,46 @@ class AperturePhotometryAnalyst(object):
 
             #sys.exit()
 
+    def starfind(self):
+        """
+        Method to perform an object detection on the image and ensure all detected objects
+        are included in the star catalog
+        """
+
+        # Compute statistics of the image background to set detection thresholds
+        mean, median, std = sigma_clipped_stats(self.image_data, sigma=3.0, maxiters=5)
+        lcologs.log(
+            'Image statistics, mean median, std: ' + str(mean) + ', ' + str(median) + ', ' + str(std),
+            'info',
+            log=self.log
+        )
+
+        # Run daofind algorithm to detect objects
+        daofind = DAOStarFinder(fwhm=3.0, threshold=5. * std)
+        sources = daofind(self.image_data - median)
+        positions = np.c_[sources['xcentroid'], sources['ycentroid']]
+        lcologs.log(
+            'Detected ' + str(len(positions)) + ' objects in the current frame',
+            'info',
+            log=self.log
+        )
+
+        # Calculate the RA, Dec positions of the stars using the refined image WCS
+        world_coords = self.image_new_wcs.wcs_pix2world(positions, 1)
+
+        # Store this set of positions as the image source catalog
+        self.image_catalog = Table([
+            Column(name='ra', data=world_coords[:,0]),
+            Column(name='dec', data=world_coords[:,1]),
+            Column(name='x', data=sources['xcentroid']),
+            Column(name='y', data=sources['ycentroid'])
+        ])
+        lcologs.log(
+            'Calculated world coordinates for all objects in the frame',
+            'info',
+            log=self.log
+        )
+
     def run_aperture_photometry(self):
         """
         Run aperture photometry on the image using the star catalog of Gaia for time been.
@@ -136,6 +183,7 @@ class AperturePhotometryAnalyst(object):
                 'info', log=self.log
             )
 
+            # Photometer at the known positions of Gaia objects, used for photometric calibration
             skycoord = SkyCoord(ra=self.gaia_catalog['ra'], dec=self.gaia_catalog['dec'], unit=(u.degree, u.degree))
             xx, yy = self.image_new_wcs.world_to_pixel(skycoord)
             positions = np.c_[xx,yy]
@@ -150,7 +198,10 @@ class AperturePhotometryAnalyst(object):
 
             self.aperture_photometry_table = phot_table
 
-            lcologs.log('Aperture Photometry successfully estimated', 'info', log=self.log)
+            lcologs.log('Aperture Photometry successfully estimated for Gaia catalog targets', 'info', log=self.log)
+
+            # Photometer at the positions of all detected objects in the frame
+
 
         except Exception as error:
 

@@ -79,31 +79,35 @@ def get_target_id(params, tom_config, log=None):
     target_pk = None
     target_groups = []
     ur = {'name': params['target_name']}
-    response = requests.get(targetid_url, auth=tom_config['login'], params=ur).json()
+    response = requests.get(targetid_url, auth=tom_config['login'], params=ur)
 
-    if 'results' in response.keys() and len(response['results']) == 1:
-        target_pk = response['results'][0]['id']
-        for group in response['results'][0]['groups']:
-            target_groups.append(group['id'])
+    if response.status_code == 200:
+        payload = response.json()
 
-        lcologs.log(
-            'TOM identified target ' + params['target_name'] + ' as target ID=' + str(target_pk),
-            'info',
-            log=log
-        )
+        if 'results' in payload.keys() and len(payload['results']) == 1:
+            target_pk = payload['results'][0]['id']
+            for group in payload['results'][0]['groups']:
+                target_groups.append(group['id'])
 
-    elif 'results' in response.keys() and len(response['results']) == 0:
-        lcologs.log('Targetname ' + params['target_name'] + ' unknown to TOM', 'warning', log=log)
+            lcologs.log(
+                'TOM identified target ' + params['target_name'] + ' as target ID=' + str(target_pk),
+                'info',
+                log=log
+            )
 
-    elif 'results' in response.keys() and len(response['results']) > 1:
-        lcologs.log(
-            'Ambiguous targetname ' + params['target_name'] + ' multiple entries in TOM',
-            'warning',
-            log=log
-        )
+        elif 'results' in payload.keys() and len(payload['results']) == 0:
+            lcologs.log('Targetname ' + params['target_name'] + ' unknown to TOM', 'warning', log=log)
+
+        elif 'results' in payload.keys() and len(payload['results']) > 1:
+            lcologs.log(
+                'Ambiguous targetname ' + params['target_name'] + ' multiple entries in TOM',
+                'warning',
+                log=log
+            )
 
     else:
-        lcologs.log('No response from TOM.  Check login details and URL?', 'warning', log=log)
+        lcologs.log('Error status ' + str(response.status_code) + ' from TOM', 'warning', log=log)
+        lcologs.log(response.text, 'info', log=log)
 
     return target_pk, target_groups
 
