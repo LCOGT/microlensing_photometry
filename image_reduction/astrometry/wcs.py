@@ -48,7 +48,7 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     return shiftx,shifty
 
 @task
-def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1000, log = None):
+def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 5000, log = None):
     """
     Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
     a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.
@@ -66,14 +66,13 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
     -------
     new_wcs : astropy.wcs, an updated astropy WCS object
     """
-
     skycoords = SkyCoord(ra=gaia_catalog['ra'].data[:star_limit],
                       dec=gaia_catalog['dec'].data[:star_limit],
                       unit=(u.degree, u.degree), frame='icrs')
 
     fluxes = [1]*len(gaia_catalog['phot_g_mean_flux'].data)
     star_pix = image_wcs.world_to_pixel(skycoords)
-    lcologs.log('Calculated image coordinates for ' + str(len(star_pix)) + ' catalog stars', 'info', log=log)
+    lcologs.log('Calculated image coordinates for ' + str(len(star_pix[0])) + ' catalog stars', 'info', log=log)
 
     stars_positions = np.array(star_pix).T
 
@@ -81,11 +80,10 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
 
     if wcs_check:
         model_gaia_image = image_tools.build_image(stars_positions, fluxes, image.shape,
-                                                    image_fraction=1,star_limit =  star_limit)
+                                                    image_fraction=1, star_limit = star_limit)
 
         model_image = image_tools.build_image(stars_image[:,:2], [1]*len(stars_image), image.shape, image_fraction=1,
                                               star_limit = star_limit)
-
 
         shiftx, shifty = find_images_shifts(model_gaia_image, model_image, image_fraction=0.25, upsample_factor=1)
         lcologs.log('Calculated image shifts in x,y = ' + str(shiftx) + ', ' + str(shifty), 'info', log=log)
@@ -97,10 +95,17 @@ def refine_image_wcs(image, stars_image, image_wcs, gaia_catalog, star_limit = 1
 
         pts1 = np.c_[star_pix[0], star_pix[1]][:star_limit][cols]
         pts2 = np.c_[stars_image[:,0], stars_image[:,1]][:star_limit][lines]
-        model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=5,
+
+        if len(pts1) > 5 and len(pts2) > 5:
+            model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=5,
                                        max_trials=300)
 
-        new_wcs = utils.fit_wcs_from_points(pts2[:star_limit][inliers].T, skycoords[cols][inliers])
+            new_wcs = utils.fit_wcs_from_points(pts2[:star_limit][inliers].T, skycoords[cols][inliers])
+
+            lcologs.log('New image WCS = ' + repr(new_wcs), 'info', log=log)
+
+        else:
+            new_wcs = None
 
     # Case where bad image_wcs causes misleading object positions
     else:

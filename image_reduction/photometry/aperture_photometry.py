@@ -14,6 +14,7 @@ import os
 import h5py
 import time
 from image_reduction.astrometry import wcs as lcowcs
+from image_reduction.astrometry import crossmatching
 from image_reduction.infrastructure import logs as lcologs
 from image_reduction.photometry import conversions
 
@@ -73,16 +74,17 @@ class AperturePhotometryAnalyst(object):
         start = time.time()
         lcologs.log('Start Image Processing', 'info', log=self.log)
 
+        # Perform object detection in this frame
+        self.starfind()
+
         # Use the Gaia catalog to refine the image WCS
-        self.find_star_catalog()
         lcologs.log(repr(time.time()-start), 'info', log=self.log)
         self.refine_wcs()
         lcologs.log(repr(time.time()-start), 'info', log=self.log)
 
-        # Perform object detection in this frame
-        self.starfind()
-
         if self.status == 'OK':
+            self.combine_source_catalogs()
+
             self.run_aperture_photometry()
             lcologs.log(repr(time.time()-start), 'info', log=self.log)
 
@@ -110,7 +112,7 @@ class AperturePhotometryAnalyst(object):
         """
 
         try:
-            wcs2 = lcowcs.refine_image_wcs(self.image_data , self.star_catalog,
+            wcs2 = lcowcs.refine_image_wcs(self.image_data , self.image_source_catalog,
                                        self.image_original_wcs, self.gaia_catalog,
                                        star_limit = 5000, log=self.log)
 
@@ -130,8 +132,6 @@ class AperturePhotometryAnalyst(object):
                 log=self.log
             )
 
-            #sys.exit()
-
     def starfind(self):
         """
         Method to perform an object detection on the image and ensure all detected objects
@@ -149,25 +149,62 @@ class AperturePhotometryAnalyst(object):
         # Run daofind algorithm to detect objects
         daofind = DAOStarFinder(fwhm=3.0, threshold=5. * std)
         sources = daofind(self.image_data - median)
-        positions = np.c_[sources['xcentroid'], sources['ycentroid']]
+        self.image_source_catalog = np.c_[sources['xcentroid'], sources['ycentroid'], sources['peak']]
         lcologs.log(
-            'Detected ' + str(len(positions)) + ' objects in the current frame',
+            'Detected ' + str(len(self.image_source_catalog)) + ' objects in the current frame',
             'info',
             log=self.log
         )
 
-        # Calculate the RA, Dec positions of the stars using the refined image WCS
-        world_coords = self.image_new_wcs.wcs_pix2world(positions, 1)
+    def combine_source_catalogs(self):
+        """
+        Method to combine the source catalog from Gaia with objects detected in the working image,
+        to produce a single object catalog.
+        Note this method requires a refined image WCS.
+        """
 
-        # Store this set of positions as the image source catalog
-        self.image_catalog = Table([
-            Column(name='ra', data=world_coords[:,0]),
-            Column(name='dec', data=world_coords[:,1]),
-            Column(name='x', data=sources['xcentroid']),
-            Column(name='y', data=sources['ycentroid'])
-        ])
+        # The Gaia catalog is always the reference catalog; calculate the image pixel coordinates
+        gaia_skycoords = SkyCoord(ra=self.gaia_catalog['ra'],
+                             dec=self.gaia_catalog['dec'],
+                             unit=(u.degree, u.degree), frame='icrs')
+        pixels = self.image_new_wcs.world_to_pixel(gaia_skycoords)
+        positions1 = np.column_stack([pixels[0], pixels[1]])
+
+        # Image pixel coordinates of objects detected in the working image
+        positions2 = self.image_source_catalog[:,:2]
+        image_skycoords = self.image_new_wcs.pixel_to_world(positions2[:,0], positions2[:,1])
+
+        # Combine the catalogs
+        merged_positions, image_idx = crossmatching.merge_positions(positions1, positions2, tolerance=4.0)
+
         lcologs.log(
-            'Calculated world coordinates for all objects in the frame',
+            'Combined ' + str(len(self.gaia_catalog)) + ' Gaia-detected objects with and additional ' \
+            + str(len(image_idx[0])) + ' objects detected in the image',
+            'info',
+            log=self.log
+        )
+
+        # Fetch the skycoords of objects detected in the image which have been added
+        # to the end of the merged catalog
+        image_coords = image_skycoords[image_idx]
+
+        # Combined the skycoord arrays for entries in the merged catalog
+        ra = np.concatenate([gaia_skycoords.ra.deg, image_coords.ra.deg])
+        dec = np.concatenate([gaia_skycoords.dec.deg, image_coords.dec.deg])
+        gaia_id = np.concatenate([self.gaia_catalog['source_id'], np.array([0]*len(image_idx[0]))])
+
+        self.star_catalog = Table(
+            [
+                Column(name='x', data=merged_positions[:,0]),
+                Column(name='y', data=merged_positions[:,1]),
+                Column(name='ra', data=ra, unit=u.deg),
+                Column(name='dec', data=dec, unit=u.deg),
+                Column(name='gaia_id', data=gaia_id)
+            ]
+        )
+
+        lcologs.log(
+            'Built star catalog of ' + str(len(self.star_catalog)) + ' objects',
             'info',
             log=self.log
         )
@@ -183,12 +220,8 @@ class AperturePhotometryAnalyst(object):
                 'info', log=self.log
             )
 
-            # Photometer at the known positions of Gaia objects, used for photometric calibration
-            skycoord = SkyCoord(ra=self.gaia_catalog['ra'], dec=self.gaia_catalog['dec'], unit=(u.degree, u.degree))
-            xx, yy = self.image_new_wcs.world_to_pixel(skycoord)
-            positions = np.c_[xx,yy]
-
-            #fwhm = self.image_layers[0].header['L1FWHM']
+            # Photometer at the known positions of the combined catalog objects
+            positions = np.column_stack([self.star_catalog['x'], self.star_catalog['y']])
 
             phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions, self.phot_aperture)
             exptime = self.image_layers[0].header['EXPTIME']
