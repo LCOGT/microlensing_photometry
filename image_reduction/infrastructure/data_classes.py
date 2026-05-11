@@ -2,11 +2,14 @@ import os
 from astropy.table import Table, Column
 from astropy import units as u
 from astropy.io import ascii
-from astropy.io.fits import getheader
+from astropy.io import fits
 from astropy.coordinates import SkyCoord
 import numpy as np
 from image_reduction.infrastructure import time_utils as lcotime
 from image_reduction.infrastructure import logs as lcologs
+from image_reduction.IO import fits_table_parser
+from image_reduction.logistics import GaiaCatalog as GC
+from image_reduction.astrometry import crossmatching
 
 class ObservationSet(object):
     """
@@ -109,7 +112,7 @@ class ObservationSet(object):
 
         # Read header info if not parsed to method
         if not header:
-            header = getheader(file_path)
+            header = fits.getheader(file_path)
 
         # Ensure coordinates stored in decimal degrees
         if ':' in header['RA']:
@@ -202,7 +205,7 @@ def get_facility_code(header):
     return facility_code
 
 def get_reduction_parameters(file_path):
-    header = getheader(file_path)
+    header = fits.getheader(file_path)
     red_params = {
         'name': header['OBJECT'],
         'RA': header['RA'],
@@ -349,3 +352,142 @@ class LCOArchiveEntry(object):
             'Dec': self.Dec
         }
         return red_params
+
+class StarCatalog(object):
+    """
+    The StarCatalog represents the source catalog for a given dataset.
+    This consists of a combination of known Gaia objects within the field
+    plus any addition objects that are detected in the image used as a reference.
+    """
+
+    def __init__(self, file_path=None, log=None):
+
+        self.sources = None
+        self.complete = False   # Indicates whether image-detected objects have been added
+
+        if file_path:
+            if os.path.isfile(file_path):
+                self.load(file_path)
+            else:
+                lcologs.log('No star catalog found at ' + file_path, 'info', log=log)
+
+    def load(self, file_path, log=None):
+        """
+        Load an existing star catalog for this field from a file, if available
+        If this is the case, then the catalog is assumed to be complete, i.e.
+        having both known Gaia stars and image detected sources.
+        """
+
+        self.sources = Table.read(file_path, format='fits')
+        self.complete = True
+        lcologs.log('Loaded star catalog from ' + file_path,'info', log=log)
+
+    def save(self, file_path, log=None):
+
+        self.sources.write(file_path, format='fits', overwrite=True)
+        lcologs.log('Saved star catalog to ' + file_path, 'info', log=log)
+
+    def create_from_Gaia_catalog(self, args, target, log=None):
+
+        lcologs.log(
+            'No star catalog found, so building one from Gaia data',
+            'info',
+            log=log
+        )
+
+        gaia_catalog = GC.collect_Gaia_catalog.fn(
+            target.ra.deg,
+            target.dec.deg,
+            20,
+            row_limit=10000,
+            catalog_name='Gaia_catalog.dat',
+            catalog_path=os.path.join(args.directory, '..'),
+            log=log
+        )
+
+        if not gaia_catalog:
+            lcologs.log(
+                'No Gaia catalog could be retrieved for this field, either locally or online',
+                'error',
+                log=log
+            )
+            lcologs.close_log(log)
+            raise IOError('No Gaia catalog could be retrieved for this field, either locally or online')
+
+        self.sources = Table(
+            [
+                Column(name='x', data=np.zeros(len(gaia_catalog))),
+                Column(name='y', data=np.zeros(len(gaia_catalog))),
+                Column(name='ra', data=gaia_catalog['ra'], unit=u.deg),
+                Column(name='dec', data=gaia_catalog['dec'], unit=u.deg),
+                Column(name='gaia_id', data=gaia_catalog['source_id']),
+                Column(name='phot_g_mean_flux', data=gaia_catalog['phot_g_mean_flux']),
+            ]
+        )
+
+    def combine_source_catalogs(self, image_new_wcs, image_source_catalog, dir_path, log):
+        """
+        Method to combine the source catalog from Gaia with objects detected in the working image,
+        to produce a single object catalog.
+        Note this method requires a refined image WCS.
+        """
+
+        # This method should only execute if the source table is incomplete,
+        # i.e. has only Gaia objects up until now
+        if not self.complete:
+
+            # The Gaia catalog is always the reference catalog; calculate the image pixel coordinates
+            gaia_skycoords = SkyCoord(ra=self.sources['ra'],
+                                 dec=self.sources['dec'],
+                                 unit=(u.degree, u.degree), frame='icrs')
+            pixels = image_new_wcs.world_to_pixel(gaia_skycoords)
+            positions1 = np.column_stack([pixels[0], pixels[1]])
+
+            # Image pixel coordinates of objects detected in the working image
+            positions2 = image_source_catalog[:,:2]
+            image_skycoords = image_new_wcs.pixel_to_world(positions2[:,0], positions2[:,1])
+
+            # Combine the catalogs
+            merged_positions, image_idx = crossmatching.merge_positions(positions1, positions2, tolerance=4.0)
+
+            lcologs.log(
+                'Combined ' + str(len(self.sources)) + ' Gaia-detected objects with and additional ' \
+                + str(len(image_idx[0])) + ' objects detected in the reference image',
+                'info',
+                log=log
+            )
+
+            # Fetch the skycoords of objects detected in the image which have been added
+            # to the end of the merged catalog
+            image_coords = image_skycoords[image_idx]
+
+            # Combined the skycoord arrays for entries in the merged catalog
+            ra = np.concatenate([gaia_skycoords.ra.deg, image_coords.ra.deg])
+            dec = np.concatenate([gaia_skycoords.dec.deg, image_coords.dec.deg])
+            gaia_id = np.concatenate([self.sources['gaia_id'], np.array([0]*len(image_idx[0]))])
+            fluxes = np.concatenate([self.sources['phot_g_mean_flux'], np.array([0]*len(image_idx[0]))])
+
+            self.sources = Table(
+                [
+                    Column(name='x', data=merged_positions[:,0]),
+                    Column(name='y', data=merged_positions[:,1]),
+                    Column(name='ra', data=ra, unit=u.deg),
+                    Column(name='dec', data=dec, unit=u.deg),
+                    Column(name='gaia_id', data=gaia_id),
+                    Column(name='phot_g_mean_flux', data=fluxes),
+                ]
+            )
+
+            # Now the complete flag has to be set, so that we don't extent the
+            # catalog after every image, since this makes indexing the stars much harder
+            self.complete = True
+
+            lcologs.log(
+                'Built star catalog of ' + str(len(self.sources)) + ' objects',
+                'info',
+                log=log
+            )
+
+            # Output the updated star catalog for this field
+            file_path = os.path.join(dir_path, '..', 'star_catalog.fits')
+            self.save(file_path, log)

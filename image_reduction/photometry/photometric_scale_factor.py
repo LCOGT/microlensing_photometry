@@ -20,35 +20,51 @@ def photometric_scale_factor_from_lightcurves(lcs):
 
     return pscales
 
-def calculate_pscale(obs_set, image_catalogs, log=None):
+def calculate_pscale(obs_set, phot_catalogs, log=None):
     """
     Function to compute the pscale factor for a set of aperture photometry catalogs
-    :return:
+
+    Params
+    ------
+    obs_set     object   Set of observations
+    phot_catalogs   arr  Array of photometry catalogs
+
+    Return
+    ------
         pscsales, epscales array    Photometric scale factors and errors for all images
         flux, err_flux      array   Fluxes for all stars in all images
     """
 
     lcologs.log('Computing photometric scale factors', 'info', log=log)
 
-    # Create the aperture lightcurves.  Default empty array is used to fill in
-    # the data cube for images where no photometry was possible
-    image_list = list(image_catalogs.keys())
-    nodata = np.empty(len(image_catalogs[image_list[0]]))
+    # Image list used to synchronise the references to each image
+    # The first non-None image photometry catalog in the dictionary is used as the
+    # reference by default.
+    image_list = list(phot_catalogs.keys())
+    ref_idx = None
+    for k,im in enumerate(image_list):
+        if phot_catalogs[im] and not ref_idx:
+            ref_idx = k
+    lcologs.log('Using image number ' + str(k) + ', (' + image_list[k] + ') as reference', 'info', log=log)
+
+    # Default empty array is used to fill in the data cube for images where no photometry was possible
+    nodata = np.empty(len(phot_catalogs[image_list[ref_idx]]))
     nodata.fill(np.nan)
 
-    apsum = np.array(
-        [image_catalogs[im]['aperture_sum'] if image_catalogs[im] else nodata for im in obs_set.table['file']]
-    )
-    eapsum = np.array(
-        [image_catalogs[im]['aperture_sum_err'] if image_catalogs[im] else nodata for im in obs_set.table['file']]
-    )
+    # Collate the timeseries photometry for all stars into a single array.
+    lcs = np.array(
+        [phot_catalogs[im]['aperture_sum'] if phot_catalogs[im] else nodata for im in obs_set.table['file']]
+    ).T
+    elcs = np.array(
+        [phot_catalogs[im]['aperture_sum_err'] if phot_catalogs[im] else nodata for im in obs_set.table['file']]
+    ).T
 
-    lcs = apsum.T
-    elcs = eapsum.T
+    #lcs = apsum.T
+    #elcs = eapsum.T
 
-    # Select datapoints that have a reasonable SNR to avoid high uncertainty on the pscale factor
+    # Select datapoints that have a reasonable SNR to avoid high uncertainty on the pscale factor,
+    # using only stars with Gaia IDs because we can be sure that these stars are the same.
     SNR = 10
-    #mask = np.all((np.abs(elcs / lcs) < 1 / SNR) & (lcs > 0), axis=1)
     valid = (np.abs(elcs / lcs) < 1 / SNR) & (lcs > 0)
 
     # Select the stars with the highest number of valid datapoints.
@@ -72,6 +88,8 @@ def calculate_pscale(obs_set, image_catalogs, log=None):
     epscales = (pscales[2] - pscales[0]) / 2
     lcologs.log('PSCALE values: ' + repr(pscales), 'info', log=log)
     lcologs.log('PSCALE uncertainties: ' + repr(epscales), 'info', log=log)
+
+    # Now apply the photometric scale factor to all star lightcurve
 
     flux = lcs / pscales[1]
     err_flux = (elcs ** 2 / pscales[1] ** 2 + lcs ** 2 * epscales ** 2 / pscales[1] ** 4) ** 0.5

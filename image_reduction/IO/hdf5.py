@@ -6,7 +6,7 @@ from image_reduction.astrometry import wcs as lcowcs
 from image_reduction.infrastructure import logs as lcologs
 
 def output_photometry(
-        catalog,
+        star_catalog,
         obs_set,
         flux,
         err_flux,
@@ -20,7 +20,7 @@ def output_photometry(
     Function to output a dataset photometry table to an HD5 file
 
     Parameters:
-        catalog  Gaia catalog object containing all known objects in the field of view
+        star_catalog  StarCatalog object containing all known objects in the field of view
         obs_set ObservationSet object for the current dataset
         flux    array  Normalized fluxes
         err_flux array Normalized flux uncertainties
@@ -41,37 +41,17 @@ def output_photometry(
     )
 
     # Build the source catalog
-    source_id = catalog['source_id'].data
-    source_radec = SkyCoord(ra=catalog['ra'], dec=catalog['dec'], unit=(u.degree, u.degree))
-    wcs_positions = np.c_[catalog['ra'], catalog['dec']]
-    im_wcs = lcowcs.build_wcs_from_obs_set(obs_set)
-    positions = np.zeros((len(catalog), len(obs_set.table), 2))
-    for i in range(1,len(obs_set.table),1):
-        xx, yy = im_wcs[i].world_to_pixel(source_radec)
-        positions[:,i,0] = xx
-        positions[:,i,1] = yy
-    positions = np.array(positions)
+    source_table = np.c_[
+        star_catalog.sources['gaia_id'], star_catalog.sources['ra'], star_catalog.sources['dec'],
+        star_catalog.sources['x'], star_catalog.sources['y']
+    ]
 
     with h5py.File(file_path, "w") as f:
         d1 = f.create_dataset(
-            'source_id',
-            source_id.shape,
-            dtype='int64',
-            data=source_id
-        )
-
-        d2 = f.create_dataset(
-            'source_wcs',
-            wcs_positions.shape,
+            'source_catalog',
+            source_table.shape,
             dtype='float64',
-            data=wcs_positions
-        )
-
-        d3 = f.create_dataset(
-            'positions',
-            positions.shape,
-            dtype='float64',
-            data=positions
+            data=source_table
         )
 
         d4 = f.create_dataset(

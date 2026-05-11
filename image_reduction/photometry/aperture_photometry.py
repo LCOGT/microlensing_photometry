@@ -13,10 +13,11 @@ import sys
 import os
 import h5py
 import time
+import copy
 from image_reduction.astrometry import wcs as lcowcs
-from image_reduction.astrometry import crossmatching
 from image_reduction.infrastructure import logs as lcologs
 from image_reduction.photometry import conversions
+from image_reduction.IO import ds9_utils
 
 class AperturePhotometryAnalyst(object):
     """
@@ -27,26 +28,29 @@ class AperturePhotometryAnalyst(object):
 
     image_name : str, a name to the data
     image_path : str, a path+name to the data
-    gaia_catalog : astropy.Table, the Gaia catalog of the field
+    sources : astropy.Table, the star catalog of the field
 
     """
 
-    def __init__(self, image_name, image_path, gaia_catalog, config, log=None):
+    def __init__(self, image_name, image_path, star_catalog, config, log=None):
 
-        self.log = log
         lcologs.log(
             'Initializing Aperture Photometry Analyst on '+image_name+' at this location '+image_path,
             'info',
-            log=self.log
+            log=log
         )
 
+        self.image_name = image_name
         self.image_path = os.path.join(image_path, image_name)
-
+        self.dir_path = image_path
         self.status = 'OK'
+        self.image_layers = []
 
         try:
+            with fits.open(self.image_path) as hdulist:
+                self.image_header = hdulist[0].header
+                self.image_layers = [hdu.data for hdu in hdulist]
 
-            self.image_layers = fits.open(self.image_path)
             lcologs.log('Image found and open successfully!', 'info', log=log)
 
         except Exception as error:
@@ -56,195 +60,137 @@ class AperturePhotometryAnalyst(object):
 
             sys.exit()
 
-        self.gaia_catalog = gaia_catalog
+        self.sources = copy.deepcopy(star_catalog.sources)
+        self.catalog_complete = copy.deepcopy(star_catalog.complete)
+        self.image_source_catalog = None
 
         ### To fix with config files
-        self.image_data = self.image_layers[0].data
-        self.image_errors = self.image_layers[3].data
-        self.image_original_wcs = WCS(self.image_layers[0].header)
-        self.phot_aperture = config['photometry']['aperture_arcsec'] / self.image_layers[0].header['PIXSCALE']
+        self.image_data = self.image_layers[0]
+        self.image_errors = self.image_layers[3]
+        self.image_original_wcs = WCS(self.image_header)
+        self.phot_aperture = config['photometry']['aperture_arcsec'] / self.image_header['PIXSCALE']
 
-        self.process_image()
-
-    def process_image(self):
+    def run_image_astrometry(self, star_catalog, log):
         """
         Process the image following the various steps
+
+        :param star_catalog: StarCatalog
         """
 
         start = time.time()
-        lcologs.log('Start Image Processing', 'info', log=self.log)
+        lcologs.log('Start image astrometry', 'info', log=log)
 
-        # Perform object detection in this frame
-        self.starfind()
+        lcologs.log('Original image WCS: ' + repr(self.image_original_wcs), 'info', log=log)
 
-        # Use the Gaia catalog to refine the image WCS
-        lcologs.log(repr(time.time()-start), 'info', log=self.log)
-        self.refine_wcs()
-        lcologs.log(repr(time.time()-start), 'info', log=self.log)
+        # Detect objects within the working frame
+        self.starfind(log)
+
+        # Refine the image WCS
+        lcologs.log(repr(time.time()-start), 'info', log=log)
+        self.refine_wcs(log)
+        lcologs.log(repr(time.time()-start), 'info', log=log)
 
         if self.status == 'OK':
-            self.combine_source_catalogs()
+            # If the star catalog is incomplete, extend it with detected objects
+            star_catalog.combine_source_catalogs(
+                self.image_new_wcs, self.image_source_catalog, self.dir_path, log
+            )
+            self.sources = copy.deepcopy(star_catalog.sources)
 
-            self.run_aperture_photometry()
-            lcologs.log(repr(time.time()-start), 'info', log=self.log)
+        return star_catalog
 
-            self.save_new_products_in_image()
-
-    def find_star_catalog(self):
-        """
-        Find the star catalog for an image. It uses BANZAI outputs if available, otherwise compute it.
-        """
-
-        if self.image_layers[1].header['EXTNAME']=='CAT':
-            #BANZAI image
-            lcologs.log('Find and use the BANZAI catalog for the entire process', 'info', log=self.log)
-            self.star_catalog = np.c_[self.image_layers[1].data['x'],
-                                      self.image_layers[1].data['y'],
-                                      self.image_layers[1].data['flux']]
-
-        else:
-            ### run starfinder
-            pass
-
-    def refine_wcs(self):
+    def refine_wcs(self, log):
         """
         Starting from approximate WCS solution, this function refine the WCS solution with the Gaia catalog.
         """
 
         try:
-            wcs2 = lcowcs.refine_image_wcs(self.image_data , self.image_source_catalog,
-                                       self.image_original_wcs, self.gaia_catalog,
-                                       star_limit = 5000, log=self.log)
+            wcs2 = lcowcs.refine_image_wcs(self, star_limit=30000, log=log, debug=True)
 
             self.image_new_wcs = wcs2
 
             if wcs2:
-                lcologs.log('WCS successfully updated', 'info', log=self.log)
+                lcologs.log('WCS successfully updated', 'info', log=log)
             else:
                 self.status = 'ERROR'
-                lcologs.log('Problems with WCS update: image skipped', 'warning', log=self.log)
+                lcologs.log('Problems with WCS update: image skipped', 'warning', log=log)
         except Exception as error:
             self.status = 'ERROR'
-            lcologs.log('Problems with WCS update: abort Aperture Photometry! Details below', 'warning', log=self.log)
+            lcologs.log('Problems with WCS update: abort Aperture Photometry! Details below', 'warning', log=log)
             lcologs.log(
                 f"Aperture Photometry Error: %s, %s" % (error, type(error)),
                 'error',
-                log=self.log
+                log=log
             )
 
-    def starfind(self):
+    def starfind(self, log, debug=False):
         """
         Method to perform an object detection on the image and ensure all detected objects
         are included in the star catalog
         """
+
+        lcologs.log(
+            'Running starfinder',
+            'info',
+            log=log
+        )
 
         # Compute statistics of the image background to set detection thresholds
         mean, median, std = sigma_clipped_stats(self.image_data, sigma=3.0, maxiters=5)
         lcologs.log(
             'Image statistics, mean median, std: ' + str(mean) + ', ' + str(median) + ', ' + str(std),
             'info',
-            log=self.log
+            log=log
         )
 
         # Run daofind algorithm to detect objects
-        daofind = DAOStarFinder(fwhm=3.0, threshold=5. * std)
+        daofind = DAOStarFinder(fwhm=3.0, threshold=2. * std)
         sources = daofind(self.image_data - median)
         self.image_source_catalog = np.c_[sources['xcentroid'], sources['ycentroid'], sources['peak']]
         lcologs.log(
             'Detected ' + str(len(self.image_source_catalog)) + ' objects in the current frame',
             'info',
-            log=self.log
+            log=log
         )
 
-    def combine_source_catalogs(self):
-        """
-        Method to combine the source catalog from Gaia with objects detected in the working image,
-        to produce a single object catalog.
-        Note this method requires a refined image WCS.
-        """
-
-        # The Gaia catalog is always the reference catalog; calculate the image pixel coordinates
-        gaia_skycoords = SkyCoord(ra=self.gaia_catalog['ra'],
-                             dec=self.gaia_catalog['dec'],
-                             unit=(u.degree, u.degree), frame='icrs')
-        pixels = self.image_new_wcs.world_to_pixel(gaia_skycoords)
-        positions1 = np.column_stack([pixels[0], pixels[1]])
-
-        # Image pixel coordinates of objects detected in the working image
-        positions2 = self.image_source_catalog[:,:2]
-        image_skycoords = self.image_new_wcs.pixel_to_world(positions2[:,0], positions2[:,1])
-
-        # Combine the catalogs
-        merged_positions, image_idx = crossmatching.merge_positions(positions1, positions2, tolerance=4.0)
-
-        lcologs.log(
-            'Combined ' + str(len(self.gaia_catalog)) + ' Gaia-detected objects with and additional ' \
-            + str(len(image_idx[0])) + ' objects detected in the image',
-            'info',
-            log=self.log
-        )
-
-        # Fetch the skycoords of objects detected in the image which have been added
-        # to the end of the merged catalog
-        image_coords = image_skycoords[image_idx]
-
-        # Combined the skycoord arrays for entries in the merged catalog
-        ra = np.concatenate([gaia_skycoords.ra.deg, image_coords.ra.deg])
-        dec = np.concatenate([gaia_skycoords.dec.deg, image_coords.dec.deg])
-        gaia_id = np.concatenate([self.gaia_catalog['source_id'], np.array([0]*len(image_idx[0]))])
-
-        self.star_catalog = Table(
-            [
-                Column(name='x', data=merged_positions[:,0]),
-                Column(name='y', data=merged_positions[:,1]),
-                Column(name='ra', data=ra, unit=u.deg),
-                Column(name='dec', data=dec, unit=u.deg),
-                Column(name='gaia_id', data=gaia_id)
-            ]
-        )
-
-        lcologs.log(
-            'Built star catalog of ' + str(len(self.star_catalog)) + ' objects',
-            'info',
-            log=self.log
-        )
-
-    def run_aperture_photometry(self):
+    def run_image_photometry(self, log):
         """
         Run aperture photometry on the image using the star catalog of Gaia for time been.
         """
 
+        start = time.time()
+        lcologs.log('Start image photometry', 'info', log=log)
+
         try:
             lcologs.log(
                 'Performing photometry with aperture ' + str(self.phot_aperture) + ' pix',
-                'info', log=self.log
+                'info', log=log
             )
 
             # Photometer at the known positions of the combined catalog objects
-            positions = np.column_stack([self.star_catalog['x'], self.star_catalog['y']])
+            positions = np.column_stack([self.sources['x'], self.sources['y']])
 
             phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions, self.phot_aperture)
-            exptime = self.image_layers[0].header['EXPTIME']
+            exptime = self.image_header['EXPTIME']
 
-            phot_table['aperture_sum'] /= exptime
-            phot_table['aperture_sum_err'] /= exptime
+            self.sources['aperture_sum'] = phot_table['aperture_sum'] / exptime
+            self.sources['aperture_sum_err'] = phot_table['aperture_sum_err'] / exptime
 
-            self.aperture_photometry_table = phot_table
-
-            lcologs.log('Aperture Photometry successfully estimated for Gaia catalog targets', 'info', log=self.log)
-
-            # Photometer at the positions of all detected objects in the frame
-
+            lcologs.log('Aperture Photometry successfully completed', 'info', log=log)
 
         except Exception as error:
 
             lcologs.log(
                 'Problems with the aperture photometry: aboard Aperture Photometry! Details below',
-                'warning', log=self.log
+                'warning', log=log
             )
-            lcologs.log(f"Aperture Photometry Error: %s, %s" % (error, type(error)), 'error', log=self.log)
+            lcologs.log(f"Aperture Photometry Error: %s, %s" % (error, type(error)), 'error', log=log)
 
-    def find_image_layer(self, layer_name):
+        lcologs.log(repr(time.time() - start), 'info', log=log)
+
+        self.save_new_products_in_image()
+
+    def find_image_layer(self, hdulist, layer_name):
         """
         Method to find an existing FITS extension in a HDUList by name if available
         :return:
@@ -252,40 +198,52 @@ class AperturePhotometryAnalyst(object):
         """
 
         layer_idx = -1
-        for i, im_layer in enumerate(self.image_layers):
+        for i, im_layer in enumerate(hdulist):
             if im_layer.header['EXTNAME'] == layer_name:
                 layer_idx = i
 
         return layer_idx
+
+    def update_or_append_fits_layer(self, hdulist, layer_name, new_hdu):
+        """
+        Method to update an existing layer of a FITS file, if one is identified by its label,
+        or otherwise append a new layer
+
+        Params
+        ------
+        layer_name  str  Label of layer in FITS file
+        new_hdu     HDU  New or updated layer content
+        """
+
+        layer_idx = self.find_image_layer(hdulist, layer_name)
+        if layer_idx == -1:
+            self.image_layers.append(new_hdu)
+        else:
+            self.image_layers[layer_idx] = new_hdu
 
     def save_new_products_in_image(self):
         """
         Save the new product, corrected WCS and aperture phot table, on the image
         directly
         """
+        with fits.open(self.image_path) as hdulist:
 
-        #Save updated wcs in a new layer or update an existing table extension if available
-        layer_idx = self.find_image_layer('LCO MICROLENSING PHOTOMETRY UPDATED WCS')
-        new_header = self.image_new_wcs.to_header()
-        new_header['EXTNAME'] = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
-        new_wcs_hdu = fits.ImageHDU(header=new_header)
-        if layer_idx == -1:
-            self.image_layers.append(new_wcs_hdu)
-        else:
-            self.image_layers[layer_idx] = new_wcs_hdu
+            #Save updated wcs in a new layer or update an existing table extension if available
+            layer_name = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
+            new_header = self.image_new_wcs.to_header()
+            new_header['EXTNAME'] = layer_name
+            new_wcs_hdu = fits.ImageHDU(header=new_header)
+            self.update_or_append_fits_layer(hdulist, layer_name, new_wcs_hdu)
 
-        #Save Aperture Photometry  in a new layer or update an existing table extension if available
-        layer_idx = self.find_image_layer('LCO MICROLENSING APERTURE PHOTOMETRY')
-        aperture_hdu =  fits.BinTableHDU(data= self.aperture_photometry_table)
-        aperture_hdu.header['EXTNAME'] = 'LCO MICROLENSING APERTURE PHOTOMETRY'
-        aperture_hdu.header['APRAD'] = self.phot_aperture
-        if layer_idx == -1:
-            self.image_layers.append(aperture_hdu)
-        else:
-            self.image_layers[layer_idx] = aperture_hdu
+            #Save Aperture Photometry  in a new layer or update an existing table extension if available
+            layer_name = 'LCO MICROLENSING APERTURE PHOTOMETRY'
+            aperture_hdu =  fits.BinTableHDU(data= self.sources)
+            aperture_hdu.header['EXTNAME'] = layer_name
+            aperture_hdu.header['APRAD'] = self.phot_aperture
+            self.update_or_append_fits_layer(hdulist, layer_name, aperture_hdu)
 
-        #Save updates
-        self.image_layers.writeto(self.image_path, overwrite=True)
+            #Save updates
+            hdulist.writeto(self.image_path, overwrite=True)
 
 def run_aperture_photometry(image, error, positions, radius):
     """
@@ -376,14 +334,17 @@ class AperturePhotometryDataset(object):
             raise IOError('Cannot find aperture photometry dataset file at ' + file_path)
 
         with h5py.File(file_path, 'r') as f:
-            self.source_id = Table([Column(name='ID', data=np.array(f['source_id'][:]))])
-            self.source_wcs = Table(
-                [
-                    Column(name='ra', data=np.array(f['source_wcs'][:])[:,0], unit=u.deg),
-                    Column(name='dec', data=np.array(f['source_wcs'][:])[:,1], unit=u.deg),
-                ]
-            )
-            self.positions = np.array(f['positions'][:])
+
+            sources = np.array(f['source_catalog'])
+
+            self.sources = Table([
+                Column(name='gaia_id', data=sources[:,0]),
+                Column(name='ra', data=sources[:,1], unit=u.deg),
+                Column(name='dec', data=sources[:,2], unit=u.deg),
+                Column(name='x', data=sources[:,3]),
+                Column(name='y', data=sources[:,4])
+            ])
+
             self.timestamps = Table([Column(name='HJD', data=np.array(f['HJD'][:]), unit=u.day)])
             self.flux = np.array(f['flux'])
             self.err_flux = np.array(f['err_flux'])
@@ -442,4 +403,45 @@ class AperturePhotometryDataset(object):
         else:
             lcologs.log('No valid measurements in lightcurve', 'warning', log=log)
 
+            return None, None
+
+    def find_nearest(self, ra, dec, radius=(2.0 / 3600.0) * u.deg, log=None):
+        """
+        Method to identify the nearest source catalog entry to the given coordinates,
+        within a cut-off radius
+
+        Parameters
+        ----------
+        ra float    RA of location to search at [decimal deg]
+        dec float   Dec of location to search at [decimal deg]
+        radius float Search cut-off radius [decimal deg, default = 2 arcsec]
+
+        Returns
+        -------
+        star_idx int    Index of star within the catalog
+        closest match   catalog Table row for the closest match or None if no object is
+                        within the search radius
+        """
+
+        sources = SkyCoord(self.sources['ra'], self.sources['dec'], frame='icrs', unit=(u.deg, u.deg))
+        target = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+
+        separations = target.separation(sources)
+
+        idx = np.where(separations <= radius)[0]
+
+        if len(idx) > 0:
+            lcologs.log(
+                'Found nearest matching star ' + str(idx[0]) + ' ' + repr(self.sources[idx[0]]),
+                'info',
+                log=log
+            )
+            return idx[0], self.sources[idx[0]]
+
+        else:
+            lcologs.log(
+                'No matching star found within search radius=' + str(radius) + ' deg',
+                'warning',
+                log=log
+            )
             return None, None

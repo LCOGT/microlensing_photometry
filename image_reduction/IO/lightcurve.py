@@ -45,7 +45,7 @@ def aperture_timeseries(params, log=None):
     )
 
     # Search the catalog for the nearest entry
-    star_idx, entry = GC.find_nearest(dataset.source_wcs, target_ra, target_dec, log=log)
+    star_idx, entry = dataset.find_nearest(target_ra, target_dec, log=log)
 
     # If a valid entry exists, extract the lightcurve and output
     if entry:

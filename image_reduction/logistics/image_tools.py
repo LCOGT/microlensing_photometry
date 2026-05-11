@@ -1,7 +1,10 @@
+import os
 from prefect import task
 import numpy as np
+from astropy.io import fits
 
 from image_reduction.photometry import psf
+from image_reduction.infrastructure import logs as lcologs
 
 @task
 def build_image(star_positions, fluxes, image_shape, image_fraction = 0.25, star_limit = 1000):
@@ -45,3 +48,18 @@ def build_image(star_positions, fluxes, image_shape, image_fraction = 0.25, star
             pass
 
     return model_image
+
+def output_image(image, file_path, log=None):
+
+    dir_path = os.path.dirname(file_path)
+    os.makedirs(dir_path, exist_ok=True)
+
+    hdu = fits.PrimaryHDU(data=image)
+
+    hdu.writeto(file_path, overwrite=True)
+
+    lcologs.log(
+        'Output image to ' + file_path,
+        'info',
+        log=log
+    )

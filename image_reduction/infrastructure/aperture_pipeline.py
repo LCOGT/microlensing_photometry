@@ -11,8 +11,8 @@ import image_reduction.infrastructure.observations as lcoobs
 import image_reduction.infrastructure.logs as lcologs
 import image_reduction.photometry.aperture_photometry as lcoapphot
 import image_reduction.photometry.photometric_scale_factor as lcopscale
-from image_reduction.logistics import GaiaCatalog as GC
 from image_reduction.IO import fits_table_parser, hdf5, lightcurve, tom_utils
+from image_reduction.infrastructure.data_classes import StarCatalog
 
 @flow
 def reduce_dataset(args):
@@ -57,38 +57,16 @@ def reduce_dataset(args):
         log=log
     )
 
-    # Load or query for known Gaia objects within this field
-    gaia_catalog = GC.collect_Gaia_catalog.fn(
-        target.ra.deg,
-        target.dec.deg,
-        20,
-        row_limit = 10000,
-        catalog_name='Gaia_catalog.dat',
-        catalog_path=args.directory,
-        log=log
-    )
+    # Load a pre-existing star catalog if one is available.  If it is, it will include known
+    # Gaia objects; otherwise returns None.
+    star_catalog_path = os.path.join(args.directory, '..', 'star_catalog.fits')
+    star_catalog = StarCatalog(file_path=star_catalog_path, log=log)
 
-    if not gaia_catalog:
-        lcologs.lco(
-            'No Gaia catalog could be retrieved for this field, either locally or online',
-            'error',
-            log=log
-        )
-        lcologs.close_log(log)
-        raise IOError('No Gaia catalog could be retrieved for this field, either locally or online')
+    # If no star catalog is available, create one starting with known Gaia objects
+    if not star_catalog.sources:
+        star_catalog.create_from_Gaia_catalog(args, target, log=log)
 
-    coords = SkyCoord(
-        ra=gaia_catalog['ra'].data,
-        dec=gaia_catalog['dec'].data,
-        unit=(u.degree, u.degree),
-        frame='icrs'
-    )
-
-    cutout_region = [target.ra.deg-0/60.,target.dec.deg-0/60.,250]
-
-    cats = {}   # List of star catalogs for all images
-    bad_agent = []
-    nstars = {}
+    phot_catalogs = {}   # List of photometry catalogs for all images
 
     for im in obs_set.table['file']:
         image_path = os.path.join(args.directory,im)
@@ -96,40 +74,44 @@ def reduce_dataset(args):
 
         with fits.open(image_path) as hdul:
 
-            hdr0 = copy.deepcopy(hdul[0].header)
-
-            nstars[im] = len(hdul[1].data)
-
             # Check whether there is an existing photometry table available.
             phot_table_index = fits_table_parser.find_phot_table(
                 hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
 
             # If photometry has already been done, read the table
             if not args.update_phot and phot_table_index >= 0:
-                cats[im] = copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index]))
+                phot_catalogs[im] = copy.deepcopy(fits_table_parser.fits_rec_to_table(hdul[phot_table_index]))
                 lcologs.log(' -> Loaded existing photometry catalog', 'info', log=log)
 
-            # If no photometry table is available, perform photometry:
+            # If no photometry table is available, perform photometry.
+            # If the star catalog is incomplete and the astrometric fit is successful, this
+            # extends (and completes) the sources table.
             else:
-                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, gaia_catalog, config, log=log)
+                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, star_catalog, config, log=log)
+                star_catalog = agent.run_image_astrometry(star_catalog, log)
+
+                # If astrometry was successful, we can photometer the image
                 if agent.status == 'OK':
-                    cats[im] = agent.aperture_photometry_table
+                    agent.run_image_photometry(log)
+                    phot_catalogs[im] = copy.deepcopy(agent.sources)
+
                     lcologs.log(' -> Performed aperture photometry', 'info', log=log)
                 else:
-                    cats[im] = None
+                    phot_catalogs[im] = None
                     lcologs.log(' -> WARNING: No photometry possible', 'info', log=log)
 
             hdul.close()
             del hdul
     lcologs.log('Photometered all images', 'info', log=log)
 
+    # Calculate the photometric scale factor and use it to compute corrected lightcurves.
     if len(obs_set.table) > 0:
-        pscales, epscales, flux, err_flux, raw_flux, raw_err_flux = lcopscale.calculate_pscale(obs_set, cats, log=log)
+        pscales, epscales, flux, err_flux, raw_flux, raw_err_flux = lcopscale.calculate_pscale(obs_set, phot_catalogs, log=log)
 
         # Output timeseries photometry for the whole frame
         phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
         hdf5.output_photometry(
-            gaia_catalog,
+            star_catalog,
             obs_set,
             flux,
             err_flux,
