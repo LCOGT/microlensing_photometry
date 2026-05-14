@@ -71,7 +71,7 @@ def reduce_dataset(args):
     for i,im in enumerate(obs_set.table['file']):
         image_path = os.path.join(args.directory,im)
         lcologs.log('Aperture photometry for ' + im + ', ' \
-                    + str(i) + ' out of ' + str(len(obs_set.table['file'])),
+                    + str(i+1) + ' out of ' + str(len(obs_set.table['file'])),
                     'info', log=log)
 
         with fits.open(image_path) as hdul:
@@ -79,6 +79,10 @@ def reduce_dataset(args):
             # Check whether there is an existing photometry table available.
             phot_table_index = fits_table_parser.find_phot_table(
                 hdul, 'LCO MICROLENSING APERTURE PHOTOMETRY')
+            lcologs.log(
+                'Index of existing photometry table returned ' + str(phot_table_index),
+                'info', log=log
+            )
 
             # If photometry has already been done, read the table
             if not args.update_phot and phot_table_index >= 0:
@@ -91,10 +95,13 @@ def reduce_dataset(args):
             else:
                 agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, star_catalog, config, log=log)
                 star_catalog = agent.run_image_astrometry(star_catalog, log)
+                agent.store_new_wcs_in_image(hdul, log)
 
                 # If astrometry was successful, we can photometer the image
                 if agent.status == 'OK':
                     agent.run_image_photometry(log)
+                    agent.store_photometry_in_image(hdul, log)
+
                     phot_catalogs[im] = copy.deepcopy(agent.sources)
 
                     lcologs.log(' -> Performed aperture photometry', 'info', log=log)
@@ -102,8 +109,11 @@ def reduce_dataset(args):
                     phot_catalogs[im] = None
                     lcologs.log(' -> WARNING: No photometry possible', 'info', log=log)
 
+            # Store the updated HDUlist and close
+            hdul.writeto(image_path, overwrite=True)
             hdul.close()
             del hdul
+
     lcologs.log('Photometered all images', 'info', log=log)
 
     # Calculate the photometric scale factor and use it to compute corrected lightcurves.
