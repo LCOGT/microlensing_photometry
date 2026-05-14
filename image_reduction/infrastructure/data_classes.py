@@ -368,6 +368,7 @@ class StarCatalog(object):
         if file_path:
             if os.path.isfile(file_path):
                 self.load(file_path)
+                lcologs.log('Loaded star catalog from ' + file_path, 'info', log=log)
             else:
                 lcologs.log('No star catalog found at ' + file_path, 'info', log=log)
 

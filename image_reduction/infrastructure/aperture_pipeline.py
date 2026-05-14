@@ -68,9 +68,11 @@ def reduce_dataset(args):
 
     phot_catalogs = {}   # List of photometry catalogs for all images
 
-    for im in obs_set.table['file']:
+    for i,im in enumerate(obs_set.table['file']):
         image_path = os.path.join(args.directory,im)
-        lcologs.log('Aperture photometry for ' + im, 'info', log=log)
+        lcologs.log('Aperture photometry for ' + im + ', ' \
+                    + str(i) + ' out of ' + str(len(obs_set.table['file'])),
+                    'info', log=log)
 
         with fits.open(image_path) as hdul:
 
