@@ -95,12 +95,12 @@ def reduce_dataset(args):
             else:
                 agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, star_catalog, config, log=log)
                 star_catalog = agent.run_image_astrometry(star_catalog, log)
-                agent.store_new_wcs_in_image(hdul, log)
+                hdul = agent.store_new_wcs_in_image(hdul, log)
 
                 # If astrometry was successful, we can photometer the image
                 if agent.status == 'OK':
                     agent.run_image_photometry(log)
-                    agent.store_photometry_in_image(hdul, log)
+                    hdul = agent.store_photometry_in_image(hdul, log)
 
                     phot_catalogs[im] = copy.deepcopy(agent.sources)
 

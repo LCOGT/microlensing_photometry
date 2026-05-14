@@ -423,6 +423,11 @@ class StarCatalog(object):
                 Column(name='dec', data=gaia_catalog['dec'], unit=u.deg),
                 Column(name='gaia_id', data=gaia_catalog['source_id']),
                 Column(name='phot_g_mean_flux', data=gaia_catalog['phot_g_mean_flux']),
+                Column(name='phot_g_mean_flux_error', data=gaia_catalog['phot_g_mean_flux_error']),
+                Column(name='phot_bp_mean_flux', data=gaia_catalog['phot_bp_mean_flux']),
+                Column(name='phot_bp_mean_flux_error', data=gaia_catalog['phot_bp_mean_flux_error']),
+                Column(name='phot_rp_mean_flux', data=gaia_catalog['phot_rp_mean_flux']),
+                Column(name='phot_rp_mean_flux_error', data=gaia_catalog['phot_rp_mean_flux_error']),
             ]
         )
 
@@ -466,7 +471,12 @@ class StarCatalog(object):
             ra = np.concatenate([gaia_skycoords.ra.deg, image_coords.ra.deg])
             dec = np.concatenate([gaia_skycoords.dec.deg, image_coords.dec.deg])
             gaia_id = np.concatenate([self.sources['gaia_id'], np.array([0]*len(image_idx[0]))])
-            fluxes = np.concatenate([self.sources['phot_g_mean_flux'], np.array([0]*len(image_idx[0]))])
+            g_fluxes = np.concatenate([self.sources['phot_g_mean_flux'], np.array([0]*len(image_idx[0]))])
+            g_ferror = np.concatenate([self.sources['phot_g_mean_flux_error'], np.array([0]*len(image_idx[0]))])
+            bp_fluxes = np.concatenate([self.sources['phot_bp_mean_flux'], np.array([0]*len(image_idx[0]))])
+            bp_ferror = np.concatenate([self.sources['phot_bp_mean_flux_error'], np.array([0]*len(image_idx[0]))])
+            rp_fluxes = np.concatenate([self.sources['phot_rp_mean_flux'], np.array([0]*len(image_idx[0]))])
+            rp_ferror = np.concatenate([self.sources['phot_rp_mean_flux_error'], np.array([0]*len(image_idx[0]))])
 
             self.sources = Table(
                 [
@@ -475,7 +485,12 @@ class StarCatalog(object):
                     Column(name='ra', data=ra, unit=u.deg),
                     Column(name='dec', data=dec, unit=u.deg),
                     Column(name='gaia_id', data=gaia_id),
-                    Column(name='phot_g_mean_flux', data=fluxes),
+                    Column(name='phot_g_mean_flux', data=g_fluxes),
+                    Column(name='phot_g_mean_flux_error', data=g_ferror),
+                    Column(name='phot_bp_mean_flux', data=bp_fluxes),
+                    Column(name='phot_bp_mean_flux_error', data=bp_ferror),
+                    Column(name='phot_rp_mean_flux', data=rp_fluxes),
+                    Column(name='phot_rp_mean_flux_error', data=rp_ferror),
                 ]
             )
 

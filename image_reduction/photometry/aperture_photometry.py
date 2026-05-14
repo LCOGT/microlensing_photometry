@@ -64,7 +64,7 @@ class AperturePhotometryAnalyst(object):
         self.catalog_complete = copy.deepcopy(star_catalog.complete)
         self.image_source_catalog = None
 
-        ### To fix with config files
+        self.image_new_wcs = None
         self.image_data = self.image_layers[0]
         self.image_errors = self.image_layers[3]
         self.image_original_wcs = WCS(self.image_header)
@@ -214,23 +214,31 @@ class AperturePhotometryAnalyst(object):
         """
 
         layer_idx = self.find_image_layer(hdulist, layer_name)
+
         if layer_idx == -1:
-            self.image_layers.append(new_hdu)
+            hdulist.append(new_hdu)
         else:
-            self.image_layers[layer_idx] = new_hdu
+            hdulist[layer_idx] = new_hdu
+
+        return hdulist
 
     def store_new_wcs_in_image(self, hdulist, log):
         """
         Method to store the revised WCS as a FITS table extention to the original image
         """
-        # Save updated wcs in a new layer or update an existing table extension if available
-        layer_name = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
-        new_header = self.image_new_wcs.to_header()
-        new_header['EXTNAME'] = layer_name
-        new_wcs_hdu = fits.ImageHDU(header=new_header)
-        self.update_or_append_fits_layer(hdulist, layer_name, new_wcs_hdu)
+        if self.image_new_wcs:
+            # Save updated wcs in a new layer or update an existing table extension if available
+            layer_name = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
+            new_header = self.image_new_wcs.to_header()
+            new_header['EXTNAME'] = layer_name
+            new_wcs_hdu = fits.ImageHDU(header=new_header)
+            hdulist = self.update_or_append_fits_layer(hdulist, layer_name, new_wcs_hdu)
 
-        lcologs.log('Stored updated WCS in ' + self.image_path, 'info', log=log)
+            lcologs.log('Stored updated WCS in ' + self.image_path, 'info', log=log)
+        else:
+            lcologs.log('No new WCS to store for ' + self.image_path, 'info', log=log)
+
+        return hdulist
 
     def store_photometry_in_image(self, hdulist, log):
         """
@@ -243,10 +251,11 @@ class AperturePhotometryAnalyst(object):
         aperture_hdu =  fits.BinTableHDU(data= self.sources)
         aperture_hdu.header['EXTNAME'] = layer_name
         aperture_hdu.header['APRAD'] = self.phot_aperture
-        self.update_or_append_fits_layer(hdulist, layer_name, aperture_hdu)
+        hdulist = self.update_or_append_fits_layer(hdulist, layer_name, aperture_hdu)
 
         lcologs.log('Stored photometry in ' + self.image_path, 'info', log=log)
 
+        return hdulist
 
 def run_aperture_photometry(image, error, positions, radius):
     """

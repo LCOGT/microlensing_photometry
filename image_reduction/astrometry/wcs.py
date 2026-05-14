@@ -3,6 +3,7 @@ from prefect import task
 from skimage.registration import phase_cross_correlation
 import numpy as np
 from astropy.coordinates import SkyCoord
+import copy
 import scipy.spatial as sspa
 from skimage.measure import ransac
 from skimage import transform as tf
@@ -66,61 +67,90 @@ def refine_image_wcs(analyst, star_limit=30000, log=None, debug=False):
     new_wcs : astropy.wcs, an updated astropy WCS object
     """
 
+    # Extract the star catalog sources
     skycoords = SkyCoord(ra=analyst.sources['ra'].data[:star_limit],
                       dec=analyst.sources['dec'].data[:star_limit],
                       unit=(u.degree, u.degree), frame='icrs')
 
     fluxes = [1]*len(analyst.sources['phot_g_mean_flux'].data)
-    star_pix = analyst.image_original_wcs.world_to_pixel(skycoords)
-    lcologs.log('Calculated image coordinates for ' + str(len(star_pix[0])) + ' catalog stars', 'info', log=log)
 
+    # Initialize the new WCS from the original image WCS
+    new_wcs = copy.deepcopy(analyst.image_original_wcs)
+
+    # Calculate the image pixel positions of stars in the catalog
+    star_pix = new_wcs.world_to_pixel(skycoords)
     stars_positions = np.array(star_pix).T
 
+    # If the initial WCS fit is so poor that the stars are off the frame, there isn't much we
+    # can do here
     wcs_check = astrometry_qc.check_stars_within_frame(analyst.image_data.shape, stars_positions, log=log)
-
     if wcs_check:
-        model_gaia_image = image_tools.build_image(stars_positions, fluxes, analyst.image_data.shape,
-                                                    image_fraction=1, star_limit = star_limit)
-        if debug:
-            file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_gaia.fits'))
-            image_tools.output_image(model_gaia_image, file_path)
-            file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_gaia.reg'))
-            ds9_utils.output_ds9_overlay(stars_positions, file_path, format='array', colour='magenta', xcol=0,
-                                         ycol=1)
+        # Iterate to refine the fit
+        max_iterations = 2
+        for it in range(0, max_iterations, 1):
+            lcologs.log('WCS refinement, iteration ' + str(it+1), 'info', log=log)
 
-        model_image = image_tools.build_image(analyst.image_source_catalog[:,:2],
-                                              [1]*len(analyst.image_source_catalog),
-                                              analyst.image_data.shape, image_fraction=1,
-                                              star_limit = star_limit)
-        if debug:
-            file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_det.fits'))
-            image_tools.output_image(model_image, file_path)
-            file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_det.reg'))
-            ds9_utils.output_ds9_overlay(analyst.image_source_catalog, file_path, format='array', colour='green',
-                                         xcol=0, ycol=1)
+            # Calculate the image pixel positions of stars in the catalog
+            star_pix = new_wcs.world_to_pixel(skycoords)
+            stars_positions = np.array(star_pix).T
+            lcologs.log('Calculated image coordinates for ' + str(len(star_pix[0])) + ' catalog stars', 'info', log=log)
 
-        shiftx, shifty = find_images_shifts(model_gaia_image, model_image, image_fraction=0.25, upsample_factor=1)
-        lcologs.log('Calculated image shifts in x,y = ' + str(shiftx) + ', ' + str(shifty), 'info', log=log)
+            # Build a simulated image using the predicted positions of the stars in the catalog
+            model_gaia_image = image_tools.build_image(stars_positions, fluxes, analyst.image_data.shape,
+                                                        image_fraction=1, star_limit = star_limit)
+            if debug:
+                file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_gaia.fits'))
+                image_tools.output_image(model_gaia_image, file_path)
+                file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_gaia.reg'))
+                ds9_utils.output_ds9_overlay(stars_positions, file_path, format='array', colour='magenta', xcol=0,
+                                             ycol=1)
 
-        dists = sspa.distance.cdist(analyst.image_source_catalog[:star_limit,:2],
-                                    np.c_[star_pix[0][:star_limit] - shiftx,
-                                    star_pix[1][:star_limit] - shifty])
-        mask = dists < 10
-        lines, cols = np.where(mask)
+            # Build a simulated image using the stars actually detected in this image
+            model_image = image_tools.build_image(analyst.image_source_catalog[:,:2],
+                                                  [1]*len(analyst.image_source_catalog),
+                                                  analyst.image_data.shape, image_fraction=1,
+                                                  star_limit = star_limit)
+            if debug:
+                file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_det.fits'))
+                image_tools.output_image(model_image, file_path)
+                file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_det.reg'))
+                ds9_utils.output_ds9_overlay(analyst.image_source_catalog, file_path, format='array', colour='green',
+                                             xcol=0, ycol=1)
 
-        pts1 = np.c_[star_pix[0], star_pix[1]][:star_limit][cols]
-        pts2 = np.c_[analyst.image_source_catalog[:,0], analyst.image_source_catalog[:,1]][:star_limit][lines]
+            # Calculate the 2D shift between the model images
+            shiftx, shifty = find_images_shifts(model_gaia_image, model_image, image_fraction=0.25, upsample_factor=1)
+            lcologs.log('Calculated image shifts in x,y = ' + str(shiftx) + ', ' + str(shifty), 'info', log=log)
 
-        if len(pts1) > 5 and len(pts2) > 5:
-            model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=5,
-                                       max_trials=300)
+            # Applying the calculated shifts, calculate the cartesian separations between detected and catalog stars,
+            # downselecting those that are relatively close
+            dists = sspa.distance.cdist(analyst.image_source_catalog[:star_limit,:2],
+                                        np.c_[star_pix[0][:star_limit] - shiftx,
+                                        star_pix[1][:star_limit] - shifty])
+            mask = dists < 10
+            lines, cols = np.where(mask)
 
-            new_wcs = utils.fit_wcs_from_points(pts2[:star_limit][inliers].T, skycoords[cols][inliers])
+            pts1 = np.c_[star_pix[0], star_pix[1]][:star_limit][cols]
+            pts2 = np.c_[analyst.image_source_catalog[:,0], analyst.image_source_catalog[:,1]][:star_limit][lines]
 
-            lcologs.log('New image WCS = ' + repr(new_wcs), 'info', log=log)
+            # Use the RANSAC method to find matching detected and catalog stars
+            if len(pts1) > 5 and len(pts2) > 5:
+                model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=5,
+                                           max_trials=300)
+                lcologs.log('Found ' + str(len(inliers)) + 'inliers', 'info', log=log)
 
-        else:
-            new_wcs = None
+                # Update the new WCS using the matching stars
+                new_wcs = utils.fit_wcs_from_points(pts2[:star_limit][inliers].T, skycoords[cols][inliers])
+                lcologs.log('New image WCS = ' + repr(new_wcs), 'info', log=log)
+
+                if debug:
+                    new_star_pix = new_wcs.world_to_pixel(skycoords)
+                    new_stars_positions = np.array(new_star_pix).T
+                    file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_new_gaia.reg'))
+                    ds9_utils.output_ds9_overlay(new_stars_positions, file_path, format='array', colour='cyan', xcol=0,
+                                                 ycol=1)
+
+            else:
+                lcologs.log('Insufficient close matching stars for RANSAC step ', 'warning', log=log)
 
     # Case where bad image_wcs causes misleading object positions
     else:
