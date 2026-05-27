@@ -51,7 +51,7 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     return shiftx,shifty
 
 @task
-def refine_image_wcs(analyst, star_limit=30000, log=None, debug=False):
+def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
     """
     Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
     a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.

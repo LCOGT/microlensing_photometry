@@ -1,5 +1,4 @@
 from prefect import task
-from astroquery.gaia import Gaia
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table

@@ -57,6 +57,13 @@ def get_observation_metadata(args, log=None):
 
     return obs_set
 
+def get_coord_trans(hdr, param):
+    if param in hdr.keys():
+        new_par = copy.deepcopy(hdr[param])
+    else:
+        new_par = 0.0
+    return new_par
+
 def update_wcs_parameters(src_hdr, dest_hdr):
     """
     Function transfers the WCS header keyworks from the src to the dest header objects
@@ -74,10 +81,14 @@ def update_wcs_parameters(src_hdr, dest_hdr):
     dest_hdr['CRVAL2'] = copy.deepcopy(src_hdr['CRVAL2'])
     dest_hdr['CUNIT1'] = copy.deepcopy(src_hdr['CUNIT1'])
     dest_hdr['CUNIT2'] = copy.deepcopy(src_hdr['CUNIT2'])
-    dest_hdr['CD1_1'] = copy.deepcopy(src_hdr['PC1_1'])
-    dest_hdr['CD1_2'] = copy.deepcopy(src_hdr['PC1_2'])
-    dest_hdr['CD2_1'] = copy.deepcopy(src_hdr['PC2_1'])
-    dest_hdr['CD2_2'] = copy.deepcopy(src_hdr['PC2_2'])
+    if 'PC1_1' in src_hdr.keys():
+        dest_hdr['PC1_1'] = get_coord_trans(src_hdr, 'PC1_1')
+        dest_hdr['PC2_2'] = get_coord_trans(src_hdr, 'PC2_2')
+    else:
+        dest_hdr['CD1_1'] = get_coord_trans(src_hdr, 'CD1_1')
+        dest_hdr['CD1_2'] = get_coord_trans(src_hdr, 'CD1_2')
+        dest_hdr['CD2_1'] = get_coord_trans(src_hdr, 'CD2_1')
+        dest_hdr['CD2_2'] = get_coord_trans(src_hdr, 'CD2_2')
     dest_hdr['WCSERR'] = 0
 
     return dest_hdr

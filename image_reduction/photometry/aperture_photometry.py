@@ -91,10 +91,6 @@ class AperturePhotometryAnalyst(object):
         lcologs.log(repr(time.time()-start), 'info', log=log)
 
         if self.status == 'OK':
-            # If the star catalog is incomplete, extend it with detected objects
-            star_catalog.combine_source_catalogs(
-                self.image_new_wcs, self.image_source_catalog, self.dir_path, log
-            )
             self.sources = copy.deepcopy(star_catalog.sources)
 
         return star_catalog
@@ -105,7 +101,7 @@ class AperturePhotometryAnalyst(object):
         """
 
         try:
-            wcs2 = lcowcs.refine_image_wcs(self, star_limit=30000, log=log, debug=True)
+            wcs2 = lcowcs.refine_image_wcs(self, star_limit=5000, log=log, debug=False)
 
             self.image_new_wcs = wcs2
 

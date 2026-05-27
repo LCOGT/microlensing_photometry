@@ -1,8 +1,6 @@
 from prefect import task
-from sys import argv
 from astroquery.vizier import Vizier
-from astroquery.gaia import Gaia
-from astropy import wcs, coordinates, units, visualization, table
+from astropy import coordinates, units, table
 import requests
 from image_reduction.infrastructure import logs as lcologs
 
@@ -194,6 +192,7 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
 
     return status, result
 
+@task(timeout_seconds=60)
 def search_vizier_for_gaia_sources(ra, dec, radius, log=None):
     """Function to perform online query of the Gaia catalog and return
     a catalogue of known objects within the field of view
@@ -209,6 +208,10 @@ def search_vizier_for_gaia_sources(ra, dec, radius, log=None):
     -------
     catalog : astropy.Table, an astropy.Table containing the catalog
     """
+    # Import this here because the module is prone to timeouts if they can't talk to
+    # ESA's server.  This can cause the whole pipeline to hang, but if we import it here,
+    # prefect can handle the timeout.
+    from astroquery.gaia import Gaia
 
     c = coordinates.SkyCoord(ra+' '+dec, frame='icrs', unit=(units.deg, units.deg))
     r = units.Quantity(radius/60.0, units.deg)
