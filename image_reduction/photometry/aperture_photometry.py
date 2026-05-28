@@ -49,6 +49,7 @@ class AperturePhotometryAnalyst(object):
         try:
             with fits.open(self.image_path) as hdulist:
                 self.image_header = hdulist[0].header
+                self.image_extensions = [hdu.name for hdu in hdulist]
                 self.image_layers = [hdu.data for hdu in hdulist]
 
             lcologs.log('Image found and open successfully!', 'info', log=log)
@@ -65,10 +66,31 @@ class AperturePhotometryAnalyst(object):
         self.image_source_catalog = None
 
         self.image_new_wcs = None
-        self.image_data = self.image_layers[0]
-        self.image_errors = self.image_layers[3]
+        self.get_science_image()
+        self.get_image_errors()
         self.image_original_wcs = WCS(self.image_header)
         self.phot_aperture = config['photometry']['aperture_arcsec'] / self.image_header['PIXSCALE']
+
+    def get_science_image(self):
+        """Method to identify and extract the science image, otherwise raise an error"""
+
+        if 'SCI' in self.image_extensions:
+            idx = self.image_extensions.index('SCI')
+            self.image_data = self.image_layers[idx]
+        else:
+            raise IOError('Image ' + self.image_name + ' has no science image extension')
+
+    def get_image_errors(self):
+        """
+        Method to identify the image uncertainties array, if present, otherwise store an array
+        of the size of the image with zero pixel entries.
+        """
+
+        if 'ERR' in self.image_extensions:
+            idx = self.image_extensions.index('ERR')
+            self.image_errors = self.image_layers[idx]
+        else:
+            self.image_errors = np.zeros((self.image_header['NAXIS1'],self.image_header['NAXIS2']))
 
     def run_image_astrometry(self, star_catalog, log):
         """
