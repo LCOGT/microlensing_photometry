@@ -29,7 +29,14 @@ def get_observation_metadata(args, log=None):
     )
 
     # Review all observations in the list and extract header data where necessary
-    for file_name in obs_list:
+    lcologs.log('Reviewing all images to extract header information', 'info', log=log)
+    for i, file_name in enumerate(obs_list):
+        if i%10 == 0:
+            lcologs.log(
+                ' -> reviewing ' + file_name + ', ' + str(i) + ' out of ' + str(len(obs_list)),
+                'info',
+                log=log
+            )
         if file_name not in obs_set.table['file']:
             file_path = os.path.join(args.directory, file_name)
 

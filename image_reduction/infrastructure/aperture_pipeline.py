@@ -3,6 +3,7 @@ import astropy.units as u
 import os
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.table import Table, Column
 import argparse
 import numpy as  np
 import yaml
