@@ -101,7 +101,7 @@ class AperturePhotometryAnalyst(object):
         """
 
         try:
-            wcs2 = lcowcs.refine_image_wcs(self, star_limit=5000, log=log, debug=False)
+            wcs2 = lcowcs.refine_image_wcs(self, star_limit=30000, log=log, debug=False)
 
             self.image_new_wcs = wcs2
 
@@ -288,7 +288,7 @@ class AperturePhotometryDataset(object):
     Class to store and manipulate the results of the AperturePhotometryAnalyst for a set of multiple images
     """
 
-    def __init__(self, file_path=None):
+    def __init__(self):
         """
         Method to instantiate an AperturePhotometryDataset object and optionally load photometry data from
         an HSF5 file.
@@ -323,12 +323,9 @@ class AperturePhotometryDataset(object):
         self.pscale = np.array([])
         self.epscale = np.array([])
 
-        if file_path:
-            self.load_hdf5(file_path)
-
     def load_hdf5(self, file_path):
         """
-        Method to load
+        Method to load the entire photometry store file
         Parameters
         ----------
         file_path  str     Path to input HDF5 file
@@ -353,13 +350,36 @@ class AperturePhotometryDataset(object):
                 Column(name='y', data=sources[:,4])
             ])
 
+            self.file = f['file'].asstr()[:].tolist()
+
             self.timestamps = Table([Column(name='HJD', data=np.array(f['HJD'][:]), unit=u.day)])
-            self.flux = np.array(f['flux'])
-            self.err_flux = np.array(f['err_flux'])
             self.raw_flux = np.array(f['raw_flux'])
-            self.raw_err_flux = np.array(f['raw_err_flux'])
-            self.pscale = np.array(f['pscale'])
-            self.epscale = np.array(f['epscale'])
+
+            if 'flux' in f.keys():
+                self.flux = np.array(f['flux'])
+
+            if 'pscales' in f.keys():
+                self.pscales = np.array(f['pscales'])
+
+    def load_raw_fluxes(self, file_path):
+        """
+        Method to load
+        Parameters
+        ----------
+        file_path  str     Path to input HDF5 file
+
+        Returns
+        -------
+        object with attributes populated with photometry from the file
+        """
+
+        if not os.path.isfile(file_path):
+            raise IOError('Cannot find aperture photometry dataset file at ' + file_path)
+
+        with h5py.File(file_path, 'r') as f:
+            self.files = f['file'].asstr()[:]
+            self.raw_flux = np.array(f['raw_flux'])
+
 
     def get_lightcurve(self, star_idx, filter, log=None):
         """
@@ -373,23 +393,26 @@ class AperturePhotometryDataset(object):
         lc  Table  Lightcurve data for the star with columns MJD, flux, err_flux, mag, err_mag
         """
 
+        # Extract the star's photometry from the array:
+        flux = self.flux[star_idx, ::2]
+        flux_err = self.flux[star_idx, 1::2]
+
         # Check for valid flux and err_flux measurements for this star's lightcurve
-        valid_flux = ~np.isnan(self.flux[star_idx, :])
-        valid_err_flux = ~np.isnan(self.err_flux[star_idx, :])
+        valid_flux1 = ~np.isnan(flux)
+        valid_flux2 = (flux > 0.0)
+        valid_flux = np.logical_and(valid_flux1, valid_flux2)
+        valid_err_flux = ~np.isnan(flux_err)
         valid = np.logical_and(valid_flux, valid_err_flux)
         if valid.any():
 
             # Convert to magnitudes for convenience
-            mag, err_mag, _, _ = conversions.flux_to_mag(
-                self.flux[star_idx, valid],
-                self.err_flux[star_idx, valid]
-            )
+            mag, err_mag, _, _ = conversions.flux_to_mag(flux[valid], flux_err[valid])
 
             # Dat format lightcurve for interactive inspection
             lc = Table([
                 Column(name='HJD', data=self.timestamps['HJD'][valid]),
-                Column(name='flux', data=self.flux[star_idx, valid]),
-                Column(name='err_flux', data=self.err_flux[star_idx, valid]),
+                Column(name='flux', data=flux[valid]),
+                Column(name='err_flux', data=flux_err[valid]),
                 Column(name='mag', data=mag),
                 Column(name='err_mag', data=err_mag),
             ])

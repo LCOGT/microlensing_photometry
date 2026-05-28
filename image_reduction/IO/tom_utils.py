@@ -160,7 +160,7 @@ def list_dataproducts(params, tom_config, target_pk, log=None):
     existing_datafiles = {}
     session = get_session_with_retries()
     try:
-        answer = session.get(dataupload_url, params=ur, auth=tom_config['login'], timeout=30)
+        answer = session.get(dataupload_url, params=ur, auth=tom_config['login'], timeout=90)
         answer.raise_for_status()
 
         response = answer.json()
@@ -197,7 +197,6 @@ def list_dataproducts(params, tom_config, target_pk, log=None):
             'error',
             log=log
         )
-        raise IOError('Cannot reach MOP')
 
     return existing_datafiles
 

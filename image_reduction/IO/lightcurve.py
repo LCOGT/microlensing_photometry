@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 
 @task
-def aperture_timeseries(params, log=None):
+def aperture_timeseries(params, dataset=None, log=None):
     """
     Function to plot an aperture photometry timeseries from an HDF5 output file
 
@@ -22,7 +22,9 @@ def aperture_timeseries(params, log=None):
     """
 
     # Load the photometry dataset
-    dataset = aperture_photometry.AperturePhotometryDataset(file_path=params['phot_file'])
+    if not dataset:
+        dataset = aperture_photometry.AperturePhotometryDataset()
+        dataset.load_hdf5(params['phot_file'])
 
     # Target coordinates can be in sexigesimal or decimal degree format, so handle both
     try:

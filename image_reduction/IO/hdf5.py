@@ -33,9 +33,9 @@ def store_image_photometry(phot_storage_path, image_photometry):
         nrows = len(image_photometry)
 
         # If photometry table extension doesn't exist, create one
-        if "timeseries_photometry" not in phot_store.keys():
+        if "raw_flux" not in phot_store.keys():
             dset = phot_store.create_dataset(
-                "timeseries_photometry",
+                "raw_flux",
                 shape=(nrows, 2),
                 maxshape=(nrows, None),
                 dtype=np.float64,
@@ -44,7 +44,7 @@ def store_image_photometry(phot_storage_path, image_photometry):
             )
 
         else:
-            dset = phot_store['timeseries_photometry']
+            dset = phot_store['raw_flux']
 
             current_cols = dset.shape[1]
             new_cols = 2
@@ -104,7 +104,7 @@ def create_photometry_store(phot_storage_path, star_catalog, obs_set, log):
             data=image_list
         )
 
-        f.close()
+        f.flush()
 
         lcologs.log(
             'Created photometry storage file ' + phot_storage_path,
@@ -142,36 +142,21 @@ def update_photometry_store(phot_storage_path, obs_set, log):
             log=log
         )
 
-def output_photometry(
-        star_catalog,
-        obs_set,
-        flux,
-        err_flux,
-        raw_flux,
-        raw_err_flux,
-        pscales,
-        epscales,
+def output_normalized_photometry(
+        dataset,
         file_path,
         log=None):
     """
     Function to output a dataset photometry table to an HD5 file
 
     Parameters:
-        star_catalog  StarCatalog object containing all known objects in the field of view
-        obs_set ObservationSet object for the current dataset
-        flux    array  Normalized fluxes
-        err_flux array Normalized flux uncertainties
-        raw_flux array Raw flux measurements
-        raw_err_flux array Raw flux uncertainties
-        pscales array Photometric scale factor for each image and star
-        epscales array Uncertainty on the scale factor per image and star
+        dataset  AperturePhotometryDataset  object
         file_path str Path to output file
+        log  Logger object
 
     Returns:
         Output HDF5 file
     """
-
-    ## THIS NEEDS TO UPDATE THE HJD, FILE LIST AND PHOTOMETRY WHEN THE CODE IS RUN MORE THAN ONCE
 
     lcologs.log(
         'Outputting timeseries photometry to ' + file_path,
@@ -179,67 +164,39 @@ def output_photometry(
         log=log
     )
 
-    # Build the source catalog
-    source_table = np.c_[
-        star_catalog.sources['gaia_id'], star_catalog.sources['ra'], star_catalog.sources['dec'],
-        star_catalog.sources['x'], star_catalog.sources['y']
-    ]
+    with h5py.File(file_path, "a") as f:
 
-    with h5py.File(file_path, "w") as f:
-        d1 = f.create_dataset(
-            'source_catalog',
-            source_table.shape,
-            dtype='float64',
-            data=source_table
-        )
+        if 'flux' not in f.keys():
+            d1 = f.create_dataset(
+                'flux',
+                dataset.flux.shape,
+                dtype='float64',
+                data=dataset.flux
+            )
+        else:
+            d1 = f['flux']
+            d1 = dataset.flux
 
-        d4 = f.create_dataset(
-            'HJD',
-            len(obs_set.table['HJD']),
-            dtype='float64',
-            data=obs_set.table['HJD'].data
-        )
+        if 'pscales' not in f.keys():
+            d2 = f.create_dataset(
+                'pscales',
+                dataset.pscales.shape,
+                dtype='float64',
+                data=dataset.pscales
+            )
+        else:
+            d2 = f['pscales']
+            d2 = dataset.pscales
 
-        d5 = f.create_dataset(
-            'flux',
-            flux.shape,
-            dtype='float64',
-            data=flux
-        )
+        if 'epscales' not in f.keys():
+            d3 = f.create_dataset(
+                'epscales',
+                dataset.epscales.shape,
+                dtype='float64',
+                data=dataset.epscales
+            )
+        else:
+            d3 = f['epscales']
+            d3 = dataset.epscales
 
-        d6 = f.create_dataset(
-            'err_flux',
-            err_flux.shape,
-            dtype='float64',
-            data=err_flux
-        )
-
-        d6 = f.create_dataset(
-            'raw_flux',
-            raw_flux.shape,
-            dtype='float64',
-            data=raw_flux
-        )
-
-        d7 = f.create_dataset(
-            'raw_err_flux',
-            raw_err_flux.shape,
-            dtype='float64',
-            data=raw_err_flux
-        )
-
-        d8 = f.create_dataset(
-            'pscale',
-            pscales.shape,
-            dtype='float64',
-            data=pscales
-        )
-
-        d9 = f.create_dataset(
-            'epscale',
-            epscales.shape,
-            dtype='float64',
-            data=epscales
-        )
-
-    f.close()
+        f.flush()

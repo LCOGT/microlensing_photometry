@@ -144,23 +144,22 @@ def reduce_dataset(args):
                         'info', log=log)
 
     lcologs.log('Photometered all images', 'info', log=log)
-    breakpoint()
+
+    ### Photometric Correction
+    # Load the timeseries photometry for all images
+    dataset = lcoapphot.AperturePhotometryDataset()
+    dataset.load_hdf5(phot_storage_path)
 
     # Calculate the photometric scale factor and use it to compute corrected lightcurves.
     if len(obs_set.table) > 0:
-        pscales, epscales, flux, err_flux, raw_flux, raw_err_flux = lcopscale.calculate_pscale(obs_set, phot_catalogs, log=log)
+        dataset.pscales, dataset.epscales, dataset.flux = lcopscale.calculate_pscale(
+            reference_image_name, dataset, log=log
+        )
 
-        # Output timeseries photometry for the whole frame
+        # Output normalized timeseries photometry for the whole frame
         phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
-        hdf5.output_photometry(
-            star_catalog,
-            obs_set,
-            flux,
-            err_flux,
-            raw_flux,
-            raw_err_flux,
-            pscales,
-            epscales,
+        hdf5.output_normalized_photometry(
+            dataset,
             phot_file_path,
             log=log
         )
@@ -174,7 +173,7 @@ def reduce_dataset(args):
             'filter': config['tom']['data_label'],
             'lc_path': os.path.join(args.directory, lc_root_file_name)
         }
-        lc_status = lightcurve.aperture_timeseries.fn(params, log=log)
+        lc_status = lightcurve.aperture_timeseries.fn(params, dataset, log=log)
 
         # TOM lightcurve upload
         if config['tom']['upload'] and lc_status:
