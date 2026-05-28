@@ -101,7 +101,7 @@ class AperturePhotometryAnalyst(object):
         """
 
         try:
-            wcs2 = lcowcs.refine_image_wcs(self, star_limit=30000, log=log, debug=False)
+            wcs2 = lcowcs.refine_image_wcs(self, star_limit=15000, log=log, debug=False)
 
             self.image_new_wcs = wcs2
 
