@@ -136,10 +136,10 @@ def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
             if len(pts1) > 5 and len(pts2) > 5:
                 model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=5,
                                            max_trials=300)
-                lcologs.log('Found ' + str(len(inliers)) + 'inliers', 'info', log=log)
+                lcologs.log('Found ' + str(len(inliers)) + ' inliers', 'info', log=log)
 
                 # Update the new WCS using the matching stars
-                new_wcs = utils.fit_wcs_from_points(pts2[:star_limit][inliers].T, skycoords[cols][inliers])
+                new_wcs = utils.fit_wcs_from_points(pts2[inliers].T, skycoords[cols][inliers])
                 lcologs.log('New image WCS = ' + repr(new_wcs), 'info', log=log)
 
                 if debug:
