@@ -1,6 +1,7 @@
 from prefect import flow, task
 import astropy.units as u
 import os
+import time
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table, Column
@@ -145,6 +146,11 @@ def reduce_dataset(args):
                         'info', log=log)
 
     lcologs.log('Photometered all images', 'info', log=log)
+
+    # Short pause to ensure that the filesystem has completed all write operations
+    # and unlocked the file before we proceed
+    time.sleep(0.5)
+    os.sync()  # Flush filesystem buffers
 
     ### Photometric Correction
     # Load the timeseries photometry for all images
