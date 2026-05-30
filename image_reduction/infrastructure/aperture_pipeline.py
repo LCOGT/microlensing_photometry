@@ -155,6 +155,7 @@ def reduce_dataset(args):
 
     ### Photometric Correction
     # Load the timeseries photometry for all images
+    lcologs.log('Loading all timeseries photometry', 'info', log=log)
     dataset = lcoapphot.AperturePhotometryDataset()
     dataset.load_hdf5(phot_storage_path)
 
