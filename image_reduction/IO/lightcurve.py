@@ -24,13 +24,6 @@ def aperture_timeseries(params, star_catalog, timestamps, flux, log=None):
     ASCII format lightcurve file without suffix (path with root filename only)
     """
 
-    # Load the photometry dataset
-    #dataset = aperture_photometry.AperturePhotometryDataset()
-    #if not phot_timeseries:
-    #    dataset.load_hdf5(params['phot_file'])
-    #else:
-    #    dataset.flux = phot_timeseries
-
     # Target coordinates can be in sexigesimal or decimal degree format, so handle both
     try:
         target_ra = float(params['target_ra'])
