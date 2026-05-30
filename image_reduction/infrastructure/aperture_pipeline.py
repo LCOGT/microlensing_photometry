@@ -149,7 +149,8 @@ def reduce_dataset(args):
 
     # Short pause to ensure that the filesystem has completed all write operations
     # and unlocked the file before we proceed
-    time.sleep(0.5)
+    lcologs.log('Pausing to complete disk IO', 'info', log=log)
+    time.sleep(10)
     os.sync()  # Flush filesystem buffers
 
     ### Photometric Correction
