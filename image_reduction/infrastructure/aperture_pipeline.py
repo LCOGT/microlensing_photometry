@@ -98,7 +98,7 @@ def reduce_dataset(args):
 
     # Create it with a copy of the star_catalog.sources, and obs_set, or
     # update the obs_set information if it exists
-    if not os.path.isfile(phot_storage_path):
+    if not os.path.isfile(phot_storage_path) or args.update_phot:
         hdf5.create_photometry_store(phot_storage_path, star_catalog, obs_set, log)
     else:
         hdf5.update_photometry_store(phot_storage_path, obs_set, log)
@@ -107,6 +107,7 @@ def reduce_dataset(args):
     # Loop over all images
     # Perform astrometry and photometer at all (transformed) locations in the star catalog
     # unless photometry already exists, or is required
+    phot_timeseries = None  # Initialise to handle case where no new photometry is done
     for i,im in enumerate(obs_set.table['file']):
         image_path = os.path.join(args.directory,im)
 
@@ -125,14 +126,14 @@ def reduce_dataset(args):
                 # If astrometry was successful, we can photometer the image
                 if agent.status == 'OK':
                     agent.run_image_photometry(log)
-                    hdf5.store_image_photometry(phot_storage_path, agent.sources)
+                    phot_timeseries = hdf5.store_image_photometry(phot_storage_path, agent.sources)
                     lcologs.log(' -> Performed aperture photometry', 'info', log=log)
                 else:
                     null_table = Table([
                         Column(name='aperture_sum', data=np.array([np.nan]*len(star_catalog.sources))),
                         Column(name='aperture_sum_err', data=np.array([np.nan]*len(star_catalog.sources))),
                     ])
-                    hdf5.store_image_photometry(phot_storage_path, null_table)
+                    phot_timeseries = hdf5.store_image_photometry(phot_storage_path, null_table)
                     lcologs.log(' -> WARNING: No photometry possible', 'info', log=log)
 
                 # Store the updated HDUlist and close
@@ -147,28 +148,25 @@ def reduce_dataset(args):
 
     lcologs.log('Photometered all images', 'info', log=log)
 
-    # Short pause to ensure that the filesystem has completed all write operations
-    # and unlocked the file before we proceed
-    lcologs.log('Pausing to complete disk IO', 'info', log=log)
-    time.sleep(10)
-    os.sync()  # Flush filesystem buffers
+    # Load timeseries photometry if not already available
+    # This is necessary because prefect holds the HDF5 writer process open
+    # and HDF5 doesn't accept concurrent reads.
+    if not phot_timeseries:
+        dataset = lcoapphot.AperturePhotometryDataset()
+        dataset.load_hdf5(phot_storage_path)
+        phot_timeseries = dataset.raw_flux
 
     ### Photometric Correction
-    # Load the timeseries photometry for all images
-    lcologs.log('Loading all timeseries photometry', 'info', log=log)
-    dataset = lcoapphot.AperturePhotometryDataset()
-    dataset.load_hdf5(phot_storage_path)
-
     # Calculate the photometric scale factor and use it to compute corrected lightcurves.
     if len(obs_set.table) > 0:
-        dataset.pscales, dataset.epscales, dataset.flux = lcopscale.calculate_pscale(
-            reference_image_name, dataset, log=log
+        pscales, epscales, flux = lcopscale.calculate_pscale(
+            reference_image_name, obs_set, phot_timeseries, log=log
         )
 
         # Output normalized timeseries photometry for the whole frame
         phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
         hdf5.output_normalized_photometry(
-            dataset,
+            pscales, epscales, flux,
             phot_file_path,
             log=log
         )
@@ -182,7 +180,9 @@ def reduce_dataset(args):
             'filter': config['tom']['data_label'],
             'lc_path': os.path.join(args.directory, lc_root_file_name)
         }
-        lc_status = lightcurve.aperture_timeseries.fn(params, dataset, log=log)
+        lc_status = lightcurve.aperture_timeseries.fn(
+            params, star_catalog, obs_set.table['HJD'], flux, log=log
+        )
 
         # TOM lightcurve upload
         if config['tom']['upload'] and lc_status:

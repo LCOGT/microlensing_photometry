@@ -28,14 +28,15 @@ def photometric_scale_factor_from_lightcurves(lcs, log=None, debug=False):
 
     return pscales, epscales
 
-def calculate_pscale(ref_image, dataset, log=None):
+def calculate_pscale(ref_image, obs_set, phot_timeseries, log=None):
     """
     Function to compute the pscale factor for a set of aperture photometry catalogs
 
     Params
     ------
     ref_image string Name of reference image
-    dataset   arr  AperturePhotometryDataset
+    obs_set ObservationSet  Set of images in the dataset
+    phot_timeseries arr timeseries photometry
 
     Return
     ------
@@ -48,12 +49,13 @@ def calculate_pscale(ref_image, dataset, log=None):
     # Image list used to synchronise the references to each image
     # The first non-None image photometry catalog in the dictionary is used as the
     # reference by default.
-    ref_idx = dataset.file.index(ref_image)
-    lcologs.log('Using image number ' + str(ref_idx) + ', (' + dataset.file[ref_idx] + ') as reference', 'info', log=log)
+    image_set = [str(image) for image in obs_set.table['file']]
+    ref_idx = image_set.index(ref_image)
+    lcologs.log('Using image number ' + str(ref_idx) + ', (' + obs_set.table['file'][ref_idx] + ') as reference', 'info', log=log)
 
     # Collate the timeseries photometry for all stars into a single array.
-    lcs = dataset.raw_flux[:, ::2]
-    elcs = dataset.raw_flux[:, 1::2]
+    lcs = phot_timeseries[:, ::2]
+    elcs = phot_timeseries[:, 1::2]
 
     # Select datapoints that have a reasonable SNR to avoid high uncertainty on the pscale factor,
     # using only stars with Gaia IDs because we can be sure that these stars are the same.
@@ -80,7 +82,7 @@ def calculate_pscale(ref_image, dataset, log=None):
     pscales, epscales = photometric_scale_factor_from_lightcurves(lcs[mask], log=log)
 
     # Now apply the photometric scale factor to all star lightcurve
-    flux = np.zeros(dataset.raw_flux.shape)
+    flux = np.zeros(phot_timeseries.shape)
     flux[:, ::2] = lcs / pscales[1]
     flux[:, 1::2] = (elcs ** 2 / pscales[1] ** 2 + lcs ** 2 * epscales ** 2 / pscales[1] ** 4) ** 0.5
 

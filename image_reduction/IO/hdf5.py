@@ -58,6 +58,8 @@ def store_image_photometry(phot_storage_path, image_photometry):
         # Optional: Force system to flush internal buffers to disk
         phot_store.flush()
 
+    return dset
+
 def create_photometry_store(phot_storage_path, star_catalog, obs_set, log):
     """
     Function to initialize the HDF5 file that stores the timeseries photometry
@@ -143,14 +145,16 @@ def update_photometry_store(phot_storage_path, obs_set, log):
         )
 
 def output_normalized_photometry(
-        dataset,
+        pscales, epscales, flux,
         file_path,
         log=None):
     """
     Function to output a dataset photometry table to an HD5 file
 
     Parameters:
-        dataset  AperturePhotometryDataset  object
+        pscales arr  Photometric scale factors
+        epscales arr Uncertainties on photometric scale factors
+        flux arr  Normalized timeseries photometry
         file_path str Path to output file
         log  Logger object
 
@@ -169,34 +173,34 @@ def output_normalized_photometry(
         if 'flux' not in f.keys():
             d1 = f.create_dataset(
                 'flux',
-                dataset.flux.shape,
+                flux.shape,
                 dtype='float64',
-                data=dataset.flux
+                data=flux
             )
         else:
             d1 = f['flux']
-            d1 = dataset.flux
+            d1 = flux
 
         if 'pscales' not in f.keys():
             d2 = f.create_dataset(
                 'pscales',
-                dataset.pscales.shape,
+                pscales.shape,
                 dtype='float64',
-                data=dataset.pscales
+                data=pscales
             )
         else:
             d2 = f['pscales']
-            d2 = dataset.pscales
+            d2 = pscales
 
         if 'epscales' not in f.keys():
             d3 = f.create_dataset(
                 'epscales',
-                dataset.epscales.shape,
+                epscales.shape,
                 dtype='float64',
-                data=dataset.epscales
+                data=epscales
             )
         else:
             d3 = f['epscales']
-            d3 = dataset.epscales
+            d3 = epscales
 
         f.flush()

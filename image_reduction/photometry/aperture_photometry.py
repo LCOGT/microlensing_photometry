@@ -16,7 +16,6 @@ import time
 import copy
 from image_reduction.astrometry import wcs as lcowcs
 from image_reduction.infrastructure import logs as lcologs
-from image_reduction.photometry import conversions
 from image_reduction.IO import ds9_utils
 
 class AperturePhotometryAnalyst(object):
@@ -401,100 +400,3 @@ class AperturePhotometryDataset(object):
         with h5py.File(file_path, 'r') as f:
             self.files = f['file'].asstr()[:]
             self.raw_flux = np.array(f['raw_flux'])
-
-
-    def get_lightcurve(self, star_idx, filter, log=None):
-        """
-
-        Parameters
-        ----------
-        star_idx int    Index (not ID) of star in source catalog
-
-        Returns
-        -------
-        lc  Table  Lightcurve data for the star with columns MJD, flux, err_flux, mag, err_mag
-        """
-
-        # Extract the star's photometry from the array:
-        flux = self.flux[star_idx, ::2]
-        flux_err = self.flux[star_idx, 1::2]
-
-        # Check for valid flux and err_flux measurements for this star's lightcurve
-        valid_flux1 = ~np.isnan(flux)
-        valid_flux2 = (flux > 0.0)
-        valid_flux = np.logical_and(valid_flux1, valid_flux2)
-        valid_err_flux = ~np.isnan(flux_err)
-        valid = np.logical_and(valid_flux, valid_err_flux)
-        if valid.any():
-
-            # Convert to magnitudes for convenience
-            mag, err_mag, _, _ = conversions.flux_to_mag(flux[valid], flux_err[valid])
-
-            # Dat format lightcurve for interactive inspection
-            lc = Table([
-                Column(name='HJD', data=self.timestamps['HJD'][valid]),
-                Column(name='flux', data=flux[valid]),
-                Column(name='err_flux', data=flux_err[valid]),
-                Column(name='mag', data=mag),
-                Column(name='err_mag', data=err_mag),
-            ])
-
-            # TOM-compatible format lightcurve
-            nvalid = valid.sum()
-            tom_lc = Table([
-                Column(name='time', data=self.timestamps['HJD'][valid]),
-                Column(name='filter', data=np.array([filter] * nvalid)),
-                Column(name='magnitude', data=mag),
-                Column(name='error', data=err_mag),
-            ])
-
-            lcologs.log('Returned lightcurve with valid data', 'info', log=log)
-
-            return lc, tom_lc
-
-        # Handle case of no valid measurements
-        else:
-            lcologs.log('No valid measurements in lightcurve', 'warning', log=log)
-
-            return None, None
-
-    def find_nearest(self, ra, dec, radius=(2.0 / 3600.0) * u.deg, log=None):
-        """
-        Method to identify the nearest source catalog entry to the given coordinates,
-        within a cut-off radius
-
-        Parameters
-        ----------
-        ra float    RA of location to search at [decimal deg]
-        dec float   Dec of location to search at [decimal deg]
-        radius float Search cut-off radius [decimal deg, default = 2 arcsec]
-
-        Returns
-        -------
-        star_idx int    Index of star within the catalog
-        closest match   catalog Table row for the closest match or None if no object is
-                        within the search radius
-        """
-
-        sources = SkyCoord(self.sources['ra'], self.sources['dec'], frame='icrs', unit=(u.deg, u.deg))
-        target = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
-
-        separations = target.separation(sources)
-
-        idx = np.where(separations <= radius)[0]
-
-        if len(idx) > 0:
-            lcologs.log(
-                'Found nearest matching star ' + str(idx[0]) + ' ' + repr(self.sources[idx[0]]),
-                'info',
-                log=log
-            )
-            return idx[0], self.sources[idx[0]]
-
-        else:
-            lcologs.log(
-                'No matching star found within search radius=' + str(radius) + ' deg',
-                'warning',
-                log=log
-            )
-            return None, None
