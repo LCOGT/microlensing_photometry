@@ -96,9 +96,6 @@ def get_lightcurve(timestamps, flux, star_idx, filter, log=None):
     valid = np.logical_and(valid_flux, valid_err_flux)
     if valid.any():
 
-        # Identify the indices of the images which produced valid fluxes
-        breakpoint()
-
         # Convert to magnitudes for convenience
         mag, err_mag, _, _ = conversions.flux_to_mag(star_flux[valid], star_flux_err[valid])
 

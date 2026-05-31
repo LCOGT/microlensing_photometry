@@ -16,8 +16,8 @@ def collect_Gaia_catalog(ra, dec, radius=15, row_limit = 10000, catalog_name='Ga
 
     Parameters
     ----------
-    ra : right ascenscion in degree
-    dec : right ascenscion in degree
+    ra : right ascension in degree
+    dec : right ascension in degree
     radius : radius in arcmin
     row_limit : the maximum number of stars (default:10000)
     catalog_name : the name of the catalog to save/load

@@ -43,7 +43,7 @@ def decide_whether_to_upload(params, log=None):
     if len(file_lines) < 6:     # Allows for header line
         upload = False
         lcologs.log(
-            '-> Lightcurve has too few datapoints ('+str(len(file_lines-1))+') to upload to TOM ',
+            '-> Lightcurve has too few datapoints ('+str(len(file_lines)-1)+') to upload to TOM ',
             'warning',
             log=log
         )
