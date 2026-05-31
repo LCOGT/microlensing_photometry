@@ -51,7 +51,7 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     return shiftx,shifty
 
 @task
-def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
+def refine_image_wcs(analyst, radius=5, star_limit=5000, log=None, debug=False):
     """
     Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
     a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.
@@ -59,6 +59,7 @@ def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
     Parameters
     ----------
     analyst: AperturePhotometryAnalyst
+    radius: float, arcmin  radius of stars from center of image to use for astrometric fit
     star_limit : int, the limit number of stars to use
     log : object pipeline log
 
@@ -67,31 +68,50 @@ def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
     new_wcs : astropy.wcs, an updated astropy WCS object
     """
 
-    # Extract the star catalog sources
-    skycoords = SkyCoord(ra=analyst.sources['ra'].data[:star_limit],
-                      dec=analyst.sources['dec'].data[:star_limit],
-                      unit=(u.degree, u.degree), frame='icrs')
-
-    fluxes = [1]*len(analyst.sources['phot_g_mean_flux'].data)
-
     # Initialize the new WCS from the original image WCS
     new_wcs = copy.deepcopy(analyst.image_original_wcs)
 
-    # Calculate the image pixel positions of stars in the catalog
-    star_pix = new_wcs.world_to_pixel(skycoords)
-    stars_positions = np.array(star_pix).T
+    # List the Gaia stars around the center of the image
+    mask1 = analyst.sources['gaia_id'] > 0
+    catalog_coords = SkyCoord(ra=analyst.sources['ra'].data,
+                      dec=analyst.sources['dec'].data,
+                      unit=(u.degree, u.degree), frame='icrs')
+
+    center = SkyCoord(ra=analyst.ra_center, dec=analyst.dec_center,
+                      unit=(u.degree, u.degree), frame='icrs')
+    separations = center.separation(catalog_coords)
+    mask2 = separations <= radius * u.arcmin
+    gaia_idx = mask1 & mask2
+
+    # List the detected stars around the center of the image
+    # Find the center of the positions
+    xcenter = analyst.image_source_catalog[:,0].max() / 2.0
+    ycenter = analyst.image_source_catalog[:,1].max() / 2.0
+    pix_radius = min(radius * 60 / analyst.pixscale, analyst.image_source_catalog[:,0].max())
+
+    # Select all detected stars within this radius
+    separations = np.sqrt((analyst.image_source_catalog[:,0]-xcenter)**2 \
+                          + (analyst.image_source_catalog[:,1]-ycenter)**2)
+    det_idx = separations <= pix_radius
+    det_star_pix = analyst.image_source_catalog[det_idx,:2]
+
+    # Extract the Gaia fluxes for selected stars
+    fluxes = [1]*len(analyst.sources['phot_g_mean_flux'][gaia_idx].data)
 
     # If the initial WCS fit is so poor that the stars are off the frame, there isn't much we
     # can do here
+    star_pix = new_wcs.world_to_pixel(catalog_coords[gaia_idx])
+    stars_positions = np.array(star_pix).T
     wcs_check = astrometry_qc.check_stars_within_frame(analyst.image_data.shape, stars_positions, log=log)
+
     if wcs_check:
         # Iterate to refine the fit
         max_iterations = 2
         for it in range(0, max_iterations, 1):
             lcologs.log('WCS refinement, iteration ' + str(it+1), 'info', log=log)
 
-            # Calculate the image pixel positions of stars in the catalog
-            star_pix = new_wcs.world_to_pixel(skycoords)
+            # Calculate the image pixel positions of selected Gaia stars in the catalog
+            star_pix = new_wcs.world_to_pixel(catalog_coords[gaia_idx])
             stars_positions = np.array(star_pix).T
             lcologs.log('Calculated image coordinates for ' + str(len(star_pix[0])) + ' catalog stars', 'info', log=log)
 
@@ -106,15 +126,15 @@ def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
                                              ycol=1)
 
             # Build a simulated image using the stars actually detected in this image
-            model_image = image_tools.build_image(analyst.image_source_catalog[:,:2],
-                                                  [1]*len(analyst.image_source_catalog),
+            model_image = image_tools.build_image(det_star_pix,
+                                                  [1]*len(det_star_pix),
                                                   analyst.image_data.shape, image_fraction=1,
                                                   star_limit = star_limit)
             if debug:
                 file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_det.fits'))
                 image_tools.output_image(model_image, file_path)
                 file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_det.reg'))
-                ds9_utils.output_ds9_overlay(analyst.image_source_catalog, file_path, format='array', colour='green',
+                ds9_utils.output_ds9_overlay(det_star_pix, file_path, format='array', colour='green',
                                              xcol=0, ycol=1)
 
             # Calculate the 2D shift between the model images
@@ -123,14 +143,14 @@ def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
 
             # Applying the calculated shifts, calculate the cartesian separations between detected and catalog stars,
             # downselecting those that are relatively close
-            dists = sspa.distance.cdist(analyst.image_source_catalog[:star_limit,:2],
+            dists = sspa.distance.cdist(det_star_pix[:star_limit,:2],
                                         np.c_[star_pix[0][:star_limit] - shiftx,
                                         star_pix[1][:star_limit] - shifty])
             mask = dists < 10
             lines, cols = np.where(mask)
 
             pts1 = np.c_[star_pix[0], star_pix[1]][:star_limit][cols]
-            pts2 = np.c_[analyst.image_source_catalog[:,0], analyst.image_source_catalog[:,1]][:star_limit][lines]
+            pts2 = np.c_[det_star_pix[:,0], det_star_pix[:,1]][:star_limit][lines]
 
             # Use the RANSAC method to find matching detected and catalog stars
             if len(pts1) > 5 and len(pts2) > 5:
@@ -139,11 +159,11 @@ def refine_image_wcs(analyst, star_limit=5000, log=None, debug=False):
                 lcologs.log('Found ' + str(len(inliers)) + ' inliers', 'info', log=log)
 
                 # Update the new WCS using the matching stars
-                new_wcs = utils.fit_wcs_from_points(pts2[inliers].T, skycoords[cols][inliers])
+                new_wcs = utils.fit_wcs_from_points(pts2[inliers].T, catalog_coords[cols][inliers])
                 lcologs.log('New image WCS = ' + repr(new_wcs), 'info', log=log)
 
                 if debug:
-                    new_star_pix = new_wcs.world_to_pixel(skycoords)
+                    new_star_pix = new_wcs.world_to_pixel(catalog_coords)
                     new_stars_positions = np.array(new_star_pix).T
                     file_path = os.path.join(analyst.dir_path, 'debug', analyst.image_name.replace('.fits', '_new_gaia.reg'))
                     ds9_utils.output_ds9_overlay(new_stars_positions, file_path, format='array', colour='cyan', xcol=0,

@@ -31,7 +31,7 @@ class AperturePhotometryAnalyst(object):
 
     """
 
-    def __init__(self, image_name, image_path, star_catalog, config, log=None):
+    def __init__(self, image_name, image_path, star_catalog, obs_set, config, log=None):
 
         lcologs.log(
             'Initializing Aperture Photometry Analyst on '+image_name+' at this location '+image_path,
@@ -63,12 +63,17 @@ class AperturePhotometryAnalyst(object):
         self.sources = copy.deepcopy(star_catalog.sources)
         self.catalog_complete = copy.deepcopy(star_catalog.complete)
         self.image_source_catalog = None
-
+        self.ra_center = star_catalog.ra_center
+        self.dec_center = star_catalog.dec_center
         self.image_new_wcs = None
         self.get_science_image()
         self.get_image_errors()
         self.image_original_wcs = WCS(self.image_header)
         self.phot_aperture = config['photometry']['aperture_arcsec'] / self.image_header['PIXSCALE']
+
+        idx = obs_set.table['file'].tolist().index(image_name)
+        if idx >= 0:
+            self.pixscale = obs_set.table['pixscale'][idx]
 
     def get_science_image(self):
         """Method to identify and extract the science image, otherwise raise an error"""

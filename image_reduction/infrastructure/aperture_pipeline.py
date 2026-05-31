@@ -82,7 +82,7 @@ def reduce_dataset(args):
         # Perform object detection and astrometry on the reference image, and extend the star catalog
         # to include uncatalogued objects
         agent = lcoapphot.AperturePhotometryAnalyst(
-            reference_image_name, args.directory, star_catalog, config, log=log
+            reference_image_name, args.directory, star_catalog, obs_set, config, log=log
         )
         star_catalog = agent.run_image_astrometry(star_catalog, log)
         star_catalog.combine_source_catalogs(
@@ -119,7 +119,7 @@ def reduce_dataset(args):
             with fits.open(image_path) as hdul:
 
                 # Perform astrometry on the image
-                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, star_catalog, config, log=log)
+                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, star_catalog, obs_set, config, log=log)
                 star_catalog = agent.run_image_astrometry(star_catalog, log)
                 hdul = agent.store_new_wcs_in_image(hdul, log)
 

@@ -29,6 +29,7 @@ class ObservationSet(object):
             Column(name='RA', data=np.array([]), dtype='float64', unit=u.degree),
             Column(name='Dec', data=np.array([]), dtype='float64', unit=u.degree),
             Column(name='airmass', data=np.array([]), dtype='float64'),
+            Column(name='pixscale', data=np.array([]), dtype='float64'),
             Column(name='fwhm', data=np.array([]), dtype='float64', unit=u.pixel),
             Column(name='moon_fraction', data=np.array([]), dtype='float64'),
             Column(name='moon_separation', data=np.array([]), dtype='float64', unit=u.degree),
@@ -150,6 +151,7 @@ class ObservationSet(object):
             float(s.ra.deg),
             float(s.dec.deg),
             header['AIRMASS'],
+            header['PIXSCALE'],
             header['L1FWHM'],
             header['MOONFRAC'],
             header['MOONDIST'],
@@ -364,6 +366,8 @@ class StarCatalog(object):
 
         self.sources = None
         self.complete = False   # Indicates whether image-detected objects have been added
+        self.ra_center = None
+        self.dec_center = None
 
         if file_path:
             if os.path.isfile(file_path):
@@ -380,11 +384,15 @@ class StarCatalog(object):
         """
 
         self.sources = Table.read(file_path, format='fits')
+        self.ra_center = self.sources.meta['RACEN']
+        self.dec_center = self.sources.meta['DECCEN']
         self.complete = True
         lcologs.log('Loaded star catalog from ' + file_path,'info', log=log)
 
     def save(self, file_path, log=None):
 
+        self.sources.meta['RACEN'] = self.ra_center
+        self.sources.meta['DECCEN'] = self.dec_center
         self.sources.write(file_path, format='fits', overwrite=True)
         lcologs.log('Saved star catalog to ' + file_path, 'info', log=log)
 
@@ -395,6 +403,9 @@ class StarCatalog(object):
             'info',
             log=log
         )
+
+        self.ra_center = target.ra.deg
+        self.dec_center = target.dec.deg
 
         gaia_catalog = GC.collect_Gaia_catalog.fn(
             target.ra.deg,
@@ -441,7 +452,6 @@ class StarCatalog(object):
         # This method should only execute if the source table is incomplete,
         # i.e. has only Gaia objects up until now
         if not self.complete:
-
             # The Gaia catalog is always the reference catalog; calculate the image pixel coordinates
             gaia_skycoords = SkyCoord(ra=self.sources['ra'],
                                  dec=self.sources['dec'],
