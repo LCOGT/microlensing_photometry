@@ -125,7 +125,7 @@ def reduce_dataset(args):
 
                 # If astrometry was successful, we can photometer the image
                 if agent.status == 'OK':
-                    agent.run_image_photometry(log)
+                    agent.run_image_photometry(log, debug=True)
                     phot_timeseries = hdf5.store_image_photometry(phot_storage_path, agent.sources)
                     lcologs.log(' -> Performed aperture photometry', 'info', log=log)
                 else:

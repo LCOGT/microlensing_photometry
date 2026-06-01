@@ -119,7 +119,30 @@ class AperturePhotometryAnalyst(object):
         if self.status == 'OK':
             self.sources = copy.deepcopy(star_catalog.sources)
 
+            # Update star positions using the refined WCS
+            # If a valid WCS is available, calculate the expected pixel positions of all the
+            # stars in the sources table
+            self.update_star_positions()
+
         return star_catalog
+
+    def update_star_positions(self, log=None):
+        """
+        Update the pixel positions of stars in this frame, based on the refined WCS fit
+        """
+
+        catalog_coords = SkyCoord(ra=self.sources['ra'].data,
+                                  dec=self.sources['dec'].data,
+                                  unit=(u.degree, u.degree), frame='icrs')
+
+        star_pix = self.image_new_wcs.world_to_pixel(catalog_coords)
+        stars_positions = np.array(star_pix).T
+        self.sources['x'] = stars_positions[:, 0]
+        self.sources['y'] = stars_positions[:, 1]
+
+        lcologs.log(
+            'Updated pixel positions of stars in the working frame', 'info', log=log
+        )
 
     def refine_wcs(self, log):
         """
@@ -175,7 +198,7 @@ class AperturePhotometryAnalyst(object):
             log=log
         )
 
-    def run_image_photometry(self, log):
+    def run_image_photometry(self, log, debug=False):
         """
         Run aperture photometry on the image using the star catalog of Gaia for time been.
         """
@@ -191,6 +214,10 @@ class AperturePhotometryAnalyst(object):
 
             # Photometer at the known positions of the combined catalog objects
             positions = np.column_stack([self.sources['x'], self.sources['y']])
+            if debug:
+                file_path = os.path.join(self.dir_path, 'debug', self.image_name.replace('.fits', '_measured.reg'))
+                ds9_utils.output_ds9_overlay(positions, file_path, format='array', colour='magenta', xcol=0,
+                                         ycol=1)
 
             phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions, self.phot_aperture)
             exptime = self.image_header['EXPTIME']
