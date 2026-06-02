@@ -327,10 +327,10 @@ def run_aperture_photometry(image, error, positions, radius):
 
     aperstats = ApertureStats(image, annulus_aperture)
 
-    bkg_mean = aperstats.mean
+    bkg_avg = aperstats.median
 
     phot_table = aperture_photometry(image, aperture, error=error)
-    total_bkg = aperture.area * bkg_mean
+    total_bkg = aperture.area * bkg_avg
 
     phot_table['aperture_sum'] -= total_bkg
 
