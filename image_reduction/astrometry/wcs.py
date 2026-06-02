@@ -51,7 +51,7 @@ def find_images_shifts(reference,image,image_fraction =0.25, upsample_factor=1):
     return shiftx,shifty
 
 @task
-def refine_image_wcs(analyst, radius=5, star_limit=5000, log=None, debug=False):
+def refine_image_wcs(analyst, radius=10, star_limit=10000, log=None, debug=False):
     """
     Refine the WCS of an image with Gaia catalog. First, find shifts in X,Y between the image stars catalog and
     a model image of the Gaia catalog. Then compute the full WCS solution using ransac and a affine transform.
@@ -105,8 +105,9 @@ def refine_image_wcs(analyst, radius=5, star_limit=5000, log=None, debug=False):
     wcs_check = astrometry_qc.check_stars_within_frame(analyst.image_data.shape, stars_positions, log=log)
 
     if wcs_check:
-        # Iterate to refine the fit
-        max_iterations = 2
+        # Optionally iterate to refine the fit - experiments suggest that this does not help
+        # due to mis-identified outliers pulling off the fit
+        max_iterations = 1
         for it in range(0, max_iterations, 1):
             lcologs.log('WCS refinement, iteration ' + str(it+1), 'info', log=log)
 
@@ -143,23 +144,40 @@ def refine_image_wcs(analyst, radius=5, star_limit=5000, log=None, debug=False):
 
             # Applying the calculated shifts, calculate the cartesian separations between detected and catalog stars,
             # downselecting those that are relatively close
-            dists = sspa.distance.cdist(det_star_pix[:star_limit,:2],
-                                        np.c_[star_pix[0][:star_limit] - shiftx,
-                                        star_pix[1][:star_limit] - shifty])
+            cat_star_pix_select = np.c_[star_pix[0][:star_limit] - shiftx,
+                                        star_pix[1][:star_limit] - shifty]
+            det_star_pix_select = det_star_pix[:star_limit,:2]
+            cat_coords_select = catalog_coords[gaia_idx][:star_limit]
+            dists = sspa.distance.cdist(det_star_pix_select, cat_star_pix_select)
+
             mask = dists < 10
             lines, cols = np.where(mask)
 
-            pts1 = np.c_[star_pix[0], star_pix[1]][:star_limit][cols]
-            pts2 = np.c_[det_star_pix[:,0], det_star_pix[:,1]][:star_limit][lines]
+            #pts1 = np.c_[star_pix[0], star_pix[1]][:star_limit][cols]
+            pts1 = cat_star_pix_select[cols]
+            pts2 = det_star_pix_select[lines]
 
             # Use the RANSAC method to find matching detected and catalog stars
             if len(pts1) > 5 and len(pts2) > 5:
                 model_robust, inliers = ransac((pts2, pts1), tf.AffineTransform, min_samples=10, residual_threshold=5,
                                            max_trials=300)
-                lcologs.log('Found ' + str(len(inliers)) + ' inliers', 'info', log=log)
+                lcologs.log(
+                    'Found ' + str(len(inliers)) + ' inliers from ' + str(len(pts1)) + ' possible matches',
+                    'info', log=log
+                )
+
+                if debug:
+                    file_name = analyst.image_name.replace('.fits', '_det_wcs_' + str(it) + '.reg')
+                    file_path = os.path.join(analyst.dir_path, 'debug', file_name)
+                    ds9_utils.output_ds9_overlay(pts2[inliers], file_path, format='array',
+                                                 colour='blue', xcol=0, ycol=1)
+                    file_name = analyst.image_name.replace('.fits', '_cat_wcs_' + str(it) + '.reg')
+                    file_path = os.path.join(analyst.dir_path, 'debug', file_name)
+                    ds9_utils.output_ds9_overlay(pts1[inliers], file_path, format='array', colour='red',
+                                                 xcol=0, ycol=1)
 
                 # Update the new WCS using the matching stars
-                new_wcs = utils.fit_wcs_from_points(pts2[inliers].T, catalog_coords[cols][inliers])
+                new_wcs = utils.fit_wcs_from_points(pts2[inliers].T, cat_coords_select[cols][inliers], sip_degree=1)
                 lcologs.log('New image WCS = ' + repr(new_wcs), 'info', log=log)
 
                 if debug:

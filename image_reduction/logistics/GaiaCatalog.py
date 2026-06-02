@@ -9,7 +9,7 @@ from image_reduction.logistics import vizier_tools
 from image_reduction.infrastructure import logs as lcologs
 
 @task
-def collect_Gaia_catalog(ra, dec, radius=15, row_limit = 10000, catalog_name='Gaia_catalog.dat',
+def collect_Gaia_catalog(ra, dec, radius=25, row_limit = 30000, catalog_name='Gaia_catalog.dat',
                          catalog_path='./',timeout=60, log=None):
     """
     Collect the Gaia catalog for the field centered at ra,dec and radius.

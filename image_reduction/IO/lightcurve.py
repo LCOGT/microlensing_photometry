@@ -10,7 +10,7 @@ from astropy.table import Table, Column
 import numpy as np
 
 @task
-def aperture_timeseries(params, star_catalog, timestamps, flux, log=None):
+def aperture_timeseries(params, star_catalog, obs_set, flux, log=None):
     """
     Function to plot an aperture photometry timeseries from an HDF5 output file
 
@@ -18,6 +18,10 @@ def aperture_timeseries(params, star_catalog, timestamps, flux, log=None):
     ----------
     params    dict      Program arguments:
         'phot_file', 'target_ra', 'target_dec', 'filter', 'lc_path'
+    star_catalog StarCatalog Source table for the dataset
+    obs_set ObservationSet Set of frames in the dataset
+    flux   arr      Timeseries flux measurements
+    log  Logger     Logger object
 
     Outputs
     -------
@@ -52,7 +56,7 @@ def aperture_timeseries(params, star_catalog, timestamps, flux, log=None):
     # If a valid entry exists, extract the lightcurve and output
     if entry:
         lc, tom_lc = get_lightcurve(
-            timestamps, flux, star_idx, params['filter'], log=log
+            obs_set, flux, star_idx, params['filter'], log=log
         )
 
         if lc:
@@ -70,12 +74,12 @@ def aperture_timeseries(params, star_catalog, timestamps, flux, log=None):
 
     return success
 
-def get_lightcurve(timestamps, flux, star_idx, filter, log=None):
+def get_lightcurve(obs_set, flux, star_idx, filter, log=None):
     """
 
     Parameters
     ----------
-    timestamps arr  HJD of all images
+    obs_set ObservationSet  Information on all images in the dataset
     flux    arr     Timeseries flux array
     star_idx int    Index (not ID) of star in source catalog
 
@@ -101,17 +105,18 @@ def get_lightcurve(timestamps, flux, star_idx, filter, log=None):
 
         # Dat format lightcurve for interactive inspection
         lc = Table([
-            Column(name='HJD', data=timestamps[valid]),
+            Column(name='HJD', data=obs_set.table['HJD'][valid]),
             Column(name='flux', data=star_flux[valid]),
             Column(name='err_flux', data=star_flux_err[valid]),
             Column(name='mag', data=mag),
             Column(name='err_mag', data=err_mag),
+            Column(name='file', data=obs_set.table['file'][valid])
         ])
 
         # TOM-compatible format lightcurve
         nvalid = valid.sum()
         tom_lc = Table([
-            Column(name='time', data=timestamps[valid]),
+            Column(name='time', data=obs_set.table['HJD'][valid]),
             Column(name='filter', data=np.array([filter] * nvalid)),
             Column(name='magnitude', data=mag),
             Column(name='error', data=err_mag),

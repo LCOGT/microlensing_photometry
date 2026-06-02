@@ -181,7 +181,7 @@ def reduce_dataset(args):
             'lc_path': os.path.join(args.directory, lc_root_file_name)
         }
         lc_status = lightcurve.aperture_timeseries.fn(
-            params, star_catalog, obs_set.table['HJD'], flux, log=log
+            params, star_catalog, obs_set, flux, log=log
         )
 
         # TOM lightcurve upload

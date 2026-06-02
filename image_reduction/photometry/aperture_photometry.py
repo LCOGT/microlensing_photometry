@@ -122,7 +122,7 @@ class AperturePhotometryAnalyst(object):
             # Update star positions using the refined WCS
             # If a valid WCS is available, calculate the expected pixel positions of all the
             # stars in the sources table
-            self.update_star_positions()
+            self.update_star_positions(log=log)
 
         return star_catalog
 
@@ -150,7 +150,7 @@ class AperturePhotometryAnalyst(object):
         """
 
         try:
-            wcs2 = lcowcs.refine_image_wcs(self, star_limit=15000, log=log, debug=True)
+            wcs2 = lcowcs.refine_image_wcs(self, star_limit=50000, log=log, debug=True)
 
             self.image_new_wcs = wcs2
 
@@ -278,7 +278,7 @@ class AperturePhotometryAnalyst(object):
         if self.image_new_wcs:
             # Save updated wcs in a new layer or update an existing table extension if available
             layer_name = 'LCO MICROLENSING PHOTOMETRY UPDATED WCS'
-            new_header = self.image_new_wcs.to_header()
+            new_header = self.image_new_wcs.to_header(relax=True) # Relax keyword needed for sip_degree>0
             new_header['EXTNAME'] = layer_name
             new_wcs_hdu = fits.ImageHDU(header=new_header)
             hdulist = self.update_or_append_fits_layer(hdulist, layer_name, new_wcs_hdu)
