@@ -16,11 +16,11 @@ def fetch_dataset_list(phot_storage_path):
 
     return dataset_list
 
-def store_image_photometry(phot_storage_path, image_photometry):
+def store_image_photometry(phot_store, image_photometry):
     """
     Function to append the photometry for a single image in a layer in the HDF5 file
 
-    :param phot_storage_path:  Path to HDF5 file
+    :param phot_store: HDF5 file open for r+
     :param image_photometry: Array of photometry measurements from a single image
     """
 
@@ -28,35 +28,35 @@ def store_image_photometry(phot_storage_path, image_photometry):
             (image_photometry['aperture_sum'], image_photometry['aperture_sum_err'])
         )
 
-    with h5py.File(phot_storage_path, "a") as phot_store:
+    #with h5py.File(phot_storage_path, "a") as phot_store:
 
-        nrows = len(image_photometry)
+    nrows = len(image_photometry)
 
-        # If photometry table extension doesn't exist, create one
-        if "raw_flux" not in phot_store.keys():
-            dset = phot_store.create_dataset(
-                "raw_flux",
-                shape=(nrows, 2),
-                maxshape=(nrows, None),
-                dtype=np.float64,
-                chunks=(5000, 2),  # Optimized disk block size (~120 KB)
-                data=phot_data
-            )
+    # If photometry table extension doesn't exist, create one
+    if "raw_flux" not in phot_store.keys():
+        dset = phot_store.create_dataset(
+            "raw_flux",
+            shape=(nrows, 2),
+            maxshape=(nrows, None),
+            dtype=np.float64,
+            chunks=(5000, 2),  # Optimized disk block size (~120 KB)
+            data=phot_data
+        )
 
-        else:
-            dset = phot_store['raw_flux']
+    else:
+        dset = phot_store['raw_flux']
 
-            current_cols = dset.shape[1]
-            new_cols = 2
+        current_cols = dset.shape[1]
+        new_cols = 2
 
-            # Expand the dataset on disk to fit the new rows
-            dset.resize((nrows, current_cols + new_cols))
+        # Expand the dataset on disk to fit the new rows
+        dset.resize((nrows, current_cols + new_cols))
 
-            # Stream the new array directly to the newly allocated disk space
-            dset[:, current_cols: current_cols + new_cols] = phot_data
+        # Stream the new array directly to the newly allocated disk space
+        dset[:, current_cols: current_cols + new_cols] = phot_data
 
-        # Optional: Force system to flush internal buffers to disk
-        phot_store.flush()
+    # Optional: Force system to flush internal buffers to disk
+    phot_store.flush()
 
     return dset
 

@@ -376,7 +376,40 @@ class AperturePhotometryDataset(object):
         self.pscale = np.array([])
         self.epscale = np.array([])
 
-    def load_hdf5(self, file_path):
+    def load_phot_store(self, phot_store):
+        """
+        Method to load the entire photometry store object
+        Parameters
+        ----------
+        phot_store  object     HDF5 file object open with r+
+
+        Returns
+        -------
+        object with attributes populated with photometry from the file
+        """
+
+        sources = np.array(phot_store['source_catalog'])
+
+        self.sources = Table([
+            Column(name='gaia_id', data=sources[:,0]),
+            Column(name='ra', data=sources[:,1], unit=u.deg),
+            Column(name='dec', data=sources[:,2], unit=u.deg),
+            Column(name='x', data=sources[:,3]),
+            Column(name='y', data=sources[:,4])
+        ])
+
+        self.file = phot_store['file'].asstr()[:].tolist()
+
+        self.timestamps = Table([Column(name='HJD', data=np.array(phot_store['HJD'][:]), unit=u.day)])
+        self.raw_flux = np.array(phot_store['raw_flux'])
+
+        if 'flux' in phot_store.keys():
+            self.flux = np.array(phot_store['flux'])
+
+        if 'pscales' in phot_store.keys():
+            self.pscales = np.array(phot_store['pscales'])
+
+    def load_hdf5_file(self, file_path):
         """
         Method to load the entire photometry store file
         Parameters
@@ -388,31 +421,15 @@ class AperturePhotometryDataset(object):
         object with attributes populated with photometry from the file
         """
 
-        if not os.path.isfile(file_path):
-            raise IOError('Cannot find aperture photometry dataset file at ' + file_path)
+        if not file_path and not phot_store:
+            raise IOError('Trying to load HDF5 file without phot_store object or file path')
 
-        with h5py.File(file_path, 'r') as f:
+        if not phot_store and file_path:
+            if not os.path.isfile(file_path):
+               raise IOError('Cannot find aperture photometry dataset file at ' + file_path)
 
-            sources = np.array(f['source_catalog'])
-
-            self.sources = Table([
-                Column(name='gaia_id', data=sources[:,0]),
-                Column(name='ra', data=sources[:,1], unit=u.deg),
-                Column(name='dec', data=sources[:,2], unit=u.deg),
-                Column(name='x', data=sources[:,3]),
-                Column(name='y', data=sources[:,4])
-            ])
-
-            self.file = f['file'].asstr()[:].tolist()
-
-            self.timestamps = Table([Column(name='HJD', data=np.array(f['HJD'][:]), unit=u.day)])
-            self.raw_flux = np.array(f['raw_flux'])
-
-            if 'flux' in f.keys():
-                self.flux = np.array(f['flux'])
-
-            if 'pscales' in f.keys():
-                self.pscales = np.array(f['pscales'])
+        with h5py.File(file_path, 'r+') as phot_store:
+            self.load_phot_store(phot_store)
 
     def load_raw_fluxes(self, file_path):
         """
