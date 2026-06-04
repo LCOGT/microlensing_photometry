@@ -146,12 +146,13 @@ def reduce_dataset(args):
                         + str(i + 1) + ' out of ' + str(len(obs_set.table['file'])),
                         'info', log=log)
 
-    lcologs.log('Photometered all images', 'info', log=log)
+    lcologs.log('Completed photometry stage for all images', 'info', log=log)
 
     # Load timeseries photometry if not already available
     # This is necessary because prefect holds the HDF5 writer process open
     # and HDF5 doesn't accept concurrent reads.
     if not phot_timeseries:
+        lcologs.log('Loading photometry because phot_timeseries='+repr(phot_timeseries), 'info', log=log)
         dataset = lcoapphot.AperturePhotometryDataset()
         dataset.load_hdf5(phot_storage_path)
         phot_timeseries = dataset.raw_flux
