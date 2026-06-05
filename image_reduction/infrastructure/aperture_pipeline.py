@@ -148,7 +148,7 @@ def reduce_dataset(args):
                             + str(i + 1) + ' out of ' + str(len(obs_set.table['file'])),
                             'info', log=log)
 
-        lcologs.log('Completed photometry stage for all images', 'info', log=log)
+        lcologs.log('Completed photometry stage for all images; loading whole dataset', 'info', log=log)
 
         # Load timeseries photometry if not already available
         # This is necessary because prefect holds the HDF5 writer process open
