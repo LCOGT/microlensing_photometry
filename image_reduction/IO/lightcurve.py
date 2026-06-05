@@ -96,12 +96,17 @@ def get_lightcurve(obs_set, flux, star_idx, filter, log=None):
     valid_flux1 = ~np.isnan(star_flux)
     valid_flux2 = (star_flux > 0.0)
     valid_flux = np.logical_and(valid_flux1, valid_flux2)
-    valid_err_flux = ~np.isnan(star_flux_err)
-    valid = np.logical_and(valid_flux, valid_err_flux)
+    valid_err_flux1 = ~np.isnan(star_flux_err)
+    valid = np.logical_and(valid_flux, valid_err_flux1)
+
     if valid.any():
 
         # Convert to magnitudes for convenience
         mag, err_mag, _, _ = conversions.flux_to_mag(star_flux[valid], star_flux_err[valid])
+
+        # Filter out data points with excessive error bars from the TOM-compatible
+        # CSV output, since they distort the plot axes.  Retain the points in the DAT output.
+        valid_mag_err = (err_mag < 0.5)
 
         # Dat format lightcurve for interactive inspection
         lc = Table([
@@ -114,15 +119,20 @@ def get_lightcurve(obs_set, flux, star_idx, filter, log=None):
         ])
 
         # TOM-compatible format lightcurve
-        nvalid = valid.sum()
+        valid2 = np.logical_and(valid, valid_mag_err)
+        nvalid2 = valid2.sum()
         tom_lc = Table([
-            Column(name='time', data=obs_set.table['HJD'][valid]),
-            Column(name='filter', data=np.array([filter] * nvalid)),
-            Column(name='magnitude', data=mag),
-            Column(name='error', data=err_mag),
+            Column(name='time', data=obs_set.table['HJD'][valid2]),
+            Column(name='filter', data=np.array([filter] * nvalid2)),
+            Column(name='magnitude', data=mag[valid2]),
+            Column(name='error', data=err_mag[valid2]),
         ])
 
-        lcologs.log('Returned lightcurve with valid data', 'info', log=log)
+        lcologs.log('Returned DAT lightcurve with ' + str(valid.sum()) + ' valid datapoints', 'info', log=log)
+        lcologs.log(
+        'Returned CSV lightcurve with ' + str(nvalid2) + ' valid datapoints, after data with large errors excluded',
+        'info', log=log
+        )
 
         return lc, tom_lc
 
