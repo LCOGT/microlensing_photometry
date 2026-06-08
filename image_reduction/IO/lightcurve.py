@@ -1,5 +1,4 @@
 from prefect import task
-from image_reduction.photometry import aperture_photometry
 from image_reduction.astrometry import crossmatching
 from image_reduction.infrastructure import logs as lcologs
 from image_reduction.photometry import conversions

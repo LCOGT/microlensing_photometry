@@ -160,7 +160,7 @@ def reduce_dataset(args):
         # Calculate the photometric scale factor and use it to compute corrected lightcurves.
         if len(obs_set.table) > 0:
             pscales, epscales, flux = lcopscale.calculate_pscale(
-                reference_image_name, obs_set, dataset.raw_flux, log=log
+                reference_image_name, obs_set, dataset, log=log
             )
 
             # Output normalized timeseries photometry for the whole frame
