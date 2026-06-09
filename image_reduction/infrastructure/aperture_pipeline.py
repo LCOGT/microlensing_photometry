@@ -8,6 +8,7 @@ from astropy.table import Table, Column
 import argparse
 import numpy as  np
 import yaml
+from threading import Lock
 
 import image_reduction.infrastructure.observations as lcoobs
 import image_reduction.infrastructure.logs as lcologs
