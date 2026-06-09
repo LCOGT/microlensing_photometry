@@ -16,6 +16,9 @@ import image_reduction.photometry.photometric_scale_factor as lcopscale
 from image_reduction.IO import hdf5, lightcurve, tom_utils
 from image_reduction.infrastructure.data_classes import StarCatalog
 
+# Initialize a thread lock
+hdf5_lock = Lock()
+
 @flow
 def reduce_dataset(args):
     """
