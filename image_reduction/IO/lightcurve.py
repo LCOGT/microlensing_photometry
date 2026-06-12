@@ -9,17 +9,17 @@ from astropy.table import Table, Column
 import numpy as np
 
 @task
-def aperture_timeseries(params, star_catalog, obs_set, flux, log=None):
+def aperture_timeseries(params, star_catalog, obs_set, dataset, log=None):
     """
     Function to plot an aperture photometry timeseries from an HDF5 output file
 
     Parameters
     ----------
     params    dict      Program arguments:
-        'phot_file', 'target_ra', 'target_dec', 'filter', 'lc_path'
+        'target_ra', 'target_dec', 'filter', 'lc_path'
     star_catalog StarCatalog Source table for the dataset
     obs_set ObservationSet Set of frames in the dataset
-    flux   arr      Timeseries flux measurements
+    dataset   object      AperturePhotometryDataset
     log  Logger     Logger object
 
     Outputs
@@ -55,7 +55,7 @@ def aperture_timeseries(params, star_catalog, obs_set, flux, log=None):
     # If a valid entry exists, extract the lightcurve and output
     if entry:
         lc, tom_lc = get_lightcurve(
-            obs_set, flux, star_idx, params['filter'], log=log
+            obs_set, dataset.flux, dataset.flux_err, star_idx, params['filter'], log=log
         )
 
         if lc:
@@ -73,13 +73,14 @@ def aperture_timeseries(params, star_catalog, obs_set, flux, log=None):
 
     return success
 
-def get_lightcurve(obs_set, flux, star_idx, filter, log=None):
+def get_lightcurve(obs_set, flux, flux_err, star_idx, filter, log=None):
     """
 
     Parameters
     ----------
     obs_set ObservationSet  Information on all images in the dataset
     flux    arr     Timeseries flux array
+    flux_err arr    Uncertainties on flux array
     star_idx int    Index (not ID) of star in source catalog
 
     Returns
@@ -88,8 +89,8 @@ def get_lightcurve(obs_set, flux, star_idx, filter, log=None):
     """
 
     # Extract the star's photometry from the array:
-    star_flux = flux[star_idx, ::2]
-    star_flux_err = flux[star_idx, 1::2]
+    star_flux = flux[star_idx, :]
+    star_flux_err = flux_err[star_idx, :]
 
     # Check for valid flux and err_flux measurements for this star's lightcurve
     valid_flux1 = ~np.isnan(star_flux)

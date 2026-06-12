@@ -37,6 +37,8 @@ PyYAML = "6.0.2"
 prefect = "3.6.15"
 pytest = "9.0.2"
 psutil = "7.0.0"
+pyarrow = "24.0.0"
+pandas = "3.0.3"
 
 [tool.poetry.scripts]
 dia_phot_script = "trials.dia_phot_script:main"

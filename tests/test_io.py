@@ -5,7 +5,7 @@ from astropy.wcs import WCS
 import numpy as np
 from os import path, remove
 from image_reduction.IO import fits_table_parser
-from image_reduction.IO import hdf5
+from image_reduction.trials import hdf5
 from image_reduction.infrastructure import data_classes
 
 class FITSParser(unittest.TestCase):

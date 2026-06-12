@@ -1,7 +1,7 @@
 import numpy as np
+import copy
 import image_reduction.infrastructure.logs as lcologs
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
 def photometric_scale_factor_from_lightcurves(lcs, mask, dataset, log=None, debug=False):
     """
@@ -91,8 +91,8 @@ def calculate_pscale(ref_image, obs_set, dataset, log=None, debug=True):
     lcologs.log('Using image number ' + str(ref_idx) + ', (' + obs_set.table['file'][ref_idx] + ') as reference', 'info', log=log)
 
     # Collate the timeseries photometry for all stars into a single array.
-    lcs = dataset.raw_flux[:, ::2]
-    elcs = dataset.raw_flux[:, 1::2]
+    lcs = copy.deepcopy(dataset.raw_flux)
+    elcs = copy.deepcopy(dataset.raw_err_flux)
 
     # Select datapoints that have a reasonable SNR to avoid high uncertainty on the pscale factor,
     # and those close to the center of the image, since the wings of the frame tend to have
@@ -111,6 +111,7 @@ def calculate_pscale(ref_image, obs_set, dataset, log=None, debug=True):
 
     # Select the stars with the highest number of valid datapoints.
     # (This works because Python interprets Booleans and 1, 0)
+    # Count the number of valid datapoints per star
     nvalid = valid.sum(axis=1)
 
     # Set the threshold number of valid points to require from a 75% percentile of the
@@ -130,11 +131,12 @@ def calculate_pscale(ref_image, obs_set, dataset, log=None, debug=True):
 
     # Now apply the photometric scale factor to all star lightcurve
     flux = np.zeros(dataset.raw_flux.shape)
-    flux[:, ::2] = lcs / pscales[1]
+    dataset.flux = lcs / pscales[1]
     ps = np.tile(pscales[1], (lcs.shape[0], 1))
     eps = np.tile(epscales, (lcs.shape[0], 1))
-    flux[:, 1::2] = np.sqrt((elcs / lcs)**2 + (eps / ps)**2) * flux[:, ::2]
-    #flux[:, 1::2] = (elcs ** 2 / pscales[1] ** 2 + lcs ** 2 * epscales ** 2 / pscales[1] ** 4) ** 0.5
+    dataset.flux_err = (elcs ** 2 / pscales[1] ** 2 + lcs ** 2 * epscales ** 2 / pscales[1] ** 4) ** 0.5
+    dataset.pscales = pscales
+    dataset.epscales = epscales
 
     if debug:
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
@@ -164,4 +166,4 @@ def calculate_pscale(ref_image, obs_set, dataset, log=None, debug=True):
 
         plt.savefig('lightcurve_phot_uncertainties.png')
 
-    return pscales, epscales, flux
+    return dataset

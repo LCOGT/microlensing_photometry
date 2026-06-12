@@ -1,10 +1,8 @@
-from prefect import flow, task
+from prefect import flow
 import astropy.units as u
 import os
-import h5py
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Table, Column
 import argparse
 import numpy as  np
 import yaml
@@ -13,7 +11,7 @@ import image_reduction.infrastructure.observations as lcoobs
 import image_reduction.infrastructure.logs as lcologs
 import image_reduction.photometry.aperture_photometry as lcoapphot
 import image_reduction.photometry.photometric_scale_factor as lcopscale
-from image_reduction.IO import hdf5, lightcurve, tom_utils
+from image_reduction.IO import parquet, lightcurve, tom_utils
 from image_reduction.infrastructure.data_classes import StarCatalog
 
 @flow
@@ -37,6 +35,9 @@ def reduce_dataset(args):
     # Load reduction configuration
     config_file = os.path.join(args.directory, 'reduction_config.yaml')
     config = yaml.safe_load(open(config_file))
+
+    # Timeseries photometry, source catalog and other results are stored in parquet-format subdirectories.
+    parquet.make_output_directories(args.directory, log=log)
 
     # Get observation set; this provides the list of images and associated information
     obs_set = lcoobs.get_observation_metadata.fn(args, log=log)
@@ -90,129 +91,112 @@ def reduce_dataset(args):
         )
         lcologs.log('Completed star catalog with objects detected in the reference image', 'info', log=log)
 
-    ### PHOTOMETRY STORAGE
-    # Timeseries photometry is stored in an HDF5 file.  If this exists, open it,
-    # otherwise create it
-    phot_storage_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
-    phot_datasets = hdf5.fetch_dataset_list(phot_storage_path)
+    ### TIME SERIES PHOTOMETRY
+    # Loop over all images
+    # Perform astrometry and photometer at all (transformed) locations in the star catalog
+    # unless photometry already exists, or is required
+    for i,im in enumerate(obs_set.table['file']):
+        image_path = os.path.join(args.directory,im)
 
-    # Create it with a copy of the star_catalog.sources, and obs_set, or
-    # update the obs_set information if it exists
-    if not os.path.isfile(phot_storage_path) or args.update_phot:
-        hdf5.create_photometry_store(phot_storage_path, star_catalog, obs_set, log)
-    else:
-        hdf5.update_photometry_store(phot_storage_path, obs_set, log)
+        if obs_set.table['processed'][i] == 0 or args.update_phot:
+            lcologs.log('Aperture photometry for ' + im + ', ' \
+                        + str(i + 1) + ' out of ' + str(len(obs_set.table['file'])),
+                        'info', log=log)
 
-    with h5py.File(phot_storage_path, "r+") as phot_store:
+            with fits.open(image_path) as hdul:
 
-        ### TIME SERIES PHOTOMETRY
-        # Loop over all images
-        # Perform astrometry and photometer at all (transformed) locations in the star catalog
-        # unless photometry already exists, or is required
-        phot_timeseries = None  # Initialise to handle case where no new photometry is done
-        for i,im in enumerate(obs_set.table['file']):
-            image_path = os.path.join(args.directory,im)
+                # Perform astrometry on the image
+                agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, star_catalog, obs_set, config, log=log)
+                star_catalog = agent.run_image_astrometry(star_catalog, log)
+                hdul = agent.store_new_wcs_in_image(hdul, log)
 
-            if im not in phot_datasets or args.update_phot:
-                lcologs.log('Aperture photometry for ' + im + ', ' \
-                            + str(i + 1) + ' out of ' + str(len(obs_set.table['file'])),
-                            'info', log=log)
+                # If astrometry was successful, we can photometer the image
+                if agent.status == 'OK':
+                    agent.run_image_photometry(log, debug=True)
+                    agent.store_photometry(args.directory, log)
+                    lcologs.log(' -> Performed aperture photometry', 'info', log=log)
+                else:
+                    agent.sources['aperture_sum'] = np.array([np.nan]*len(star_catalog.sources))
+                    agent.sources['aperture_sum_err'] = np.array([np.nan]*len(star_catalog.sources))
+                    agent.store_photometry(args.directory, log)
+                    lcologs.log(' -> WARNING: No photometry possible', 'info', log=log)
 
-                with fits.open(image_path) as hdul:
+                # Store the updated HDUlist and close
+                hdul.writeto(image_path, overwrite=True)
+                hdul.close()
 
-                    # Perform astrometry on the image
-                    agent = lcoapphot.AperturePhotometryAnalyst(im, args.directory, star_catalog, obs_set, config, log=log)
-                    star_catalog = agent.run_image_astrometry(star_catalog, log)
-                    hdul = agent.store_new_wcs_in_image(hdul, log)
+                # Update processed status in obs_set
+                obs_set.table['processed'][i] = 1
+            del hdul
 
-                    # If astrometry was successful, we can photometer the image
-                    if agent.status == 'OK':
-                        agent.run_image_photometry(log, debug=True)
-                        phot_timeseries = hdf5.store_image_photometry(phot_store, agent.sources)
-                        lcologs.log(' -> Performed aperture photometry', 'info', log=log)
-                    else:
-                        null_table = Table([
-                            Column(name='aperture_sum', data=np.array([np.nan]*len(star_catalog.sources))),
-                            Column(name='aperture_sum_err', data=np.array([np.nan]*len(star_catalog.sources))),
-                        ])
-                        phot_timeseries = hdf5.store_image_photometry(phot_store, null_table)
-                        lcologs.log(' -> WARNING: No photometry possible', 'info', log=log)
-
-                    # Store the updated HDUlist and close
-                    hdul.writeto(image_path, overwrite=True)
-                    hdul.close()
-                del hdul
-
-            else:
-                lcologs.log('Photometry exists for ' + im + ', ' \
-                            + str(i + 1) + ' out of ' + str(len(obs_set.table['file'])),
-                            'info', log=log)
-
-        lcologs.log('Completed photometry stage for all images; loading whole dataset', 'info', log=log)
-
-        # Load timeseries photometry if not already available
-        # This is necessary because prefect holds the HDF5 writer process open
-        # and HDF5 doesn't accept concurrent reads.
-        dataset = lcoapphot.AperturePhotometryDataset()
-        dataset.load_phot_store(phot_store=phot_store)
-
-        ### Photometric Correction
-        # Calculate the photometric scale factor and use it to compute corrected lightcurves.
-        if len(obs_set.table) > 0:
-            pscales, epscales, flux = lcopscale.calculate_pscale(
-                reference_image_name, obs_set, dataset, log=log
-            )
-
-            # Output normalized timeseries photometry for the whole frame
-            phot_file_path = os.path.join(args.directory, 'aperture_photometry.hdf5')
-            hdf5.output_normalized_photometry(
-                pscales, epscales, flux,
-                phot_file_path,
-                log=log
-            )
-
-            # Output the lightcurve of the object closest to the center of the field of view
-            lc_root_file_name = config['target']['name'] + '_' + obs_set.table['filter'][0] + '_lc'
-            params = {
-                'phot_file': phot_file_path,
-                'target_ra': config['target']['RA'],
-                'target_dec': config['target']['Dec'],
-                'filter': config['tom']['data_label'],
-                'lc_path': os.path.join(args.directory, lc_root_file_name)
-            }
-            lc_status = lightcurve.aperture_timeseries.fn(
-                params, star_catalog, obs_set, flux, log=log
-            )
-
-            # TOM lightcurve upload
-            if config['tom']['upload'] and lc_status:
-                params = {
-                    'file_path': os.path.join(args.directory, lc_root_file_name + '.csv'),
-                    'data_label': config['tom']['data_label'],
-                    'target_name': config['target']['name'],
-                    'tom_config_file': config['tom']['config_file']
-                }
-                tom_utils.upload_lightcurve.fn(params, log=log)
-
-            elif not lc_status:
-                lcologs.log(
-                    'No lightcurve for TOM upload',
-                    'warning',
-                    log=log
-                )
-
-            elif not config['tom']['upload']:
-                lcologs.log(
-                    'TOM upload switched OFF in configuration',
-                    'warning',
-                    log=log
-                )
         else:
+            lcologs.log('Photometry exists for ' + im + ', ' \
+                        + str(i + 1) + ' out of ' + str(len(obs_set.table['file'])),
+                        'info', log=log)
+
+    lcologs.log('Completed photometry stage for all images; loading whole dataset', 'info', log=log)
+
+    # Save updated results from newly processed images
+    obs_set_file = os.path.join(args.directory, 'data_summary.txt')
+    obs_set.save(obs_set_file, log=log)
+
+    # Load timeseries photometry for all images
+    dataset = lcoapphot.AperturePhotometryDataset()
+    dataset.load_phot_store(args.directory, len(star_catalog.sources), obs_set)
+
+    ### Photometric Correction
+    # Calculate the photometric scale factor and use it to compute corrected lightcurves.
+    if len(obs_set.table) > 0:
+        dataset = lcopscale.calculate_pscale(
+            reference_image_name, obs_set, dataset, log=log
+        )
+
+        # Output normalized timeseries photometry for the whole frame
+        parquet.output_norm_flux(args.directory, dataset)
+
+        # Output the lightcurve of the object closest to the center of the field of view
+        phot_file_path = os.path.join(args.directory, 'aperture_photometry.parquet')
+        lc_root_file_name = config['target']['name'] + '_' + obs_set.table['filter'][0] + '_lc'
+        params = {
+            'phot_file': phot_file_path,
+            'target_ra': config['target']['RA'],
+            'target_dec': config['target']['Dec'],
+            'filter': config['tom']['data_label'],
+            'lc_path': os.path.join(args.directory, lc_root_file_name)
+        }
+        lc_status = lightcurve.aperture_timeseries.fn(
+            params, star_catalog, obs_set, dataset, log=log
+        )
+
+        # TOM lightcurve upload
+        if config['tom']['upload'] and lc_status:
+            params = {
+                'file_path': os.path.join(args.directory, lc_root_file_name + '.csv'),
+                'data_label': config['tom']['data_label'],
+                'target_name': config['target']['name'],
+                'tom_config_file': config['tom']['config_file']
+            }
+            tom_utils.upload_lightcurve.fn(params, log=log)
+
+        elif not lc_status:
             lcologs.log(
-                'Empty observations table, cannot calculate photometry timeseries',
-                'error',
+                'No lightcurve for TOM upload',
+                'warning',
                 log=log
             )
+
+        elif not config['tom']['upload']:
+            lcologs.log(
+                'TOM upload switched OFF in configuration',
+                'warning',
+                log=log
+            )
+    else:
+        lcologs.log(
+            'Empty observations table, cannot calculate photometry timeseries',
+            'error',
+            log=log
+        )
 
     # Wrap up
     log.info('Aperture photometry reduction completed')

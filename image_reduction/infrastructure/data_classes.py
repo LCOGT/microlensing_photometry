@@ -5,9 +5,9 @@ from astropy.io import ascii
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 import numpy as np
+
 from image_reduction.infrastructure import time_utils as lcotime
 from image_reduction.infrastructure import logs as lcologs
-from image_reduction.IO import fits_table_parser
 from image_reduction.logistics import GaiaCatalog as GC
 from image_reduction.astrometry import crossmatching
 
@@ -51,6 +51,7 @@ class ObservationSet(object):
             Column(name='NAXIS1', data=np.array([]), dtype='int'),
             Column(name='NAXIS2', data=np.array([]), dtype='int'),
             Column(name='WMSCLOUD', data=np.array([]), dtype='float64', unit=u.deg_C),
+            Column(name='processed', data=np.array([]), dtype='int')
             ])
 
         if file_path:
@@ -139,6 +140,13 @@ class ObservationSet(object):
             header['EXPTIME']
         )
 
+        # Check whether photometry output exists for this frame
+        phot_file = os.path.join(os.path.dirname(file_path), 'raw_flux', os.path.basename(file_path) + '.parquet')
+        if os.path.isfile(phot_file):
+            processed = 1
+        else:
+            processed = 0
+
         row = [
             os.path.basename(file_path),
             facility_code,
@@ -172,7 +180,8 @@ class ObservationSet(object):
             header['WCSERR'],
             header['NAXIS1'],
             header['NAXIS2'],
-            wmscloud
+            wmscloud,
+            processed
         ]
 
         self.table.add_row(row)

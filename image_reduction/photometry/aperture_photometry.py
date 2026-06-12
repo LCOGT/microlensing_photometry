@@ -14,9 +14,12 @@ import os
 import h5py
 import time
 import copy
+import pyarrow as pa
+import pyarrow.parquet as pq
 from image_reduction.astrometry import wcs as lcowcs
 from image_reduction.infrastructure import logs as lcologs
 from image_reduction.IO import ds9_utils
+from image_reduction.IO import parquet
 
 class AperturePhotometryAnalyst(object):
     """
@@ -289,22 +292,17 @@ class AperturePhotometryAnalyst(object):
 
         return hdulist
 
-    def store_photometry_in_image(self, hdulist, log):
+    def store_photometry(self, red_dir_path, log):
         """
-        Save the new photometry table, corrected WCS and aperture phot table, on the image
-        directly
+        Save the new photometry table in parquet format
         """
 
-        #Save Aperture Photometry  in a new layer or update an existing table extension if available
-        layer_name = 'LCO MICROLENSING APERTURE PHOTOMETRY'
-        aperture_hdu =  fits.BinTableHDU(data= self.sources)
-        aperture_hdu.header['EXTNAME'] = layer_name
-        aperture_hdu.header['APRAD'] = self.phot_aperture
-        hdulist = self.update_or_append_fits_layer(hdulist, layer_name, aperture_hdu)
+        dir_path = os.path.join(red_dir_path, "raw_flux")
+        phot_arrow = pa.Table.from_pandas(self.sources.to_pandas())
+        pq.write_table(phot_arrow, os.path.join(dir_path, self.image_name + '.parquet'))
 
-        lcologs.log('Stored photometry in ' + self.image_path, 'info', log=log)
+        lcologs.log('Stored photometry for ' + self.image_path, 'info', log=log)
 
-        return hdulist
 
 def run_aperture_photometry(image, error, positions, radius):
     """
@@ -376,38 +374,53 @@ class AperturePhotometryDataset(object):
         self.pscale = np.array([])
         self.epscale = np.array([])
 
-    def load_phot_store(self, phot_store):
+    def load_phot_store(self, red_dir_path, nstars, obs_set):
         """
         Method to load the entire photometry store object
         Parameters
         ----------
         phot_store  object     HDF5 file object open with r+
+        star_catalog object     Source catalog for the dataset
+        obs_set      object    Observation Set
 
         Returns
         -------
         object with attributes populated with photometry from the file
         """
 
-        sources = np.array(phot_store['source_catalog'])
+        # Load the raw photometry tables from the parquet files.
+        # Load the raw flux measurements for all images and compile
+        raw_flux_data = parquet.load_raw_flux(red_dir_path)
 
-        self.sources = Table([
-            Column(name='gaia_id', data=sources[:,0]),
-            Column(name='ra', data=sources[:,1], unit=u.deg),
-            Column(name='dec', data=sources[:,2], unit=u.deg),
-            Column(name='x', data=sources[:,3]),
-            Column(name='y', data=sources[:,4])
-        ])
+        flux = np.array(raw_flux_data['aperture_sum'])
+        self.raw_flux = flux.reshape(len(obs_set.table), nstars).T
+        fluxerr = np.array(raw_flux_data['aperture_sum_err'])
+        self.raw_err_flux = fluxerr.reshape(len(obs_set.table), nstars).T
 
-        self.file = phot_store['file'].asstr()[:].tolist()
+        self.sources = raw_flux_data['gaia_id', 'ra', 'dec', 'x', 'y'][0:nstars]
+        self.file = obs_set.table['file'].tolist()
+        self.timestamps = np.array(obs_set.table['HJD'])
+        self.nstars = nstars
+        self.nimages = len(obs_set.table)
 
-        self.timestamps = Table([Column(name='HJD', data=np.array(phot_store['HJD'][:]), unit=u.day)])
-        self.raw_flux = np.array(phot_store['raw_flux'])
+        #self.sources = Table([
+        #    Column(name='gaia_id', data=sources[:,0]),
+        #    Column(name='ra', data=sources[:,1], unit=u.deg),
+        #    Column(name='dec', data=sources[:,2], unit=u.deg),
+        #    Column(name='x', data=sources[:,3]),
+        #    Column(name='y', data=sources[:,4])
+        #])
 
-        if 'flux' in phot_store.keys():
-            self.flux = np.array(phot_store['flux'])
+        #self.file = phot_store['file'].asstr()[:].tolist()
 
-        if 'pscales' in phot_store.keys():
-            self.pscales = np.array(phot_store['pscales'])
+        #self.timestamps = Table([Column(name='HJD', data=np.array(phot_store['HJD'][:]), unit=u.day)])
+        #self.raw_flux = np.array(phot_store['raw_flux'])
+
+        #if 'flux' in phot_store.keys():
+        #    self.flux = np.array(phot_store['flux'])
+
+        #if 'pscales' in phot_store.keys():
+        #    self.pscales = np.array(phot_store['pscales'])
 
     def load_hdf5_file(self, file_path):
         """
