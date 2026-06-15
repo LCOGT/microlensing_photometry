@@ -121,7 +121,7 @@ def get_lightcurve(obs_set, flux, flux_err, star_idx, filter, log=None):
         # TOM-compatible format lightcurve
         nvalid2 = valid_mag_err.sum()
         tom_lc = Table([
-            Column(name='time', data=obs_set.table['HJD'][valid_mag_err]),
+            Column(name='time', data=obs_set.table['HJD'][valid][valid_mag_err]),
             Column(name='filter', data=np.array([filter] * nvalid2)),
             Column(name='magnitude', data=mag[valid_mag_err]),
             Column(name='error', data=err_mag[valid_mag_err]),
