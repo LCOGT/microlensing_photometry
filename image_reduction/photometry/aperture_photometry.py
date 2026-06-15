@@ -403,25 +403,6 @@ class AperturePhotometryDataset(object):
         self.nstars = nstars
         self.nimages = len(obs_set.table)
 
-        #self.sources = Table([
-        #    Column(name='gaia_id', data=sources[:,0]),
-        #    Column(name='ra', data=sources[:,1], unit=u.deg),
-        #    Column(name='dec', data=sources[:,2], unit=u.deg),
-        #    Column(name='x', data=sources[:,3]),
-        #    Column(name='y', data=sources[:,4])
-        #])
-
-        #self.file = phot_store['file'].asstr()[:].tolist()
-
-        #self.timestamps = Table([Column(name='HJD', data=np.array(phot_store['HJD'][:]), unit=u.day)])
-        #self.raw_flux = np.array(phot_store['raw_flux'])
-
-        #if 'flux' in phot_store.keys():
-        #    self.flux = np.array(phot_store['flux'])
-
-        #if 'pscales' in phot_store.keys():
-        #    self.pscales = np.array(phot_store['pscales'])
-
     def load_hdf5_file(self, file_path):
         """
         Method to load the entire photometry store file
@@ -462,3 +443,12 @@ class AperturePhotometryDataset(object):
         with h5py.File(file_path, 'r') as f:
             self.files = f['file'].asstr()[:]
             self.raw_flux = np.array(f['raw_flux'])
+
+    def load_norm_flux(self, red_dir):
+        """
+        Method to load the normalized flux data
+
+        :params red_dir: str Path to the reduction directory
+        """
+
+        self.flux, self.flux_err = parquet.load_norm_flux(red_dir)

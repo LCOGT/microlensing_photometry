@@ -7,23 +7,23 @@ from image_reduction.infrastructure import data_classes
 from image_reduction.infrastructure import logs as lcologs
 
 @task
-def get_observation_metadata(args, log=None):
+def get_observation_metadata(red_dir, log=None):
     """
     Function to review all available observations in a single dataset and extract
     header information necessary for the reduction.
 
-    :param args:
+    :param red_dir: Path to the reduction directory
     :return: ObservationSet object
     """
 
     # Load an existing observation set summary table if there is one; otherwise return an empty table
-    obs_set_file = os.path.join(args.directory, 'data_summary.txt')
+    obs_set_file = os.path.join(red_dir, 'data_summary.txt')
     obs_set = data_classes.ObservationSet(file_path=obs_set_file, log=log)
 
     # List all observations in the reduction directory
-    obs_list = [i for i in os.listdir(args.directory) if ('.fits' in i) & ('.fz' not in i)]
+    obs_list = [i for i in os.listdir(red_dir) if ('.fits' in i) & ('.fz' not in i)]
     lcologs.log(
-        'Identified ' + str(len(obs_list)) + ' observations in ' + args.directory,
+        'Identified ' + str(len(obs_list)) + ' observations in ' + red_dir,
         'info',
         log=log
     )
@@ -38,7 +38,7 @@ def get_observation_metadata(args, log=None):
                 log=log
             )
         if file_name not in obs_set.table['file']:
-            file_path = os.path.join(args.directory, file_name)
+            file_path = os.path.join(red_dir, file_name)
 
             # A deepcopy of the header object is taken so that the file itself can be properly
             # closed at the end of the function; this matters with large datasets.  Astropy

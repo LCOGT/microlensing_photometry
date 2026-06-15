@@ -1,5 +1,5 @@
 import os
-import pyarrow as pa
+import numpy as np
 import pyarrow.parquet as pq
 import pandas as pd
 import image_reduction.infrastructure.logs as lcologs
@@ -41,6 +41,26 @@ def load_raw_flux(red_dir_path):
     raw_flux = Table.from_pandas(flux_arrow.to_pandas())
 
     return raw_flux
+
+def load_norm_flux(red_dir_path):
+    """
+    Function to load the normalized flux data
+
+    :param red_dir_path: str  Path to reduction directory
+
+    Returns
+    :param flux:  arr  Table of flux data for all images
+    :param flux_err: arr Table of uncertainties of flux data
+    """
+    file_path = os.path.join(red_dir_path, 'aperture_photometry.parquet')
+    data = Table.read(file_path)
+
+    # Flux measurements and uncertainties are horizontally concatenated in the table;
+    # separate them into separate Tables
+    flux_cols = [col for col in data.colnames if '_err_' not in col]
+    flux_err_cols = [col for col in data.colnames if '_err_' in col]
+
+    return data[flux_cols].to_pandas().to_numpy(), data[flux_err_cols].to_pandas().to_numpy()
 
 def output_norm_flux(red_dir_path, dataset):
     """

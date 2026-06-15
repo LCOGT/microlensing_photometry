@@ -4,15 +4,18 @@ from image_reduction.infrastructure import logs as lcologs
 import argparse
 import numpy as np
 from os import path
+from image_reduction.infrastructure.data_classes import StarCatalog
+import image_reduction.infrastructure.observations as lcoobs
+import image_reduction.photometry.aperture_photometry as lcoapphot
+from image_reduction.IO import lightcurve
 
-
-def find_nearest_star_by_pixel(positions, target_x, target_y, radius=5.0, image_index=0, log=None):
+def find_nearest_star_by_pixel(star_catalog, target_x, target_y, radius=5.0, log=None):
     """
     Function to identify the star nearest to the pixel position given in the reference image
 
     Parameters
     ----------
-    dataset.positions   HDF array with positions of detected sources in all images
+    star_catalog    Star catalog object
     target_x        float Target x-pixel position
     target_y        float Target y-pixel position
     radius          [optional] float Selection radius in pixels, default=5
@@ -28,7 +31,8 @@ def find_nearest_star_by_pixel(positions, target_x, target_y, radius=5.0, image_
     # The first image in a dataset is normally used as the reference.  Use this to
     # calculate the separation of all objects from the target location
     separations = np.sqrt(
-        (positions[:,image_index,0] - target_x)**2 + (positions[:,image_index,1] - target_y)**2
+        #(positions[:,image_index,0] - target_x)**2 + (positions[:,image_index,1] - target_y)**2
+        (star_catalog.sources['x'] - target_x)**2 + (star_catalog.sources['y'] - target_y)**2
     )
 
     # Find the closest match within the search radius
@@ -36,7 +40,7 @@ def find_nearest_star_by_pixel(positions, target_x, target_y, radius=5.0, image_
 
     if separations[idx[0]] <= radius:
         star_idx = idx[0]
-        match_position = (positions[idx[0],image_index,0], positions[idx[0],image_index,1])
+        match_position = (star_catalog.sources['x'][idx[0]], star_catalog.sources['y'][idx[0]])
         lcologs.log(
             'Nearest matching star is =' + str(star_idx) + ' at ' + repr(match_position) + 'pix',
             'info',
@@ -55,7 +59,7 @@ def find_nearest_star_by_pixel(positions, target_x, target_y, radius=5.0, image_
             'warning',
             log=log
         )
-        return None, None
+        return -1, None
 @task
 def aperture_timeseries_on_pixel(params, log=None):
     """
@@ -72,10 +76,17 @@ def aperture_timeseries_on_pixel(params, log=None):
     ASCII format lightcurve file without suffix (path with root filename only)
     """
 
-    log = lcologs.start_log(path.dirname(params['phot_file']), 'lc_by_pix')
+    log = lcologs.start_log(params['red_dir'], 'lc_by_pix')
 
     # Load the photometry dataset
-    dataset = aperture_photometry.AperturePhotometryDataset(file_path=params['phot_file'])
+    star_catalog_path = path.join(params['red_dir'], '..', 'star_catalog.fits')
+    star_catalog = StarCatalog(file_path=star_catalog_path, log=log)
+
+    obs_set = lcoobs.get_observation_metadata.fn(params['red_dir'], log=log)
+
+    dataset = lcoapphot.AperturePhotometryDataset()
+    dataset.load_phot_store(params['red_dir'], len(star_catalog.sources), obs_set)
+    dataset.load_norm_flux(params['red_dir'])
 
     # Target coordinates need to be in pixel coordinates
     target_x = float(params['target_x'])
@@ -89,17 +100,18 @@ def aperture_timeseries_on_pixel(params, log=None):
 
     # Search the catalog for the nearest entry
     star_idx, entry = find_nearest_star_by_pixel(
-        dataset.positions,
+        star_catalog,
         target_x,
         target_y,
         radius=params['radius'],
-        image_index=params['image_index'],
         log=log
     )
 
     # If a valid entry exists, extract the lightcurve and output
-    if star_idx:
-        lc, tom_lc = dataset.get_lightcurve(star_idx, params['filter'], log=log)
+    if star_idx >= 0:
+        lc, tom_lc = lightcurve.get_lightcurve(
+            obs_set, dataset.flux, dataset.flux_err, star_idx, params['filter'], log=log
+        )
 
         if lc:
             lc.write(params['lc_path']+'.dat', format='ascii', overwrite=True)
@@ -121,22 +133,20 @@ def aperture_timeseries_on_pixel(params, log=None):
 def get_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('in_path', help='Path to aperture photometry HDF5 file')
+    parser.add_argument('red_dir', help='Path to reduction directory')
     parser.add_argument('target_x', help='X-position of target star in pixels')
     parser.add_argument('target_y', help='Y-position of target star in pixels')
     parser.add_argument('radius', help='Search radius in pixels')
-    parser.add_argument('image_index', help='Index of image to use as match reference in HDF file')
     parser.add_argument('filter', help='Filter used for observations')
     parser.add_argument('out_path', help='Path to output lightcurve file [no file suffix]')
     args = parser.parse_args()
 
     # Decant the information into a dictionary to allow for easier integration with the pipeline
     params = {
-        'phot_file': args.in_path,
+        'red_dir': args.red_dir,
         'target_x': float(args.target_x),
         'target_y': float(args.target_y),
         'radius': float(args.radius),
-        'image_index': int(args.image_index),
         'filter': args.filter,
         'lc_path': args.out_path
     }

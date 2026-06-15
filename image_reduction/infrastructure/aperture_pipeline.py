@@ -40,7 +40,7 @@ def reduce_dataset(args):
     parquet.make_output_directories(args.directory, log=log)
 
     # Get observation set; this provides the list of images and associated information
-    obs_set = lcoobs.get_observation_metadata.fn(args, log=log)
+    obs_set = lcoobs.get_observation_metadata.fn(args.directory, log=log)
 
     # Establish label for the dataset
     config['tom']['data_label'] = config['tom']['data_label'] + '_' + obs_set.table['filter'][0]
