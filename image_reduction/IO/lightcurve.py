@@ -119,13 +119,12 @@ def get_lightcurve(obs_set, flux, flux_err, star_idx, filter, log=None):
         ])
 
         # TOM-compatible format lightcurve
-        valid2 = np.logical_and(valid, valid_mag_err)
-        nvalid2 = valid2.sum()
+        nvalid2 = valid_mag_err.sum()
         tom_lc = Table([
-            Column(name='time', data=obs_set.table['HJD'][valid2]),
+            Column(name='time', data=obs_set.table['HJD'][valid_mag_err]),
             Column(name='filter', data=np.array([filter] * nvalid2)),
-            Column(name='magnitude', data=mag[valid2]),
-            Column(name='error', data=err_mag[valid2]),
+            Column(name='magnitude', data=mag[valid_mag_err]),
+            Column(name='error', data=err_mag[valid_mag_err]),
         ])
 
         lcologs.log('Returned DAT lightcurve with ' + str(valid.sum()) + ' valid datapoints', 'info', log=log)
