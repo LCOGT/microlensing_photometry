@@ -30,6 +30,10 @@ def get_observation_metadata(red_dir, log=None):
 
     # Review all observations in the list and extract header data where necessary
     lcologs.log('Reviewing all images to extract header information', 'info', log=log)
+    # Membership testing against an Astropy Column is O(N); building a set once up front
+    # avoids repeating that scan for every file in obs_list (which was O(N^2) overall).
+    existing_files = set(obs_set.table['file'])
+    new_rows = []
     for i, file_name in enumerate(obs_list):
         if i%10 == 0:
             lcologs.log(
@@ -37,7 +41,7 @@ def get_observation_metadata(red_dir, log=None):
                 'info',
                 log=log
             )
-        if file_name not in obs_set.table['file']:
+        if file_name not in existing_files:
             file_path = os.path.join(red_dir, file_name)
 
             # A deepcopy of the header object is taken so that the file itself can be properly
@@ -53,11 +57,15 @@ def get_observation_metadata(red_dir, log=None):
                     if hdu.header['EXTNAME'] == 'LCO MICROLENSING PHOTOMETRY UPDATED WCS':
                         hdr0 = update_wcs_parameters(hdu.header, hdr0)
 
-                obs_set.add_observation(file_path, hdr0)
+                new_rows.append(obs_set.build_observation_row(file_path, hdr0))
 
             # Ensure FITS files close properly
             hdul.close()
             del hdul
+
+    # Add all newly-found observations to the table in a single bulk operation, rather than
+    # one Table.add_row() call per file (which rebuilds the whole table each time).
+    obs_set.add_observations(new_rows)
 
     # Store summary of the dataset information
     obs_set.save(obs_set_file, log=log)
