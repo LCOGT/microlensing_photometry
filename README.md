@@ -14,7 +14,7 @@ The package can be installed directly to any compatible Python environment (>3.1
 
 ```pip install microlensing_photometry```
 
-To install the scripts used to run the pipeline, it is best to clone this respository.
+To install the scripts used to run the pipeline, it is best to clone this repository.
 
 ## Documentation
 The documentation for this package can be found on [ReadTheDocs](https://lcogt-microlensing-photometry.readthedocs.io/en/latest/).
