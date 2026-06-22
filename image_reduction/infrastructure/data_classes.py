@@ -1,5 +1,5 @@
 import os
-from astropy.table import Table, Column
+from astropy.table import Table, Column, vstack
 from astropy import units as u
 from astropy.io import ascii
 from astropy.io import fits
@@ -112,6 +112,38 @@ class ObservationSet(object):
         :return: Information added to self.table
         """
 
+        row = self.build_observation_row(file_path, header=header)
+        self.table.add_row(row)
+
+    def add_observations(self, rows):
+        """
+        Method to add multiple observation rows to the table in a single operation.
+
+        Calling Table.add_row() repeatedly is O(N) per call (it rebuilds the table each
+        time), so for large numbers of new rows this is O(N^2) overall. Building the new
+        rows as a separate Table and vstacking once avoids that.
+
+        :param rows: list of row lists, as returned by build_observation_row()
+        """
+
+        if len(rows) == 0:
+            return
+
+        new_table = Table(rows=rows, names=self.table.colnames)
+        if len(self.table) == 0:
+            self.table = new_table
+        else:
+            self.table = vstack([self.table, new_table])
+
+    def build_observation_row(self, file_path, header=None):
+        """
+        Method to extract a row of observation metadata from the FITS header of a single file,
+        without mutating self.table.
+
+        :param header: Astropy FITS header object
+        :return: list  Row of table data
+        """
+
         # Read header info if not parsed to method
         if not header:
             header = fits.getheader(file_path)
@@ -184,7 +216,7 @@ class ObservationSet(object):
             processed
         ]
 
-        self.table.add_row(row)
+        return row
 
     def check_file_in_set(self, filename):
         """

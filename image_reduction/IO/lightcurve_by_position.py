@@ -85,7 +85,6 @@ def aperture_timeseries_on_pixel(params, log=None):
     obs_set = lcoobs.get_observation_metadata.fn(params['red_dir'], log=log)
 
     dataset = lcoapphot.AperturePhotometryDataset()
-    dataset.load_phot_store(params['red_dir'], len(star_catalog.sources), obs_set)
     dataset.load_norm_flux(params['red_dir'])
 
     # Target coordinates need to be in pixel coordinates
