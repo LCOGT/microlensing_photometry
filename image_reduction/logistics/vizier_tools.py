@@ -101,9 +101,9 @@ def search_vizier_for_sources(ra, dec, radius, catalog, row_limit=-1,
 
     else:
         result = table.Table([])
-        lcologs.error(
+        lcologs.log(
             'No results returned from catalog query of ' + cat_id,
-            'info',
+            'error',
             log=log
         )
 
