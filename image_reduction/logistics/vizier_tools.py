@@ -131,7 +131,7 @@ def query_vizier_servers(query_service, coord, search_radius, catalog_id, log=No
     result : astropy.Table, an astropy.Table containing the catalog
     """
 
-    vizier_servers_list = ['vizier.cds.unistra.fr', 'vizier.cfa.harvard.edu']
+    vizier_servers_list = ['vizier.idia.ac.za', 'vizier.cds.unistra.fr', 'vizier.cfa.harvard.edu']
 
     query_service.VIZIER_SERVER = vizier_servers_list[0]
 
