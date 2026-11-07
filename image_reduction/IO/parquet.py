@@ -17,6 +17,7 @@ def make_output_directories(red_dir_path, log=None):
 
     sub_dirs = [
         os.path.join(red_dir_path, 'raw_flux'),
+        os.path.join(red_dir_path, 'orphan_flux'),
     ]
 
     for dir_path in sub_dirs:
@@ -25,7 +26,7 @@ def make_output_directories(red_dir_path, log=None):
 
     lcologs.log('Verified output directories exist','info', log=log)
 
-def load_raw_flux(red_dir_path):
+def load_raw_flux(red_dir_path, sub_dir='raw_flux'):
     """
     Function to load the raw_flux parquet files for all images into numpy arrays
 
@@ -36,7 +37,7 @@ def load_raw_flux(red_dir_path):
     """
 
     # Read the raw flux data from separate parquet files for each image
-    dir_path = os.path.join(red_dir_path, "raw_flux")
+    dir_path = os.path.join(red_dir_path, sub_dir)
     flux_arrow = pq.read_table(dir_path)
     raw_flux = Table.from_pandas(flux_arrow.to_pandas())
 

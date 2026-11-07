@@ -20,6 +20,7 @@ from image_reduction.astrometry import wcs as lcowcs
 from image_reduction.infrastructure import logs as lcologs
 from image_reduction.IO import ds9_utils
 from image_reduction.IO import parquet
+from image_reduction.astrometry import crossmatching
 
 class AperturePhotometryAnalyst(object):
     """
@@ -127,6 +128,19 @@ class AperturePhotometryAnalyst(object):
             # stars in the sources table
             self.update_star_positions(log=log)
 
+            # Identify orphans
+            positions1 = np.column_stack([self.sources['x'], self.sources['y']])
+            positions2 = self.image_source_catalog[:, :2]
+            _, orphan_idx = crossmatching.merge_positions(positions1, positions2)
+            self.orphans = Table([
+                Column(name='file', data=[self.image_name]*len(orphan_idx[0])),
+                Column(name='id', data=orphan_idx[0]),
+                Column(name='x', data=self.image_source_catalog[orphan_idx[0],0]),
+                Column(name='y', data=self.image_source_catalog[orphan_idx[0],1])
+            ])
+
+            lcologs.log('Found ' + str(len(self.orphans)) + ' orphans in the frame', 'info', log=log)
+
         return star_catalog
 
     def update_star_positions(self, log=None):
@@ -192,14 +206,32 @@ class AperturePhotometryAnalyst(object):
         )
 
         # Run daofind algorithm to detect objects
-        daofind = DAOStarFinder(fwhm=3.0, threshold=2. * std)
+        daofind = DAOStarFinder(fwhm=3.0, threshold=1. * std)
         sources = daofind(self.image_data - median)
         self.image_source_catalog = np.c_[sources['xcentroid'], sources['ycentroid'], sources['peak']]
+
         lcologs.log(
             'Detected ' + str(len(self.image_source_catalog)) + ' objects in the current frame',
             'info',
             log=log
         )
+
+        # Store detected positions
+        self.store_detected_positions()
+
+    def store_detected_positions(self):
+
+        # Create subdirectory if needed
+        pos_path = os.path.join(os.path.dirname(self.image_path), 'detected_positions')
+        if not os.path.isdir(pos_path):
+            os.makedirs(pos_path)
+
+        # Output image source catalog in DS9 region format
+        file_path = os.path.join(pos_path, os.path.basename(self.image_path).replace('.fits', '.reg'))
+        with open(file_path, 'w') as f:
+            for i in range(0, len(self.image_source_catalog), 1):
+                f.write('point ' + str(self.image_source_catalog[i,0]) + ' '
+                        + str(self.image_source_catalog[i,1]) + ' # color=cyan\n')
 
     def run_image_photometry(self, log, debug=False):
         """
@@ -227,6 +259,14 @@ class AperturePhotometryAnalyst(object):
 
             self.sources['aperture_sum'] = phot_table['aperture_sum'] / exptime
             self.sources['aperture_sum_err'] = phot_table['aperture_sum_err'] / exptime
+
+            # Photometer orphans
+            positions = np.column_stack([self.orphans['x'], self.orphans['y']])
+            orphan_phot_table = run_aperture_photometry(self.image_data, self.image_errors, positions, self.phot_aperture)
+            exptime = self.image_header['EXPTIME']
+
+            self.orphans['aperture_sum'] = orphan_phot_table['aperture_sum'] / exptime
+            self.orphans['aperture_sum_err'] = orphan_phot_table['aperture_sum_err'] / exptime
 
             lcologs.log('Aperture Photometry successfully completed', 'info', log=log)
 
@@ -297,8 +337,14 @@ class AperturePhotometryAnalyst(object):
         Save the new photometry table in parquet format
         """
 
+        # Store photometry for catalog objects
         dir_path = os.path.join(red_dir_path, "raw_flux")
         phot_arrow = pa.Table.from_pandas(self.sources.to_pandas())
+        pq.write_table(phot_arrow, os.path.join(dir_path, self.image_name + '.parquet'))
+
+        # Store photometry for orphans
+        dir_path = os.path.join(red_dir_path, "orphan_flux")
+        phot_arrow = pa.Table.from_pandas(self.orphans.to_pandas())
         pq.write_table(phot_arrow, os.path.join(dir_path, self.image_name + '.parquet'))
 
         lcologs.log('Stored photometry for ' + self.image_path, 'info', log=log)
@@ -379,7 +425,6 @@ class AperturePhotometryDataset(object):
         Method to load the entire photometry store object
         Parameters
         ----------
-        phot_store  object     HDF5 file object open with r+
         star_catalog object     Source catalog for the dataset
         obs_set      object    Observation Set
 
@@ -402,6 +447,13 @@ class AperturePhotometryDataset(object):
         self.timestamps = np.array(obs_set.table['HJD'])
         self.nstars = nstars
         self.nimages = len(obs_set.table)
+
+    def load_orphan_data(self, red_dir_path):
+        """
+        Method to load the photometry for the orphan objects
+        """
+        # Load the raw photometry tables from the parquet files.
+        self.orphan_data = parquet.load_raw_flux(red_dir_path, sub_dir='orphan_flux')
 
     def load_hdf5_file(self, file_path):
         """
